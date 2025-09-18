@@ -1,0 +1,447 @@
+/* ==========================================================================
+   1. CONFIGURAÇÃO INICIAL E VARIÁVEIS
+   ========================================================================== */
+
+/* 1.1. Import de Fontes */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* 1.2. Variáveis de Cor (Temas) */
+:root {
+  /* TEMA CLARO (PADRÃO) */
+  --cor-fundo: #f4f7f6;
+  --cor-texto: #1a1a1a;
+  --cor-card: #ffffff;
+  --cor-borda: #dddddd;
+  --cor-texto-secundario: #555555;
+  --cor-acento-principal: #64748b;
+  --cor-acento-secundario: #94a3b8;
+
+  /* TEMA ESCURO */
+  --cor-fundo-dark: #111827; /* Cinza-azulado escuro e suave */
+  --cor-fundo-dark-gradiente: linear-gradient(180deg, #1f2937, #111827);
+  --cor-texto-dark: #e2e8f0;
+  --cor-card-dark: rgba(31, 41, 55, 0.5); /* Fundo do card mais sutil */
+  --cor-borda-dark: rgba(255, 255, 255, 0.1);
+  --cor-texto-secundario-dark: #94a3b8;
+}
+
+
+/* ==========================================================================
+   2. ESTILOS GERAIS E BASE
+   ========================================================================== */
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  padding-top: 70px;
+  scroll-behavior: smooth;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.card-title {
+  color: var(--cor-texto-secundario);
+  font-weight: 600;
+}
+
+.card-title i {
+  color: var(--cor-acento-principal);
+  margin-right: 0.25rem;
+}
+
+
+/* ==========================================================================
+   3. LAYOUT PRINCIPAL
+   ========================================================================== */
+
+.navbar {
+  background-color: var(--cor-acento-principal) !important;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link {
+  color: #ffffff !important;
+}
+
+footer {
+  border-top: 1px solid var(--cor-borda);
+  background-color: #f8f9fa;
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   4. COMPONENTES
+   ========================================================================== */
+
+/* 4.1. Cards */
+.card {
+  background-color: var(--cor-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* 4.2. Botões */
+.btn-primary {
+  background-image: linear-gradient(90deg, var(--cor-acento-principal) 0%, var(--cor-acento-secundario) 100%);
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient {
+  background: linear-gradient(90deg, var(--cor-acento-principal), var(--cor-acento-secundario));
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6);
+  filter: brightness(1.1);
+}
+
+/* 4.3. Formulários */
+.form-label {
+  color: var(--cor-texto-secundario);
+  font-weight: 500;
+}
+
+.form-control,
+.form-select {
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  color: var(--cor-texto);
+}
+
+/* 4.4. Tabelas */
+.tabela-filmes {
+  vertical-align: middle;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.tabela-filmes .col-titulo,
+.tabela-filmes .col-direcao,
+.tabela-filmes .col-atores,
+.tabela-filmes .col-genero {
+  white-space: normal;
+}
+
+.tabela-filmes .col-num { width: 50px; }
+.tabela-filmes .col-titulo { min-width: 250px; }
+.tabela-filmes .col-nota { width: 80px; }
+.tabela-filmes .col-ano { width: 80px; }
+.tabela-filmes .col-direcao { min-width: 200px; }
+.tabela-filmes .col-atores { min-width: 300px; }
+.tabela-filmes .col-genero { min-width: 200px; }
+.tabela-filmes .col-assistido { width: 100px; }
+.tabela-filmes .col-data { width: 140px; }
+.tabela-filmes .col-origem { width: 130px; }
+.tabela-filmes .col-acoes { width: 150px; text-align: right; }
+
+.tabela-filmes .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.tabela-filmes th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tabela-filmes th.sortable:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* 4.5. Listas */
+.list-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.2rem;
+  background-color: transparent;
+  color: var(--cor-texto);
+  border-color: #eee;
+}
+
+.list-group-item span {
+  font-weight: 600;
+  background-color: var(--cor-acento-principal);
+  color: white;
+  padding: 0.1rem 0.4rem;
+  border-radius: 5px;
+  font-size: 0.8rem;
+}
+
+/* 4.6. Ícones Sociais (HEADER) */
+.social-icon i {
+  font-size: 1.4rem;
+  transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.social-icon:hover i {
+  color: var(--cor-texto-dark);
+  transform: scale(1.1);
+}
+
+/* 4.7. Ícones do Rodapé */
+.footer-icon {
+  color: var(--cor-texto-secundario);
+  font-size: 1.6rem;
+  margin-left: 1rem;
+  transition: color 0.2s ease-in-out;
+}
+.footer-icon:hover {
+  color: var(--cor-acento-principal);
+}
+
+
+/* ==========================================================================
+   5. ESTILOS POR SEÇÃO
+   ========================================================================== */
+
+/* 5.1. Seção de Estatísticas */
+.stat-card {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.stat-card-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--cor-texto-secundario-dark);
+  margin-bottom: 0.25rem;
+}
+
+.stat-card-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.stat-card-value-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.ranking-count {
+  background-color: #333;
+  color: #fff;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* 5.2. Seção de Gráficos (Análise Visual) */
+.ranking-title {
+  color: var(--cor-acento-principal);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+canvas {
+  max-height: 350px;
+}
+
+/* 5.3. Abas (Tabs) de Rankings e Listas */
+.rankings-tabs-container .nav-tabs,
+#filmesTab {
+  border-bottom: none;
+}
+
+.rankings-tabs-container .nav-link,
+#filmesTab .nav-link {
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  color: var(--cor-texto-secundario);
+  font-weight: 600;
+  margin: 0 0.25rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.rankings-tabs-container .nav-link:not(.active):hover,
+#filmesTab .nav-link:not(.active):hover {
+  color: var(--cor-texto);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.rankings-tabs-container .nav-link.active,
+#filmesTab .nav-link.active {
+  background-color: var(--cor-acento-principal);
+  border-color: var(--cor-acento-principal);
+  box-shadow: 0 0 15px rgba(100, 116, 139, 0.4);
+  color: #ffffff;
+}
+
+.rankings-tabs-container .tab-content {
+  padding-top: 1.5rem;
+}
+
+
+/* ==========================================================================
+   6. MODIFICADORES DE TEMA
+   ========================================================================== */
+
+/* 6.1. TEMA ESCURO (Dark Mode) */
+body.dark-mode {
+  background-color: var(--cor-fundo-dark);
+  background-image: var(--cor-fundo-dark-gradiente);
+  color: var(--cor-texto-dark);
+  background-attachment: fixed;
+}
+
+body.dark-mode footer {
+  border-top-color: var(--cor-borda-dark);
+  background-color: rgba(17, 24, 39, 0.4);
+}
+body.dark-mode .footer-icon {
+  color: var(--cor-texto-secundario-dark);
+}
+body.dark-mode .footer-icon:hover {
+  color: #FFF;
+}
+
+body.dark-mode .navbar {
+  background-color: rgba(17, 24, 39, 0.6) !important;
+  border-bottom: 1px solid var(--cor-borda-dark);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.dark-mode .card {
+  background-color: var(--cor-card-dark);
+  border: 1px solid var(--cor-borda-dark);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .card-title,
+body.dark-mode .form-label {
+  color: var(--cor-texto-secundario-dark);
+}
+
+body.dark-mode .text-muted {
+  color: var(--cor-texto-secundario-dark) !important;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: rgba(17, 24, 39, 0.8);
+  border-color: var(--cor-borda-dark);
+  color: var(--cor-texto-dark);
+}
+
+body.dark-mode .form-control::placeholder {
+  color: var(--cor-texto-secundario-dark);
+  opacity: 0.7;
+}
+
+body.dark-mode .form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%<path fill='none' stroke='%23e2e8f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+}
+
+body.dark-mode .form-select option {
+  background-color: #1e1e1e;
+  color: var(--cor-texto-dark);
+}
+
+body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+body.dark-mode .tabela-filmes th.sortable:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .list-group-item {
+  color: var(--cor-texto-dark);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .rankings-tabs-container .nav-link,
+body.dark-mode #filmesTab .nav-link {
+  color: var(--cor-texto-secundario-dark);
+}
+
+body.dark-mode .rankings-tabs-container .nav-link:not(.active):hover,
+body.dark-mode #filmesTab .nav-link:not(.active):hover {
+  color: var(--cor-texto-dark);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 6.2. TEMA CLARO (Light Mode - Overrides Específicos) */
+body:not(.dark-mode) .tabela-filmes {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+body:not(.dark-mode) .table-dark {
+  --bs-table-bg: #ffffff;
+  --bs-table-color: #1a1a1a;
+  --bs-table-border-color: #dee2e6;
+  --bs-table-striped-bg: #f8f9fa;
+  --bs-table-hover-bg: #f1f7ff;
+}
+
+body:not(.dark-mode) .tabela-filmes thead {
+  background-color: #f1f3f5;
+  color: var(--cor-texto);
+}
+
+body:not(.dark-doc) .tabela-filmes th {
+  border-bottom: 2px solid #dee2e6;
+}
+
+body:not(.dark-mode) .tabela-filmes td {
+  border-top: 1px solid #f1f1f1;
+  color: #495057;
+}
+
+body:not(.dark-mode) .tabela-filmes .btn-info {
+  background-color: #0dcaf0;
+  border-color: #0dcaf0;
+  color: white;
+}
+
+body:not(.dark-mode) .tabela-filmes .btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
