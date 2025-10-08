@@ -63,4 +63,4 @@ Este projeto foi construído utilizando as seguintes tecnologias e bibliotecas:
 Feito com ❤️ por **Kaique Rangel**
 
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Kaiquerangel)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)]( www.linkedin.com/in/kaiquerangel)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/kaique-rangel/)
