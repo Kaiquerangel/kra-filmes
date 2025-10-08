@@ -311,20 +311,27 @@ document.addEventListener('DOMContentLoaded', function () {
     
         Swal.fire({
             title: 'Que tal assistir...',
-            icon: 'info',
+            iconHtml: '<i class="fas fa-film"></i>', // Ícone customizado
+            // Bloco HTML com o novo layout
             html: `
-                <div class="suggestion-content">
-                    <h2 class="suggestion-title">${filmeSugerido.titulo}</h2>
-                    <div class="suggestion-details">
+                <div class="suggestion-layout">
+                    
+                    <div class="suggestion-main-info">
+                        <h2 class="suggestion-title">${filmeSugerido.titulo}</h2>
                         <p><strong>Ano:</strong> ${filmeSugerido.ano || 'N/A'}</p>
-                        <p class="suggestion-note">
-                            <i class="fas fa-star" aria-hidden="true"></i> 
-                            ${filmeSugerido.nota ? filmeSugerido.nota.toFixed(1) : 'N/A'}
-                        </p>
+                        <p><strong>Direção:</strong> ${filmeSugerido.direcao?.join(', ') || 'N/A'}</p>
                     </div>
-                    <div class="suggestion-genres">
-                        ${filmeSugerido.genero?.map(g => `<span class="tag-pill">${g}</span>`).join('') || '<span class="text-muted">Nenhum gênero</span>'}
+
+                    <div class="suggestion-side-info">
+                        <div class="suggestion-note">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <span>${filmeSugerido.nota ? filmeSugerido.nota.toFixed(1) : 'N/A'}</span>
+                        </div>
+                        <div class="suggestion-genres">
+                            ${filmeSugerido.genero?.map(g => `<span class="tag-pill">${g}</span>`).join('') || '<span class="text-muted">Nenhum gênero</span>'}
+                        </div>
                     </div>
+
                 </div>
             `,
             showCancelButton: true,
