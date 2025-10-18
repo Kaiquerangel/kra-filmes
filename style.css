@@ -2,10 +2,10 @@
    [ 1 ] CONFIGURAÇÕES GLOBAIS E VARIÁVEIS
    ========================================================================== */
 
-/* C.1.1 - Import de Fontes */
+/* -------------------- Fontes -------------------- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* C.1.2 - Variáveis de Cor (Custom Properties) */
+/* -------------------- Variáveis de Cor -------------------- */
 :root {
   /* TEMA CLARO (PADRÃO) */
   --cor-fundo: #f4f7f6;
@@ -13,24 +13,24 @@
   --cor-card: #ffffff;
   --cor-borda: #dddddd;
   --cor-texto-secundario: #555555;
-  --cor-acento-principal: #64748b;
-  --cor-acento-secundario: #94a3b8;
+  --cor-acento-principal: #64748b; /* Cinza-azulado */
+  --cor-acento-secundario: #94a3b8; /* Cinza-azulado mais claro */
 
   /* TEMA ESCURO */
-  --cor-fundo-dark: #111827;
+  --cor-fundo-dark: #111827; /* Azul bem escuro */
   --cor-fundo-dark-gradiente: linear-gradient(180deg, #1f2937, #111827);
-  --cor-texto-dark: #e2e8f0;
+  --cor-texto-dark: #e2e8f0; /* Branco acinzentado */
   --cor-card-dark: rgba(31, 41, 55, 0.5); /* Efeito Glass */
   --cor-borda-dark: rgba(255, 255, 255, 0.1);
-  --cor-texto-secundario-dark: #94a3b8;
+  --cor-texto-secundario-dark: #94a3b8; /* Cinza azulado claro */
 }
 
-/* C.1.3 - Estilos Base */
+/* -------------------- Estilos Base -------------------- */
 body {
   font-family: 'Inter', sans-serif;
   background-color: var(--cor-fundo);
   color: var(--cor-texto);
-  padding-top: 70px; /* Espaço para o navbar fixo */
+  padding-top: 70px;
   scroll-behavior: smooth;
   transition: background-color 0.3s, color 0.3s;
 }
@@ -39,21 +39,29 @@ body {
 /* ==========================================================================
    [ 2 ] LAYOUT
    ========================================================================== */
-   
-/* L.1 - Navegação Principal (Navbar) */
+
+/* -------------------- Barra de Navegação -------------------- */
 .navbar {
   background-color: var(--cor-acento-principal);
+  transition: background-color 0.3s ease;
 }
-
 .navbar .navbar-brand,
 .navbar .nav-link {
   color: #ffffff;
 }
+.navbar .social-icon i {
+    font-size: 1.2rem; /* Tamanho ajustado */
+}
 
-/* L.2 - Seções Principais */
-/* Correção para rolagem de âncora com cabeçalho fixo */
+/* -------------------- Seções Principais -------------------- */
 section[id] {
-  scroll-margin-top: 80px;
+  scroll-margin-top: 80px; /* Ajuste para navbar fixa */
+}
+hr.hr-style {
+    border: none;
+    height: 1px;
+    background-color: rgba(0,0,0,0.1);
+    transition: background-color 0.3s;
 }
 
 
@@ -61,7 +69,7 @@ section[id] {
    [ 3 ] COMPONENTES
    ========================================================================== */
 
-/* C.1 - Cards */
+/* -------------------- Cards -------------------- */
 .card {
   background-color: var(--cor-card);
   border: 1px solid var(--cor-borda);
@@ -69,22 +77,20 @@ section[id] {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
-/* Efeito Glass específico para o Card */
-.glass-card {
-    /* Estilos padrão do card são aplicados, adicionamos o específico do dark mode abaixo */
-}
+.glass-card { /* Usado para aplicar efeito glass no dark mode */ }
 
 .card-title {
   color: var(--cor-texto-secundario);
   font-weight: 600;
+  transition: color 0.3s;
 }
-
 .card-title i {
   color: var(--cor-acento-principal);
   margin-right: 0.25rem;
+  transition: color 0.3s ease;
 }
 
-/* C.2 - Botões */
+/* -------------------- Botões -------------------- */
 .btn-gradient {
   background: linear-gradient(90deg, var(--cor-acento-principal), var(--cor-acento-secundario));
   border: none;
@@ -95,131 +101,76 @@ section[id] {
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
 }
-
 .btn-gradient:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6);
   filter: brightness(1.1);
 }
+.btn-outline-light {
+    transition: all 0.3s ease;
+}
 
-/* C.3 - Formulários */
+/* -------------------- Formulários -------------------- */
 .form-label {
   color: var(--cor-texto-secundario);
   font-weight: 500;
+  transition: color 0.3s;
 }
-
 .form-control,
 .form-select {
   background-color: #f8f9fa;
   border: 1px solid #ced4da;
   color: var(--cor-texto);
+  border-radius: 0.375rem;
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--cor-acento-principal);
+    box-shadow: 0 0 0 0.25rem rgba(100, 116, 139, 0.25);
 }
 
-/* C.4 - Campo de Tags (Gênero) */
+/* -------------------- Campo de Tags (Gênero) -------------------- */
 .tag-container {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.375rem 0.75rem;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    background-color: #f8f9fa;
-    cursor: text;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    padding: 0.375rem 0.75rem; border: 1px solid #ced4da; border-radius: 0.375rem;
+    background-color: #f8f9fa; cursor: text; transition: background-color 0.3s, border-color 0.3s;
 }
-
 .tag-container input {
-    flex-grow: 1;
-    border: none;
-    outline: none;
-    background-color: transparent;
-    padding: 0.25rem 0;
-    min-width: 150px;
+    flex-grow: 1; border: none; outline: none; background-color: transparent;
+    padding: 0.25rem 0; min-width: 150px; color: var(--cor-texto); transition: color 0.3s;
 }
-
 .tag-pill {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--cor-acento-principal);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+    display: inline-flex; align-items: center; background-color: var(--cor-acento-principal);
+    color: white; padding: 0.25rem 0.75rem; border-radius: 1rem;
+    font-size: 0.875rem; font-weight: 500; transition: background-color 0.3s;
 }
+.tag-remove-btn { background: none; border: none; color: white; font-size: 1.1rem; line-height: 1; margin-left: 0.5rem; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
+.tag-remove-btn:hover { opacity: 1; }
 
-.tag-remove-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.1rem;
-    line-height: 1;
-    margin-left: 0.5rem;
-    cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-
-.tag-remove-btn:hover {
-    opacity: 1;
-}
-
-/* C.5 - Tabela de Filmes */
-.tabela-filmes {
-  vertical-align: middle;
-  white-space: nowrap;
-  font-size: 0.9rem;
-}
-.tabela-filmes .col-titulo,
-.tabela-filmes .col-direcao,
-.tabela-filmes .col-atores,
-.tabela-filmes .col-genero {
-  white-space: normal;
-}
-.tabela-filmes .col-num { width: 50px; }
-.tabela-filmes .col-titulo { min-width: 250px; }
-.tabela-filmes .col-nota { width: 80px; }
-.tabela-filmes .col-ano { width: 80px; }
-.tabela-filmes .col-direcao { min-width: 200px; }
-.tabela-filmes .col-atores { min-width: 300px; }
-.tabela-filmes .col-genero { min-width: 200px; }
-.tabela-filmes .col-assistido { width: 100px; }
-.tabela-filmes .col-data { width: 140px; }
-.tabela-filmes .col-origem { width: 130px; }
+/* -------------------- Tabela de Filmes -------------------- */
+.tabela-filmes { vertical-align: middle; white-space: nowrap; font-size: 0.9rem; }
+.tabela-filmes .col-titulo, .tabela-filmes .col-direcao, .tabela-filmes .col-atores, .tabela-filmes .col-genero { white-space: normal; }
+.tabela-filmes .col-num { width: 50px; } .tabela-filmes .col-titulo { min-width: 250px; }
+.tabela-filmes .col-nota { width: 80px; } .tabela-filmes .col-ano { width: 80px; }
+.tabela-filmes .col-direcao { min-width: 200px; } .tabela-filmes .col-atores { min-width: 300px; }
+.tabela-filmes .col-genero { min-width: 200px; } .tabela-filmes .col-assistido { width: 100px; }
+.tabela-filmes .col-data { width: 140px; } .tabela-filmes .col-origem { width: 130px; }
 .tabela-filmes .col-acoes { width: 150px; text-align: right; }
 .tabela-filmes .action-buttons { display: flex; gap: 0.5rem; justify-content: flex-end; }
 .tabela-filmes th.sortable { cursor: pointer; user-select: none; }
-
-/* Funcionalidade de arrastar para rolar */
 .table-responsive { cursor: grab; user-select: none; }
-.table-responsive.active { cursor: grabbing; cursor: -webkit-grabbing; }
+.table-responsive.active { cursor: grabbing; -webkit-grabbing: grabbing; }
 
-/* C.6 - Ícones */
+/* -------------------- Ícones Sociais -------------------- */
 .social-icon i { font-size: 1.4rem; transition: color 0.2s ease-in-out, transform 0.2s ease-in-out; }
-.social-icon:hover i { color: var(--cor-texto-dark); transform: scale(1.1); }
+.social-icon:hover i { transform: scale(1.1); }
 
-/* C.7 - Abas (Tabs) */
+/* -------------------- Abas (Tabs) -------------------- */
 .nav-tabs { border-bottom: none; }
-.nav-link { 
-  background-color: transparent; 
-  border: 1px solid transparent; 
-  border-radius: .5rem; 
-  color: var(--cor-texto-secundario); /* Cor para tema claro por padrão */
-  font-weight: 600; 
-  margin: 0 .25rem; 
-  padding: .5rem 1rem; 
-  transition: all .3s ease; 
-}
-.nav-link:not(.active):hover {
-  color: var(--cor-texto);
-  background-color: rgba(0,0,0,.05);
-}
-.nav-link.active {
-  background-color: var(--cor-acento-principal);
-  border-color: var(--cor-acento-principal);
-  box-shadow: 0 0 15px rgba(100,116,139,.4);
-  color: #ffffff;
-}
+.nav-link { background-color: transparent; border: 1px solid transparent; border-radius: .5rem; color: var(--cor-texto-secundario); font-weight: 600; margin: 0 .25rem; padding: .5rem 1rem; transition: all .3s ease; }
+.nav-link:not(.active):hover { color: var(--cor-texto); background-color: rgba(0,0,0,.05); }
+.nav-link.active { background-color: var(--cor-acento-principal); border-color: var(--cor-acento-principal); box-shadow: 0 0 15px rgba(100,116,139,.4); color: #ffffff; }
 .tab-content { padding-top: 1.5rem; }
 
 
@@ -227,17 +178,18 @@ section[id] {
    [ 4 ] SEÇÕES DA PÁGINA
    ========================================================================== */
 
-/* S.1 - Seção Estatísticas */
-.stat-card { background-color: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.1); padding: .75rem; border-radius: .75rem; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-.stat-card-title { font-size: .7rem; font-weight: 600; text-transform: uppercase; color: var(--cor-texto-secundario-dark); margin-bottom: .25rem; }
-.stat-card-value { font-size: 1.75rem; font-weight: 700; color: #fff; line-height: 1.2; }
-.stat-card-value-text { font-size: 1rem; font-weight: 600; color: #fff; line-height: 1.3; }
-.ranking-count { background-color: #333; color: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; }
-.list-group-item { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; padding: .5rem .2rem; background-color: transparent; border-color: #eee; color: var(--cor-texto); }
-.list-group-item span { font-weight: 600; background-color: var(--cor-acento-principal); color: #fff; padding: .1rem .4rem; border-radius: 5px; font-size: .8rem; }
+/* -------------------- Seção Estatísticas -------------------- */
+.stat-card { padding: .75rem; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-radius: .75rem; transition: background-color 0.3s, border-color 0.3s; }
+.stat-card-title { font-size: .7rem; font-weight: 600; text-transform: uppercase; color: var(--cor-texto-secundario); margin-bottom: .25rem; transition: color 0.3s; }
+.stat-card-value { font-size: 1.75rem; font-weight: 700; color: var(--cor-texto); line-height: 1.2; transition: color 0.3s; }
+.stat-card-value-text { font-size: 1rem; font-weight: 600; color: var(--cor-texto); line-height: 1.3; transition: color 0.3s; }
+.ranking-count { background-color: var(--cor-acento-secundario); color: #fff; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; padding: 0; transition: background-color 0.3s; }
+.list-group-item { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; padding: .5rem .2rem; background-color: transparent; border: none; border-bottom: 1px solid var(--cor-borda); color: var(--cor-texto); transition: border-color 0.3s, color 0.3s; }
+.list-group-item:last-child { border-bottom: none; }
+.list-group-item span.ranking-count { margin-left: 0.5rem; }
 
-/* S.2 - Seção Gráficos */
-.ranking-title { color: var(--cor-acento-principal); font-weight: 600; margin-bottom: 1rem; text-align: center; }
+/* -------------------- Seção Gráficos -------------------- */
+.ranking-title { color: var(--cor-acento-principal); font-weight: 600; margin-bottom: 1rem; text-align: center; transition: color 0.3s; }
 canvas { max-height: 350px; }
 
 
@@ -245,31 +197,19 @@ canvas { max-height: 350px; }
    [ 5 ] MODIFICADORES DE TEMA
    ========================================================================== */
 
-/* M.1 - TEMA CLARO (Light Mode) - ESTILOS ORIGINAIS */
-body:not(.dark-mode) .table.table-dark {
-  --bs-table-bg: #ffffff;
-  --bs-table-color: var(--cor-texto);
-  --bs-table-border-color: #dee2e6;
-  --bs-table-striped-bg: #f8f9fa;
-  --bs-table-hover-bg: #f1f7ff;
+/* -------------------- TEMA CLARO (Light Mode) -------------------- */
+body:not(.dark-mode) .table.table-dark { /* Corrige tabela Bootstrap */
+  --bs-table-bg: #ffffff; --bs-table-color: var(--cor-texto); --bs-table-border-color: #dee2e6;
+  --bs-table-striped-bg: #f8f9fa; --bs-table-hover-bg: #f1f7ff;
 }
-body:not(.dark-mode) .tabela-filmes {
-  border: 1px solid #dee2e6;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-body:not(.dark-mode) .tabela-filmes thead {
-  background-color: #f1f3f5;
-}
-body:not(.dark-mode) .tabela-filmes td {
-  color: #495057;
-}
+body:not(.dark-mode) .tabela-filmes { border: 1px solid #dee2e6; border-radius: 0.5rem; overflow: hidden; }
+body:not(.dark-mode) .tabela-filmes thead { background-color: #f1f3f5; }
+body:not(.dark-mode) .tabela-filmes td { color: #495057; }
 body:not(.dark-mode) .tabela-filmes .btn-info { background-color: #0dcaf0; border-color: #0dcaf0; color: white; }
 body:not(.dark-mode) .tabela-filmes .btn-danger { background-color: #dc3545; border-color: #dc3545; color: white; }
 body:not(.dark-mode) .tabela-filmes th.sortable:hover { background-color: rgba(0, 0, 0, 0.05); }
 
-
-/* M.2 - TEMA ESCURO (Dark Mode) - ESTILOS ORIGINAIS */
+/* -------------------- TEMA ESCURO (Dark Mode) -------------------- */
 body.dark-mode {
   background-color: var(--cor-fundo-dark);
   background-image: var(--cor-fundo-dark-gradiente);
@@ -281,218 +221,83 @@ body.dark-mode .navbar {
   border-bottom: 1px solid var(--cor-borda-dark);
   backdrop-filter: blur(10px);
 }
-body.dark-mode .card.glass-card { /* Efeito Glass APLICADO AQUI */
+body.dark-mode .navbar .navbar-brand,
+body.dark-mode .navbar .nav-link { color: var(--cor-texto-dark) !important; }
+body.dark-mode .social-icon:hover i { color: var(--cor-acento-secundario); }
+body.dark-mode .card.glass-card { /* Efeito Glass */
   background-color: var(--cor-card-dark);
   border: 1px solid var(--cor-borda-dark);
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
-/* Cards normais (sem glass) no dark mode, se houver */
-body.dark-mode .card:not(.glass-card) {
-   background-color: #1f2937; /* Cor sólida, se precisar */
-   border: 1px solid var(--cor-borda-dark);
-}
-
+body.dark-mode .card:not(.glass-card) { background-color: #1f2937; border: 1px solid var(--cor-borda-dark); }
 body.dark-mode .card-title,
-body.dark-mode .form-label {
-  color: var(--cor-texto-secundario-dark);
-}
+body.dark-mode .form-label,
+body.dark-mode .ranking-title { color: var(--cor-texto-secundario-dark); }
+body.dark-mode .card-title i { color: var(--cor-acento-principal); }
 body.dark-mode .form-control,
 body.dark-mode .form-select,
-body.dark-mode .tag-container {
-  background-color: rgba(17, 24, 39, 0.8); /* Fundo dos inputs */
-  border-color: var(--cor-borda-dark);
-  color: var(--cor-texto-dark);
-}
-body.dark-mode .tag-container input {
-    color: var(--cor-texto-dark);
-}
-body.dark-mode .form-control::placeholder {
-  color: var(--cor-texto-secundario-dark);
-  opacity: 0.7;
-}
-body.dark-mode .form-select {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e2e8f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-}
-body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-}
-body.dark-mode .tabela-filmes th.sortable:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-body.dark-mode .list-group-item {
-  color: var(--cor-texto-dark);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-body.dark-mode .nav-link {
-  color: var(--cor-texto-dark);
-}
+body.dark-mode .tag-container { background-color: rgba(17, 24, 39, 0.8); border-color: var(--cor-borda-dark); color: var(--cor-texto-dark); }
+body.dark-mode .tag-container input { color: var(--cor-texto-dark); }
+body.dark-mode .form-control::placeholder { color: var(--cor-texto-secundario-dark); opacity: 0.7; }
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus { border-color: var(--cor-acento-principal); box-shadow: 0 0 0 0.25rem rgba(100, 116, 139, 0.5); }
+body.dark-mode .form-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e2e8f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e"); }
+body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+body.dark-mode .tabela-filmes th.sortable:hover { background-color: rgba(255, 255, 255, 0.05); }
+body.dark-mode .table { --bs-table-color: var(--cor-texto-dark); --bs-table-bg: transparent; --bs-table-border-color: var(--cor-borda-dark); --bs-table-striped-bg: rgba(255, 255, 255, 0.03); --bs-table-striped-color: var(--cor-texto-dark); --bs-table-hover-bg: rgba(255, 255, 255, 0.06); --bs-table-hover-color: var(--cor-texto-dark); }
+body.dark-mode .tabela-filmes { border: none; }
+body.dark-mode .tabela-filmes thead th { background-color: rgba(255, 255, 255, 0.05); border-bottom-width: 1px; }
+body.dark-mode .tabela-filmes .btn-info { background-color: #0dcaf0; border-color: #0dcaf0; color: #111; }
+body.dark-mode .tabela-filmes .btn-danger { background-color: #dc3545; border-color: #dc3545; color: white; }
+body.dark-mode .list-group-item { color: var(--cor-texto-dark); border-color: rgba(255, 255, 255, 0.1); }
+body.dark-mode .ranking-count { background-color: var(--cor-acento-principal); }
+body.dark-mode .nav-link { color: var(--cor-texto-dark); }
 body.dark-mode .nav-link:not(.active):hover { color: var(--cor-texto-dark); background-color: rgba(255,255,255,0.05); }
 body.dark-mode .text-muted { color: var(--cor-texto-secundario-dark) !important; }
+body.dark-mode .nav-link.active { background-color: var(--cor-fundo-dark); border-color: var(--cor-acento-principal); box-shadow: 0 0 15px rgba(100,116,139,.4); color: var(--cor-texto-dark); }
+body.dark-mode .stat-card { background-color: rgba(31, 41, 55, 0.3); border: 1px solid rgba(255,255,255,.1); }
+body.dark-mode .stat-card-title { color: var(--cor-texto-secundario-dark); }
+body.dark-mode .stat-card-value, body.dark-mode .stat-card-value-text { color: var(--cor-texto-dark); }
+body.dark-mode hr.hr-style { background-color: rgba(255,255,255,0.1); }
 
-body.dark-mode .nav-link.active {
-  background-color: var(--cor-fundo-dark);
-  border-color: var(--cor-acento-principal);
-  box-shadow: 0 0 15px rgba(100,116,139,.4);
-  color: var(--cor-texto-dark);
-}
 
 /* ==========================================================================
    [ 6 ] ESTILOS ESPECÍFICOS PARA SUGESTÃO DE FILME (SWEETALERT2)
    ========================================================================== */
-
-/* Estilos para o novo layout do modal de sugestão */
-.suggestion-layout {
-    display: flex;
-    flex-wrap: wrap; /* Permite quebrar em telas menores */
-    gap: 2rem; /* Espaço entre as colunas */
-    text-align: left; /* Alinha o texto à esquerda */
-    align-items: center;
-    padding: 1rem;
-}
-
-.suggestion-main-info {
-    flex: 2; /* Ocupa 2/3 do espaço */
-    min-width: 200px;
-}
-
-.suggestion-side-info {
-    flex: 1; /* Ocupa 1/3 do espaço */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    background-color: rgba(0, 0, 0, 0.2);
-    padding: 1rem;
-    border-radius: 0.75rem;
-}
-
-/* Ajustes finos nos elementos dentro do novo layout */
-.suggestion-layout .suggestion-title {
-    font-size: 2rem;
-    text-align: left;
-    margin-bottom: 0.75rem;
-    color: var(--cor-acento-principal); /* Usando a cor acento do tema */
-}
-
-.suggestion-layout .suggestion-details p {
-    justify-content: flex-start; /* Alinha os 'Ano' e 'Direção' à esquerda */
-    margin-bottom: 0.25rem;
-}
-
-.suggestion-layout .suggestion-note {
-    flex-direction: column;
-    gap: 0.5rem;
-    font-size: 1.1rem;
-    color: var(--cor-texto-secundario-dark);
-    display: flex;
-    align-items: center;
-}
-
-.suggestion-layout .suggestion-note .fas.fa-star {
-    margin-right: 0;
-    color: #FFD700;
-    font-size: 1.3em;
-}
-
-.suggestion-layout .suggestion-note span {
-    font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1;
-    color: #fff; /* Cor da nota */
-}
-
-.suggestion-layout .suggestion-genres {
-    margin-top: 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem;
-}
-.suggestion-swal-popup {
-    background-color: var(--cor-card-dark) !important; /* Reutiliza a cor do card */
-    border: 1px solid var(--cor-borda-dark) !important;
-    backdrop-filter: blur(12px) !important;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
-    color: var(--cor-texto-dark) !important;
-    border-radius: 1rem !important;
-}
-.suggestion-swal-popup .swal2-title {
-    color: var(--cor-texto-dark) !important;
-    font-size: 1.8rem !important;
-    margin-bottom: 1.5rem !important;
-}
+.suggestion-layout { display: flex; flex-wrap: wrap; gap: 2rem; text-align: left; align-items: center; padding: 1rem; }
+.suggestion-main-info { flex: 2; min-width: 200px; }
+.suggestion-side-info { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1rem; background-color: rgba(0, 0, 0, 0.2); padding: 1rem; border-radius: 0.75rem; }
+.suggestion-layout .suggestion-title { font-size: 2rem; text-align: left; margin-bottom: 0.75rem; color: var(--cor-acento-principal); }
+.suggestion-layout .suggestion-details p { justify-content: flex-start; margin-bottom: 0.25rem; }
+.suggestion-layout .suggestion-note { flex-direction: column; gap: 0.5rem; font-size: 1.1rem; color: var(--cor-texto-secundario-dark); display: flex; align-items: center; }
+.suggestion-layout .suggestion-note .fas.fa-star { margin-right: 0; color: #FFD700; font-size: 1.3em; }
+.suggestion-layout .suggestion-note span { font-size: 2.5rem; font-weight: 700; line-height: 1; color: #fff; }
+.suggestion-layout .suggestion-genres { margin-top: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+.suggestion-swal-popup { background-color: var(--cor-card-dark) !important; border: 1px solid var(--cor-borda-dark) !important; backdrop-filter: blur(12px) !important; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important; color: var(--cor-texto-dark) !important; border-radius: 1rem !important; }
+.suggestion-swal-popup .swal2-title { color: var(--cor-texto-dark) !important; font-size: 1.8rem !important; margin-bottom: 1.5rem !important; }
 
 /* ==========================================================================
    [ 7 ] ESTILOS ADICIONAIS SWEETALERT
    ========================================================================== */
-.suggestion-swal-popup .swal2-icon-content {
-  font-size: 3.5rem;
-  line-height: 1;
-}
-.suggestion-swal-popup .swal2-icon.swal2-html-container {
-  border-color: var(--cor-acento-principal) !important; /* Usa cor acento */
-  color: var(--cor-acento-principal) !important; /* Usa cor acento */
-}
-.suggestion-swal-popup .swal2-actions {
-    margin-top: 2rem;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-.suggestion-confirm-btn { /* Botão "Ótima Ideia" */
-    background: linear-gradient(90deg, #64748b, #94a3b8) !important; /* Reutiliza o gradiente */
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 0.75rem !important;
-    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
-    padding: 0.75rem 1.5rem !important;
-    order: 1;
-    margin: 0.5rem !important;
-}
-.suggestion-confirm-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6) !important;
-    filter: brightness(1.1) !important;
-}
-.suggestion-deny-btn { /* Botão "Marcar como Assistido" */
-    background-color: #dc3545 !important; /* Vermelho padrão */
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 0.75rem !important;
-    padding: 0.75rem 1.5rem !important;
-    order: 2;
-    margin: 0.5rem !important;
-}
-.suggestion-deny-btn:hover {
-    filter: brightness(1.1);
-}
-.suggestion-cancel-btn { /* Botão "Sugerir Outro" */
-    background-color: #6c757d !important; /* Cinza padrão */
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 0.75rem !important;
-    padding: 0.75rem 1.5rem !important;
-    order: 3;
-    margin: 0.5rem !important;
-}
-.suggestion-cancel-btn:hover {
-    filter: brightness(1.1);
-}
+.suggestion-swal-popup .swal2-icon-content { font-size: 3.5rem; line-height: 1; }
+.suggestion-swal-popup .swal2-icon.swal2-html-container { border-color: var(--cor-acento-principal) !important; color: var(--cor-acento-principal) !important; }
+.suggestion-swal-popup .swal2-actions { margin-top: 2rem; flex-wrap: wrap; justify-content: center; }
+.suggestion-confirm-btn { background: linear-gradient(90deg, #64748b, #94a3b8) !important; border: none !important; color: white !important; font-weight: 600 !important; border-radius: 0.75rem !important; box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important; padding: 0.75rem 1.5rem !important; order: 1; margin: 0.5rem !important; }
+.suggestion-confirm-btn:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6) !important; filter: brightness(1.1) !important; }
+.suggestion-deny-btn { background-color: #dc3545 !important; border: none !important; color: white !important; font-weight: 600 !important; border-radius: 0.75rem !important; padding: 0.75rem 1.5rem !important; order: 2; margin: 0.5rem !important; }
+.suggestion-deny-btn:hover { filter: brightness(1.1); }
+.suggestion-cancel-btn { background-color: #6c757d !important; border: none !important; color: white !important; font-weight: 600 !important; border-radius: 0.75rem !important; padding: 0.75rem 1.5rem !important; order: 3; margin: 0.5rem !important; }
+.suggestion-cancel-btn:hover { filter: brightness(1.1); }
 
 /* ==========================================================================
-   [ 8 ] ESTILOS ADICIONAIS SWEETALERT (Inputs - Adicionado para Alterar Senha)
+   [ 8 ] ESTILOS ADICIONAIS SWEETALERT (Inputs)
    ========================================================================== */
-
-/* Estilo para inputs do SweetAlert no modo escuro */
 body.dark-mode .swal2-input {
     background-color: rgba(17, 24, 39, 0.8) !important;
     border-color: var(--cor-borda-dark) !important;
     color: var(--cor-texto-dark) !important;
 }
-
 body.dark-mode .swal2-input:focus {
     border-color: var(--cor-acento-principal) !important;
     box-shadow: 0 0 0 0.25rem rgba(100, 116, 139, 0.5) !important;

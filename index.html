@@ -7,13 +7,10 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,7 +18,7 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
             <div class="container-fluid">
-                <a class="navbar-brand" href="#">
+                <a class="navbar-brand fw-bold" href="#">
                     <i class="fas fa-film me-2" aria-hidden="true"></i>
                     Meus Filmes
                 </a>
@@ -29,86 +26,70 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav mx-auto">
-                        <li class="nav-item">
-                            <a class="nav-link social-icon" href="https://github.com/Kaiquerangel" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-                                <i class="fab fa-github"></i>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link social-icon" href="www.linkedin.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
-                                <i class="fab fa-linkedin"></i>
-                            </a>
-                        </li>
+                    <ul class="navbar-nav me-auto d-none d-lg-flex">
+                        <li class="nav-item"><a class="nav-link social-icon" href="https://github.com/Kaiquerangel" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+                        <li class="nav-item"><a class="nav-link social-icon" href="#" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a></li>
+                    </ul>
+                    <ul class="navbar-nav mx-auto d-lg-none d-flex flex-row justify-content-center pt-2 pb-2">
+                        <li class="nav-item me-3"><a class="nav-link social-icon fs-4" href="https://github.com/Kaiquerangel" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+                        <li class="nav-item"><a class="nav-link social-icon fs-4" href="#" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a></li>
                     </ul>
 
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-                        <li class="nav-item app-nav" style="display: none;">
-                            <a class="nav-link" href="#cadastro-section"><i class="fas fa-plus-circle me-1" aria-hidden="true"></i> Cadastrar</a>
-                        </li>
-                        <li class="nav-item app-nav" style="display: none;">
-                            <a class="nav-link" href="#estatisticas-section"><i class="fas fa-chart-bar me-1" aria-hidden="true"></i> Estatísticas</a>
-                        </li>
-                        <li class="nav-item app-nav" style="display: none;">
-                            <a class="nav-link" href="#lista-section"><i class="fas fa-list me-1" aria-hidden="true"></i> Lista</a>
-                        </li>
-                        <li class="nav-item ms-lg-3">
-                            <button id="theme-toggle" class="btn btn-outline-light btn-sm" aria-label="Alternar tema claro/escuro">
-                                <i class="fas fa-moon" aria-hidden="true"></i>
-                            </button>
-                        </li>
-                        <li class="nav-item ms-lg-2" id="logout-container" style="display: none;">
-                            <button id="logout-btn" class="btn btn-danger btn-sm">
-                                <i class="fas fa-sign-out-alt me-1"></i>Sair
-                            </button>
-                        </li>
+                        <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#cadastro-section"><i class="fas fa-plus-circle me-1" aria-hidden="true"></i> Cadastrar</a></li>
+                        <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#estatisticas-section"><i class="fas fa-chart-bar me-1" aria-hidden="true"></i> Estatísticas</a></li>
+                        <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#lista-section"><i class="fas fa-list me-1" aria-hidden="true"></i> Lista</a></li>
+                        <li class="nav-item ms-lg-3"><button id="theme-toggle" class="btn btn-outline-light btn-sm" aria-label="Alternar tema claro/escuro"><i class="fas fa-moon" aria-hidden="true"></i></button></li>
+                        <li class="nav-item ms-lg-2" id="change-password-container" style="display: none;"><button id="change-password-btn" class="btn btn-outline-light btn-sm"><i class="fas fa-key me-1"></i>Alterar Senha</button></li>
+                        <li class="nav-item ms-lg-2" id="logout-container" style="display: none;"><button id="logout-btn" class="btn btn-danger btn-sm"><i class="fas fa-sign-out-alt me-1"></i>Sair</button></li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    
+
     <div class="container mt-5 pt-5" id="auth-container">
         <div class="row justify-content-center" style="padding-top: 5rem;">
             <div class="col-lg-5 col-md-7">
                 <div class="card glass-card" id="login-card">
                     <div class="card-body p-4 p-md-5">
-                        <h2 class="card-title mb-4 text-center">Login</h2>
+                        <h2 class="card-title mb-4 text-center fw-bold">Login</h2>
                         <form id="login-form" novalidate>
-                             <button type="submit" class="btn btn-gradient w-100 mt-3">Entrar</button>
-                                <p class="text-center mt-4 mb-0">
-                                    Não tem uma conta? <a href="#" id="show-register-link" class="fw-bold">Cadastre-se</a>
-                                </p>
-                                <p class="text-center mt-2">
-                                    <a href="#" id="forgot-password-link" class="small">Esqueceu sua senha?</a>
-                                </p>
+                            <div class="mb-3">
+                                <label for="login-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="login-email" required autocomplete="email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-password" class="form-label">Senha</label>
+                                <input type="password" class="form-control" id="login-password" required autocomplete="current-password">
+                            </div>
+                            <button type="submit" class="btn btn-gradient w-100 mt-3">Entrar</button>
+                            <p class="text-center mt-4 mb-0">Não tem uma conta? <a href="#" id="show-register-link" class="fw-bold text-decoration-none">Cadastre-se</a></p>
+                            <p class="text-center mt-2"><a href="#" id="forgot-password-link" class="small text-decoration-none">Esqueceu sua senha?</a></p>
                         </form>
                     </div>
                 </div>
-
                 <div class="card glass-card" id="register-card" style="display: none;">
                     <div class="card-body p-4 p-md-5">
-                        <h2 class="card-title mb-4 text-center">Cadastro</h2>
+                        <h2 class="card-title mb-4 text-center fw-bold">Cadastro</h2>
                         <form id="register-form" novalidate>
                             <div class="mb-3">
                                 <label for="register-email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="register-email" required>
+                                <input type="email" class="form-control" id="register-email" required autocomplete="email">
                             </div>
                             <div class="mb-3">
                                 <label for="register-password" class="form-label">Senha (mín. 6 caracteres)</label>
-                                <input type="password" class="form-control" id="register-password" minlength="6" required>
+                                <input type="password" class="form-control" id="register-password" minlength="6" required autocomplete="new-password">
                             </div>
                             <button type="submit" class="btn btn-gradient w-100 mt-3">Criar Conta</button>
-                            <p class="text-center mt-4 mb-0">
-                                Já tem uma conta? <a href="#" id="show-login-link" class="fw-bold">Faça o login</a>
-                            </p>
+                            <p class="text-center mt-4 mb-0">Já tem uma conta? <a href="#" id="show-login-link" class="fw-bold text-decoration-none">Faça o login</a></p>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <main class="container mt-5 pt-5" id="app-content" style="display: none;">
 
         <section id="cadastro-section" class="mb-5" aria-labelledby="cadastro-titulo">
@@ -129,8 +110,7 @@
                                 <div class="tag-container" id="genero-tag-container">
                                     <input type="text" id="genero-input" list="generos-sugeridos" placeholder="Adicionar gênero...">
                                 </div>
-                                <datalist id="generos-sugeridos">
-                                    </datalist>
+                                <datalist id="generos-sugeridos"></datalist>
                             </div>
                             <div class="col-md-6"><label for="origem" class="form-label">Origem</label><select class="form-select" id="origem" required><option selected disabled value="">Selecione...</option><option value="Nacional">Nacional</option><option value="Internacional">Internacional</option></select></div>
                         </div>
@@ -145,22 +125,19 @@
         </section>
 
         <section id="estatisticas-section" class="mb-5" aria-labelledby="estatisticas-titulo">
-            <div class="card glass-card">
+             <div class="card glass-card">
                 <div class="card-body">
                     <h2 id="estatisticas-titulo" class="card-title mb-4"><i class="fas fa-chart-bar me-2"></i> Estatísticas dos Filmes Assistidos</h2>
-                
                     <div class="row g-3 text-center border-bottom pb-4 mb-4">
                         <div class="col-6 col-lg-3"><div class="stat-card"><span class="stat-card-title">Total de Filmes (Filtro)</span><span class="stat-card-value" id="stat-total-filmes">0</span></div></div>
                         <div class="col-6 col-lg-3"><div class="stat-card"><span class="stat-card-title">Média das Notas</span><span class="stat-card-value" id="stat-media-notas">0.0</span></div></div>
                         <div class="col-6 col-lg-3"><div class="stat-card"><span class="stat-card-title">Filme com Maior Nota</span><span class="stat-card-value-text" id="stat-melhor-filme">-</span></div></div>
                         <div class="col-6 col-lg-3"><div class="stat-card"><span class="stat-card-title">Filme com Menor Nota</span><span class="stat-card-value-text" id="stat-pior-filme">-</span></div></div>
-                        
                         <div class="col-6 col-lg-3"><div class="stat-card"><span class="stat-card-title">Década Mais Popular</span><span class="stat-card-value-text" id="stat-decada-popular">-</span></div></div>
                         <div class="col-6 col-lg-3"><div class="stat-card"><span class="stat-card-title">Ator/Atriz Frequente</span><span class="stat-card-value-text" id="stat-ator-frequente">-</span></div></div>
                         <div class="col-6 col-lg-3"><div class="stat-card"><span class="stat-card-title">% Nacionais</span><span class="stat-card-value" id="stat-pct-nacionais">0%</span></div></div>
                         <div class="col-6 col-lg-3"><div class="stat-card"><span class="stat-card-title">% Internacionais</span><span class="stat-card-value" id="stat-pct-internacionais">0%</span></div></div>
                     </div>
-                
                     <div class="rankings-tabs-container mt-4">
                         <ul class="nav nav-tabs" id="rankingsTab" role="tablist">
                             <li class="nav-item" role="presentation"><button class="nav-link active" id="generos-tab" data-bs-toggle="tab" data-bs-target="#generos-pane" type="button" role="tab">Gêneros</button></li>
@@ -180,31 +157,22 @@
         </section>
 
         <section id="graficos-section" class="mb-5" aria-labelledby="graficos-titulo">
-            <div class="card glass-card">
+             <div class="card glass-card">
                 <div class="card-body">
                     <h2 id="graficos-titulo" class="card-title mb-4"><i class="fas fa-palette me-2" aria-hidden="true"></i> Análise Visual</h2>
                     <div class="row justify-content-center">
                         <div class="col-lg-6 col-md-6 mb-4"><h5 class="ranking-title">Distribuição de Gêneros</h5><canvas id="generosChart"></canvas></div>
                         <div class="col-lg-6 col-md-6 mb-4"><h5 class="ranking-title">Filmes por Ano</h5><canvas id="anosChart"></canvas></div>
-
-                        <div class="col-12"><hr class="my-4" style="border-color: rgba(255,255,255,0.1);"></div>
+                        <div class="col-12"><hr class="my-4 hr-style"></div>
                         <div class="col-12">
                             <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h5 class="ranking-title">Distribuição de Notas</h5>
-                                    <canvas id="notasChart"></canvas>
-                                </div>
+                                <div class="col-md-8"><h5 class="ranking-title">Distribuição de Notas</h5><canvas id="notasChart"></canvas></div>
                                 <div class="col-md-4">
-                                    <div class="stat-card mt-4 mt-md-0">
-                                        <span class="stat-card-title">Média Geral das Notas</span>
-                                        <span class="stat-card-value" id="stat-media-notas-grafico">0.0</span> 
-                                    </div>
+                                    <div class="stat-card mt-4 mt-md-0"><span class="stat-card-title">Média Geral das Notas</span><span class="stat-card-value" id="stat-media-notas-grafico">0.0</span></div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="col-12"><hr class="my-4" style="border-color: rgba(255,255,255,0.1);"></div>
-                        
+                        <div class="col-12"><hr class="my-4 hr-style"></div>
                         <div class="col-lg-4 col-md-6 mb-4"><h5 class="ranking-title">Origem dos Filmes</h5><canvas id="origemChart"></canvas></div>
                         <div class="col-lg-8 col-md-6 mb-4"><h5 class="ranking-title">Média de Notas por Ano de Lançamento</h5><canvas id="mediaNotasAnoChart"></canvas></div>
                         <div class="col-lg-6 mb-4"><h5 class="ranking-title">Top 5 Diretores</h5><canvas id="diretoresChart"></canvas></div>
@@ -218,23 +186,15 @@
             <div class="card glass-card">
                 <div class="card-body">
                     <h2 id="lista-titulo" class="card-title mb-4"><i class="fas fa-list me-2" aria-hidden="true"></i> Lista de Filmes</h2>
-                    
-                    <div class="d-flex justify-content-center mb-4">
-                        <button id="sugerir-filme-btn" class="btn btn-gradient px-4 py-2">
-                            <i class="fas fa-dice me-2"></i> Não sabe que filme assistir?
-                        </button>
-                    </div>
-
+                    <div class="d-flex justify-content-center mb-4"><button id="sugerir-filme-btn" class="btn btn-gradient px-4 py-2"><i class="fas fa-dice me-2"></i> Não sabe que filme assistir?</button></div>
                     <div class="d-flex justify-content-end mb-4">
                         <div class="btn-group" role="group" aria-label="Ações de Importar e Exportar">
-                            <button id="export-json-btn" class="btn btn-sm btn-outline-light"><i class="fas fa-file-code me-2"></i>Exportar para JSON</button>
-                            <button id="export-csv-btn" class="btn btn-sm btn-outline-light"><i class="fas fa-file-csv me-2"></i>Exportar para CSV</button>
-                            
+                            <button id="export-json-btn" class="btn btn-sm btn-outline-light"><i class="fas fa-file-code me-2"></i>Exportar JSON</button>
+                            <button id="export-csv-btn" class="btn btn-sm btn-outline-light"><i class="fas fa-file-csv me-2"></i>Exportar CSV</button>
                             <input type="file" id="import-file-input" accept=".json, .csv" style="display: none;">
                             <button id="import-btn" class="btn btn-sm btn-outline-light"><i class="fas fa-file-upload me-2"></i>Importar Arquivo</button>
                         </div>
                     </div>
-
                     <div class="row g-3 mb-4 align-items-end" id="filtros-container">
                         <div class="col-lg-4 col-md-12"><label for="filtro-busca" class="form-label">Buscar por Título</label><input type="text" id="filtro-busca" class="form-control" placeholder="Digite um título..."></div>
                         <div class="col-lg-2 col-md-6"><label for="filtro-genero" class="form-label">Buscar por Gênero</label><input type="text" id="filtro-genero" class="form-control" placeholder="Ex: Ação"></div>
@@ -245,71 +205,54 @@
                         <div class="col-lg-2 col-md-4"><label for="filtro-assistido" class="form-label">Status</label><select id="filtro-assistido" class="form-select"><option value="todos">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
                         <div class="col-lg-2 col-md-4"><button id="limpar-filtros" class="btn btn-outline-light w-100">Limpar</button></div>
                     </div>
-
                     <ul class="nav nav-tabs" id="filmesTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="todos-tab" data-bs-toggle="tab" data-bs-target="#todos-pane" type="button" role="tab">Todos os Filmes</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="assistidos-tab" data-bs-toggle="tab" data-bs-target="#assistidos-pane" type="button" role="tab">Assistidos</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="nao-assistidos-tab" data-bs-toggle="tab" data-bs-target="#nao-assistidos-pane" type="button" role="tab">Não Assistidos</button>
-                        </li>
+                        <li class="nav-item" role="presentation"><button class="nav-link active" id="todos-tab" data-bs-toggle="tab" data-bs-target="#todos-pane" type="button" role="tab">Todos os Filmes</button></li>
+                        <li class="nav-item" role="presentation"><button class="nav-link" id="assistidos-tab" data-bs-toggle="tab" data-bs-target="#assistidos-pane" type="button" role="tab">Assistidos</button></li>
+                        <li class="nav-item" role="presentation"><button class="nav-link" id="nao-assistidos-tab" data-bs-toggle="tab" data-bs-target="#nao-assistidos-pane" type="button" role="tab">Não Assistidos</button></li>
                     </ul>
                     <div class="tab-content" id="filmesTabContent">
-                        <div class="tab-pane fade show active" id="todos-pane" role="tabpanel">
-                            <div id="tabela-todos-container" class="table-responsive mt-3">
-                                <p class="text-center text-muted">Carregando filmes...</p>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="assistidos-pane" role="tabpanel">
-                            <div id="tabela-assistidos-container" class="table-responsive mt-3">
-                                <p class="text-center text-muted">Carregando filmes...</p>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="nao-assistidos-pane" role="tabpanel">
-                             <div id="tabela-nao-assistidos-container" class="table-responsive mt-3">
-                                <p class="text-center text-muted">Carregando filmes...</p>
-                            </div>
-                        </div>
+                        <div class="tab-pane fade show active" id="todos-pane" role="tabpanel"><div id="tabela-todos-container" class="table-responsive mt-3"><p class="text-center text-muted">Carregando filmes...</p></div></div>
+                        <div class="tab-pane fade" id="assistidos-pane" role="tabpanel"><div id="tabela-assistidos-container" class="table-responsive mt-3"><p class="text-center text-muted">Carregando filmes...</p></div></div>
+                        <div class="tab-pane fade" id="nao-assistidos-pane" role="tabpanel"><div id="tabela-nao-assistidos-container" class="table-responsive mt-3"><p class="text-center text-muted">Carregando filmes...</p></div></div>
                     </div>
-                    
                 </div>
             </div>
         </section>
-        
+
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script type="module">
+        // Importa apenas as funções necessárias
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-        // IMPORTAÇÃO DA AUTENTICAÇÃO
-        import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-        
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where, writeBatch } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+        // Configuração do Firebase (Substitua pelas suas chaves!)
         const firebaseConfig = {
-            // ATENÇÃO: É ALTAMENTE RECOMENDADO PROTEGER ESTAS CHAVES USANDO VARIÁVEIS DE AMBIENTE
-            // E REGRAS DE SEGURANÇA NO FIREBASE PARA EVITAR ABUSO.
-            apiKey: "AIzaSyBnd-aZz1JIIHsgaBUZRlM38xwz3BjKhyI",
-            authDomain: "meus-filmes-app.firebaseapp.com",
-            projectId: "meus-filmes-app",
-            storageBucket: "meus-filmes-app.appspot.com",
-            messagingSenderId: "857152940365",
-            appId: "1:857152940365:web:3b239a77ff87aded822f04"
+            apiKey: "AIzaSyBnd-aZz1JIIHsgaBUZRlM38xwz3BjKhyI", // Substitua!
+            authDomain: "meus-filmes-app.firebaseapp.com",     // Substitua!
+            projectId: "meus-filmes-app",                    // Substitua!
+            storageBucket: "meus-filmes-app.appspot.com",   // Substitua!
+            messagingSenderId: "857152940365",               // Substitua!
+            appId: "1:857152940365:web:3b239a77ff87aded822f04" // Substitua!
         };
-        
+
+        // Inicializa Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth(app); // Crie a instância do Auth
+        const auth = getAuth(app);
 
-        // Exponha 'app', 'db' e 'auth' para o script.js
-        window.db = { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where };
-        window.firebaseApp = { app, auth }; // Disponibiliza a autenticação
+        // Exporta as dependências para o escopo global (usado pelo script.js não-módulo)
+        window.firebaseDeps = {
+            db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where, writeBatch,
+            auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential
+        };
     </script>
     
     <script src="script.js"></script>
+
 </body>
 </html>
