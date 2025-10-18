@@ -412,37 +412,79 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const sugerirFilmeAleatorio = () => {
-        // (Seu código original, sem mudanças)
-        const filmesNaoAssistidos = filmes.filter(filme => !filme.assistido);
-        if (filmesNaoAssistidos.length === 0) {
-            Swal.fire({ icon: 'info', title: 'Tudo em dia!', text: 'Você já assistiu a todos os filmes da sua lista. Adicione novos filmes para receber sugestões.' });
-            return;
-        }
-        const indiceAleatorio = Math.floor(Math.random() * filmesNaoAssistidos.length);
-        const filmeSugerido = filmesNaoAssistidos[indiceAleatorio];
-        Swal.fire({
-            title: 'Que tal assistir...',
-            iconHtml: '<i class="fas fa-film"></i>',
-            html: `... (seu HTML do modal de sugestão) ...`,
-            // ... (resto da sua configuração do Swal) ...
-        }).then(async (result) => {
-            if (result.isDenied) {
-                try {
-                    const filmeRef = getUserFilmeDoc(filmeSugerido.id); // ATUALIZADO
-                    await updateDoc(filmeRef, {
-                        assistido: true,
-                        dataAssistido: new Date().toISOString().slice(0, 10)
-                    });
-                    showToast('Filme marcado como assistido!');
-                    carregarFilmes();
-                } catch (error) {
-                    console.error("Erro ao marcar como assistido:", error);
-                    Swal.fire('Erro!', 'Não foi possível atualizar o filme.', 'error');
-                }
+            const filmesNaoAssistidos = filmes.filter(filme => !filme.assistido);
+        
+            if (filmesNaoAssistidos.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Tudo em dia!',
+                    text: 'Você já assistiu a todos os filmes da sua lista. Adicione novos filmes para receber sugestões.'
+                });
+                return;
             }
-            // ... (resto da lógica do .then) ...
-        });
-    };
+        
+            const indiceAleatorio = Math.floor(Math.random() * filmesNaoAssistidos.length);
+            const filmeSugerido = filmesNaoAssistidos[indiceAleatorio];
+        
+            Swal.fire({
+                title: 'Que tal assistir...',
+                iconHtml: '<i class="fas fa-film"></i>', // Ícone customizado
+                // Bloco HTML com o layout correto
+                html: `
+                    <div class="suggestion-layout">
+                        <div class="suggestion-main-info">
+                            <h2 class="suggestion-title">${filmeSugerido.titulo}</h2>
+                            <p><strong>Ano:</strong> ${filmeSugerido.ano || 'N/A'}</p>
+                            <p><strong>Direção:</strong> ${filmeSugerido.direcao?.join(', ') || 'N/A'}</p>
+                        </div>
+                        <div class="suggestion-side-info">
+                            <div class="suggestion-note">
+                                <i class="fas fa-star" aria-hidden="true"></i>
+                                <span>${filmeSugerido.nota ? filmeSugerido.nota.toFixed(1) : 'N/A'}</span>
+                            </div>
+                            <div class="suggestion-genres">
+                                ${filmeSugerido.genero?.map(g => `<span class="tag-pill">${g}</span>`).join('') || '<span class="text-muted">Nenhum gênero</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `,
+                // Configuração correta dos botões
+                showCancelButton: true,
+                confirmButtonText: 'Ótima ideia!',
+                cancelButtonText: 'Sugerir outro',
+                showDenyButton: true, 
+                denyButtonText: '<i class="fas fa-check-circle me-1"></i> Marcar como assistido',
+                customClass: {
+                    container: 'suggestion-swal-container',
+                    popup: 'suggestion-swal-popup',
+                    confirmButton: 'suggestion-confirm-btn',
+                    cancelButton: 'suggestion-cancel-btn',
+                    denyButton: 'suggestion-deny-btn'
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    // O usuário gostou da ideia, não fazemos nada.
+                } else if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+                    sugerirFilmeAleatorio();
+                } else if (result.isDenied) {
+                    // Lógica de "marcar como assistido" COM A FUNÇÃO DE LOGIN
+                    try {
+                        const filmeRef = getUserFilmeDoc(filmeSugerido.id); // Correto, usa a função do usuário
+                        if (!filmeRef) return; // Checagem de segurança
+                        
+                        await updateDoc(filmeRef, {
+                            assistido: true,
+                            dataAssistido: new Date().toISOString().slice(0, 10)
+                        });
+                        showToast('Filme marcado como assistido!');
+                        carregarFilmes();
+                    } catch (error) {
+                        console.error("Erro ao marcar como assistido:", error);
+                        Swal.fire('Erro!', 'Não foi possível atualizar o filme.', 'error');
+                    }
+                }
+            });
+        };
 
     // --- FUNÇÕES DE RENDERIZAÇÃO, ESTATÍSTICAS E GRÁFICOS ---
 
