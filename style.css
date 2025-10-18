@@ -20,7 +20,7 @@
   --cor-fundo-dark: #111827;
   --cor-fundo-dark-gradiente: linear-gradient(180deg, #1f2937, #111827);
   --cor-texto-dark: #e2e8f0;
-  --cor-card-dark: rgba(31, 41, 55, 0.5);
+  --cor-card-dark: rgba(31, 41, 55, 0.5); /* Efeito Glass */
   --cor-borda-dark: rgba(255, 255, 255, 0.1);
   --cor-texto-secundario-dark: #94a3b8;
 }
@@ -42,12 +42,12 @@ body {
    
 /* L.1 - Navegação Principal (Navbar) */
 .navbar {
-  background-color: var(--cor-acento-principal) !important;
+  background-color: var(--cor-acento-principal);
 }
 
 .navbar .navbar-brand,
 .navbar .nav-link {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 /* L.2 - Seções Principais */
@@ -68,6 +68,10 @@ section[id] {
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+/* Efeito Glass específico para o Card */
+.glass-card {
+    /* Estilos padrão do card são aplicados, adicionamos o específico do dark mode abaixo */
 }
 
 .card-title {
@@ -241,7 +245,7 @@ canvas { max-height: 350px; }
    [ 5 ] MODIFICADORES DE TEMA
    ========================================================================== */
 
-/* M.1 - TEMA CLARO (Light Mode) */
+/* M.1 - TEMA CLARO (Light Mode) - ESTILOS ORIGINAIS */
 body:not(.dark-mode) .table.table-dark {
   --bs-table-bg: #ffffff;
   --bs-table-color: var(--cor-texto);
@@ -265,7 +269,7 @@ body:not(.dark-mode) .tabela-filmes .btn-danger { background-color: #dc3545; bor
 body:not(.dark-mode) .tabela-filmes th.sortable:hover { background-color: rgba(0, 0, 0, 0.05); }
 
 
-/* M.2 - TEMA ESCURO (Dark Mode) */
+/* M.2 - TEMA ESCURO (Dark Mode) - ESTILOS ORIGINAIS */
 body.dark-mode {
   background-color: var(--cor-fundo-dark);
   background-image: var(--cor-fundo-dark-gradiente);
@@ -273,16 +277,22 @@ body.dark-mode {
   background-attachment: fixed;
 }
 body.dark-mode .navbar {
-  background-color: rgba(17, 24, 39, 0.6) !important;
+  background-color: rgba(17, 24, 39, 0.6) !important; /* Navbar com blur */
   border-bottom: 1px solid var(--cor-borda-dark);
   backdrop-filter: blur(10px);
 }
-body.dark-mode .card {
+body.dark-mode .card.glass-card { /* Efeito Glass APLICADO AQUI */
   background-color: var(--cor-card-dark);
   border: 1px solid var(--cor-borda-dark);
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
+/* Cards normais (sem glass) no dark mode, se houver */
+body.dark-mode .card:not(.glass-card) {
+   background-color: #1f2937; /* Cor sólida, se precisar */
+   border: 1px solid var(--cor-borda-dark);
+}
+
 body.dark-mode .card-title,
 body.dark-mode .form-label {
   color: var(--cor-texto-secundario-dark);
@@ -290,7 +300,7 @@ body.dark-mode .form-label {
 body.dark-mode .form-control,
 body.dark-mode .form-select,
 body.dark-mode .tag-container {
-  background-color: rgba(17, 24, 39, 0.8);
+  background-color: rgba(17, 24, 39, 0.8); /* Fundo dos inputs */
   border-color: var(--cor-borda-dark);
   color: var(--cor-texto-dark);
 }
@@ -321,105 +331,15 @@ body.dark-mode .nav-link:not(.active):hover { color: var(--cor-texto-dark); back
 body.dark-mode .text-muted { color: var(--cor-texto-secundario-dark) !important; }
 
 body.dark-mode .nav-link.active {
-  background-color: var(--cor-fundo-dark); /* Fundo da aba ativa igual ao fundo da página */
-  border-color: var(--cor-acento-principal); /* A borda ainda destaca a aba */
-  box-shadow: 0 0 15px rgba(100,116,139,.4); /* Mantém o brilho suave */
-  color: var(--cor-texto-dark); /* Cor do texto principal do dark mode */
+  background-color: var(--cor-fundo-dark);
+  border-color: var(--cor-acento-principal);
+  box-shadow: 0 0 15px rgba(100,116,139,.4);
+  color: var(--cor-texto-dark);
 }
 
 /* ==========================================================================
    [ 6 ] ESTILOS ESPECÍFICOS PARA SUGESTÃO DE FILME (SWEETALERT2)
    ========================================================================== */
-
-.suggestion-swal-popup {
-    background-color: var(--cor-card-dark) !important; /* Usa a cor do card do tema escuro */
-    border: 1px solid var(--cor-borda-dark) !important;
-    backdrop-filter: blur(12px) !important;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
-    color: var(--cor-texto-dark) !important;
-    border-radius: 1rem !important;
-}
-
-.suggestion-swal-popup .swal2-title {
-    color: var(--cor-texto-dark) !important; /* Título principal do pop-up */
-    font-size: 1.8rem !important;
-    margin-bottom: 1.5rem !important;
-}
-
-.suggestion-swal-popup .swal2-icon {
-    border-color: var(--cor-acento-principal) !important;
-    color: var(--cor-acento-principal) !important;
-}
-
-/* Estilos dos Botões no SweetAlert2 */
-.suggestion-swal-popup .swal2-actions {
-    margin-top: 2rem; /* Mais espaço entre o conteúdo e os botões */
-    flex-wrap: wrap; /* Permite que os botões quebrem a linha em telas pequenas */
-    justify-content: center; /* Centraliza os botões */
-}
-
-.suggestion-confirm-btn { /* Ótima ideia! */
-    background: linear-gradient(90deg, #64748b, #94a3b8) !important; /* Reutiliza seu gradiente */
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 0.75rem !important;
-    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
-    padding: 0.75rem 1.5rem !important;
-    order: 1; /* Garante a ordem dos botões */
-    margin: 0.5rem !important; /* Espaçamento entre botões */
-}
-
-.suggestion-confirm-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6) !important;
-    filter: brightness(1.1) !important;
-}
-
-.suggestion-deny-btn { /* Marcar como assistido */
-    background-color: #dc3545 !important; /* Bootstrap red */
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 0.75rem !important;
-    padding: 0.75rem 1.5rem !important;
-    order: 2; /* Garante a ordem dos botões */
-    margin: 0.5rem !important;
-}
-
-.suggestion-deny-btn:hover {
-    filter: brightness(1.1);
-}
-
-.suggestion-cancel-btn { /* Sugerir outro */
-    background-color: #6c757d !important; /* Bootstrap secondary gray */
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 0.75rem !important;
-    padding: 0.75rem 1.5rem !important;
-    order: 3; /* Garante a ordem dos botões */
-    margin: 0.5rem !important;
-}
-
-.suggestion-cancel-btn:hover {
-    filter: brightness(1.1);
-}
-
-/* ==========================================================================
-   [ 7 ] ESTILOS ADICIONAIS SWEETALERT (NOVO)
-   ========================================================================== */
-
-/* Estilo para o ícone customizado de filme */
-.suggestion-swal-popup .swal2-icon-content {
-  font-size: 3.5rem; /* Ajusta o tamanho do ícone */
-  line-height: 1;
-}
-
-.suggestion-swal-popup .swal2-icon.swal2-html-container {
-  border-color: var(--cor-acento-principal) !important;
-  color: var(--cor-acento-principal) !important;
-}
 
 /* Estilos para o novo layout do modal de sugestão */
 .suggestion-layout {
@@ -452,6 +372,7 @@ body.dark-mode .nav-link.active {
     font-size: 2rem;
     text-align: left;
     margin-bottom: 0.75rem;
+    color: var(--cor-acento-principal); /* Usando a cor acento do tema */
 }
 
 .suggestion-layout .suggestion-details p {
@@ -478,7 +399,7 @@ body.dark-mode .nav-link.active {
     font-size: 2.5rem;
     font-weight: 700;
     line-height: 1;
-    color: #fff;
+    color: #fff; /* Cor da nota */
 }
 
 .suggestion-layout .suggestion-genres {
@@ -488,11 +409,84 @@ body.dark-mode .nav-link.active {
     justify-content: center;
     gap: 0.5rem;
 }
+.suggestion-swal-popup {
+    background-color: var(--cor-card-dark) !important; /* Reutiliza a cor do card */
+    border: 1px solid var(--cor-borda-dark) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
+    color: var(--cor-texto-dark) !important;
+    border-radius: 1rem !important;
+}
+.suggestion-swal-popup .swal2-title {
+    color: var(--cor-texto-dark) !important;
+    font-size: 1.8rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
 /* ==========================================================================
-   [ 8 ] ESTILOS ADICIONAIS SWEETALERT (Inputs)
+   [ 7 ] ESTILOS ADICIONAIS SWEETALERT
+   ========================================================================== */
+.suggestion-swal-popup .swal2-icon-content {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+.suggestion-swal-popup .swal2-icon.swal2-html-container {
+  border-color: var(--cor-acento-principal) !important; /* Usa cor acento */
+  color: var(--cor-acento-principal) !important; /* Usa cor acento */
+}
+.suggestion-swal-popup .swal2-actions {
+    margin-top: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.suggestion-confirm-btn { /* Botão "Ótima Ideia" */
+    background: linear-gradient(90deg, #64748b, #94a3b8) !important; /* Reutiliza o gradiente */
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
+    padding: 0.75rem 1.5rem !important;
+    order: 1;
+    margin: 0.5rem !important;
+}
+.suggestion-confirm-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6) !important;
+    filter: brightness(1.1) !important;
+}
+.suggestion-deny-btn { /* Botão "Marcar como Assistido" */
+    background-color: #dc3545 !important; /* Vermelho padrão */
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 0.75rem !important;
+    padding: 0.75rem 1.5rem !important;
+    order: 2;
+    margin: 0.5rem !important;
+}
+.suggestion-deny-btn:hover {
+    filter: brightness(1.1);
+}
+.suggestion-cancel-btn { /* Botão "Sugerir Outro" */
+    background-color: #6c757d !important; /* Cinza padrão */
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 0.75rem !important;
+    padding: 0.75rem 1.5rem !important;
+    order: 3;
+    margin: 0.5rem !important;
+}
+.suggestion-cancel-btn:hover {
+    filter: brightness(1.1);
+}
+
+/* ==========================================================================
+   [ 8 ] ESTILOS ADICIONAIS SWEETALERT (Inputs - Adicionado para Alterar Senha)
    ========================================================================== */
 
-/* NOVO: Estilo para inputs do SweetAlert no modo escuro */
+/* Estilo para inputs do SweetAlert no modo escuro */
 body.dark-mode .swal2-input {
     background-color: rgba(17, 24, 39, 0.8) !important;
     border-color: var(--cor-borda-dark) !important;
