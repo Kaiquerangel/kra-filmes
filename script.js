@@ -2,12 +2,23 @@
 document.addEventListener('DOMContentLoaded', async () => {
     
     // --- CONFIGURAÇÃO FIREBASE ---
-    const { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js");
+    // NOVAS FUNÇÕES IMPORTADAS: updatePassword, EmailAuthProvider, reauthenticateWithCredential
+    const { 
+        createUserWithEmailAndPassword, 
+        signInWithEmailAndPassword, 
+        onAuthStateChanged, 
+        signOut, 
+        sendPasswordResetEmail,
+        updatePassword,
+        EmailAuthProvider,
+        reauthenticateWithCredential
+    } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js");
+    
     const { auth } = window.firebaseApp;
     const { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where } = window.db;
 
     // --- ESTADO DA APLICAÇÃO ---
-    let currentUserId = null; // Armazena o ID do usuário logado
+    let currentUserId = null;
     let filmes = [];
     let filmeEmEdicao = null;
     let charts = {};
@@ -41,6 +52,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const showLoginLink = document.getElementById('show-login-link');
     const logoutContainer = document.getElementById('logout-container');
     const logoutBtn = document.getElementById('logout-btn');
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    
+    // NOVOS ELEMENTOS
+    const changePasswordContainer = document.getElementById('change-password-container');
+    const changePasswordBtn = document.getElementById('change-password-btn');
 
     // Elementos do Formulário de Filme
     const formElements = {
@@ -79,9 +95,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const password = document.getElementById('login-password').value;
         
         signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Sucesso, o onAuthStateChanged vai lidar com a UI
-            })
             .catch((error) => {
                 console.error("Erro no login:", error.message);
                 Swal.fire({ icon: 'error', title: 'Erro no Login', text: 'Email ou senha inválidos. Por favor, tente novamente.' });
@@ -99,9 +112,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Sucesso, o onAuthStateChanged vai lidar com a UI
-            })
             .catch((error) => {
                 console.error("Erro no cadastro:", error.message);
                 if (error.code === 'auth/email-already-in-use') {
@@ -117,45 +127,141 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("Erro no logout:", error);
         });
     };
+    
+    const handleForgotPassword = (e) => {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Redefinir Senha',
+            text: 'Digite seu email e enviaremos um link para você criar uma nova senha.',
+            input: 'email',
+            inputPlaceholder: 'seu.email@exemplo.com',
+            inputAttributes: { autocapitalize: 'off', autocorrect: 'off' },
+            showCancelButton: true,
+            confirmButtonText: 'Enviar link',
+            cancelButtonText: 'Cancelar',
+            showLoaderOnConfirm: true,
+            preConfirm: (email) => {
+                return sendPasswordResetEmail(auth, email)
+                    .then(() => { return email; })
+                    .catch((error) => {
+                        console.error(error);
+                        Swal.showValidationMessage(`Falha ao enviar: Este email é inválido ou não está cadastrado.`);
+                    });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Link Enviado!',
+                    text: `Um email foi enviado para ${result.value}. Verifique sua caixa de entrada (e a pasta de spam).`
+                });
+            }
+        });
+    };
+    
+    // ----- NOVA FUNÇÃO: ALTERAR SENHA -----
+    const handleChangePassword = () => {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return; // Checagem de segurança
+
+        Swal.fire({
+            title: 'Alterar Senha',
+            html:
+                '<input type="password" id="swal-current-password" class="swal2-input" placeholder="Senha Atual" autocomplete="current-password">' +
+                '<input type="password" id="swal-new-password" class="swal2-input" placeholder="Nova Senha (mín. 6 caracteres)" autocomplete="new-password">' +
+                '<input type="password" id="swal-confirm-password" class="swal2-input" placeholder="Confirme a Nova Senha" autocomplete="new-password">',
+            confirmButtonText: 'Salvar Alterações',
+            cancelButtonText: 'Cancelar',
+            showCancelButton: true,
+            focusConfirm: false,
+            preConfirm: () => {
+                const currentPassword = document.getElementById('swal-current-password').value;
+                const newPassword = document.getElementById('swal-new-password').value;
+                const confirmPassword = document.getElementById('swal-confirm-password').value;
+
+                // Validações
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    Swal.showValidationMessage('Todos os campos são obrigatórios.');
+                    return false;
+                }
+                if (newPassword.length < 6) {
+                    Swal.showValidationMessage('A nova senha deve ter pelo menos 6 caracteres.');
+                    return false;
+                }
+                if (newPassword !== confirmPassword) {
+                    Swal.showValidationMessage('As novas senhas não coincidem.');
+                    return false;
+                }
+
+                Swal.showLoading(); // Mostra o loader
+                
+                // 1. Criar a credencial da senha atual
+                const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+                
+                // 2. Re-autenticar o usuário
+                return reauthenticateWithCredential(currentUser, credential)
+                    .then(() => {
+                        // 3. Se a re-autenticação for OK, atualizar a senha
+                        return updatePassword(currentUser, newPassword);
+                    })
+                    .then(() => {
+                        // 4. Sucesso final
+                        return { success: true };
+                    })
+                    .catch((error) => {
+                        // 5. Tratar erros
+                        console.error("Erro ao alterar senha:", error);
+                        let errorMsg = 'Ocorreu um erro inesperado.';
+                        if (error.code === 'auth/wrong-password') {
+                            errorMsg = 'A senha atual está incorreta.';
+                        } else if (error.code === 'auth/too-many-requests') {
+                            errorMsg = 'Muitas tentativas. Tente novamente mais tarde.';
+                        }
+                        Swal.showValidationMessage(errorMsg);
+                        return { success: false };
+                    });
+            }
+        }).then((result) => {
+            if (result.isConfirmed && result.value.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso!',
+                    text: 'Sua senha foi alterada.'
+                });
+            }
+        });
+    };
+    // ----- FIM DA NOVA FUNÇÃO -----
 
     // --- "PORTEIRO" DA APLICAÇÃO (Auth State Change) ---
-    // Esta é a função central que controla o que é exibido
     onAuthStateChanged(auth, (user) => {
         if (user) {
             // --- USUÁRIO ESTÁ LOGADO ---
-            currentUserId = user.uid; // Define o ID do usuário globalmente
-
-            // Mostra o conteúdo do app e esconde o login
+            currentUserId = user.uid; 
             appContent.style.display = 'block';
             logoutContainer.style.display = 'block';
+            changePasswordContainer.style.display = 'block'; // MOSTRA O BOTÃO DE ALTERAR SENHA
             authContainer.style.display = 'none';
-            appNavLinks.forEach(link => link.style.display = 'block'); // Mostra links do app na navbar
-
-            // Carrega os filmes DESTE usuário
+            appNavLinks.forEach(link => link.style.display = 'block'); 
             carregarFilmes();
 
         } else {
             // --- USUÁRIO ESTÁ DESLOGADO ---
             currentUserId = null;
-            filmes = []; // Limpa os dados do usuário anterior
-
-            // Mostra o login e esconde o conteúdo do app
+            filmes = []; 
             appContent.style.display = 'none';
             logoutContainer.style.display = 'none';
+            changePasswordContainer.style.display = 'none'; // ESCONDE O BOTÃO DE ALTERAR SENHA
             authContainer.style.display = 'block';
-            appNavLinks.forEach(link => link.style.display = 'none'); // Esconde links do app na navbar
-
-            // Garante que o formulário de login seja o padrão
+            appNavLinks.forEach(link => link.style.display = 'none'); 
             loginCard.style.display = 'block';
             registerCard.style.display = 'none';
-            
-            // Limpa a UI (tabelas, gráficos, etc.)
             atualizarUI(); 
         }
     });
 
-    // --- FUNÇÕES AUXILIARES (showToast, parseCSV, etc.) ---
-    // (Seu código original, sem mudanças)
+    // --- FUNÇÕES AUXILIARES ---
     const showToast = (title) => {
         const Toast = Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
@@ -186,7 +292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const walk = (x - startX) * 2; slider.scrollLeft = scrollLeft - walk; });
     };
     
-    // --- FUNÇÕES DE TAGS (Seu código original, sem mudanças) ---
+    // --- FUNÇÕES DE TAGS ---
     function renderizarTags() {
         generoTagContainer.querySelectorAll('.tag-pill').forEach(tagEl => tagEl.remove());
         generosSelecionadosAtualmente.slice().reverse().forEach(label => {
@@ -229,7 +335,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- LÓGICA PRINCIPAL (Atualizar UI, Filtros) ---
-    // (Seu código original, sem mudanças)
     const atualizarUI = (listaDeFilmes = filmes) => {
         const filmesFiltrados = aplicarFiltrosEordenacao(listaDeFilmes);
         renderizarTabela(filmesFiltrados, 'tabela-todos-container');
@@ -275,13 +380,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- FUNÇÕES CRUD (ATUALIZADAS PARA USAR currentUserId) ---
     
-    // Constrói a referência da coleção do usuário
     const getUserFilmesCollection = () => {
         if (!currentUserId) return null;
         return collection(db, "users", currentUserId, "filmes");
     };
     
-    // Constrói a referência de um documento de filme do usuário
     const getUserFilmeDoc = (id) => {
          if (!currentUserId) return null;
          return doc(db, "users", currentUserId, "filmes", id);
@@ -289,7 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const carregarFilmes = async () => {
         const colRef = getUserFilmesCollection();
-        if (!colRef) return; // Sai se o usuário não estiver logado
+        if (!colRef) return; 
 
         try {
             const q = query(colRef, orderBy("cadastradoEm", "asc"));
@@ -306,7 +409,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const salvarFilme = async (event) => {
         event.preventDefault();
         const colRef = getUserFilmesCollection();
-        if (!colRef) return; // Sai se o usuário não estiver logado
+        if (!colRef) return; 
 
         const tituloValue = formElements.titulo.value.trim();
         if (!tituloValue) {
@@ -314,7 +417,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return formElements.titulo.focus();
         }
         
-        // Verifica duplicidade apenas para filmes novos
         if (!filmeEmEdicao) {
             try {
                 const q = query(colRef, where("titulo", "==", tituloValue));
@@ -412,89 +514,78 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const sugerirFilmeAleatorio = () => {
-            const filmesNaoAssistidos = filmes.filter(filme => !filme.assistido);
-        
-            if (filmesNaoAssistidos.length === 0) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Tudo em dia!',
-                    text: 'Você já assistiu a todos os filmes da sua lista. Adicione novos filmes para receber sugestões.'
-                });
-                return;
-            }
-        
-            const indiceAleatorio = Math.floor(Math.random() * filmesNaoAssistidos.length);
-            const filmeSugerido = filmesNaoAssistidos[indiceAleatorio];
-        
+        const filmesNaoAssistidos = filmes.filter(filme => !filme.assistido);
+    
+        if (filmesNaoAssistidos.length === 0) {
             Swal.fire({
-                title: 'Que tal assistir...',
-                iconHtml: '<i class="fas fa-film"></i>', // Ícone customizado
-                // Bloco HTML com o layout correto
-                html: `
-                    <div class="suggestion-layout">
-                        <div class="suggestion-main-info">
-                            <h2 class="suggestion-title">${filmeSugerido.titulo}</h2>
-                            <p><strong>Ano:</strong> ${filmeSugerido.ano || 'N/A'}</p>
-                            <p><strong>Direção:</strong> ${filmeSugerido.direcao?.join(', ') || 'N/A'}</p>
+                icon: 'info',
+                title: 'Tudo em dia!',
+                text: 'Você já assistiu a todos os filmes da sua lista. Adicione novos filmes para receber sugestões.'
+            });
+            return;
+        }
+    
+        const indiceAleatorio = Math.floor(Math.random() * filmesNaoAssistidos.length);
+        const filmeSugerido = filmesNaoAssistidos[indiceAleatorio];
+    
+        Swal.fire({
+            title: 'Que tal assistir...',
+            iconHtml: '<i class="fas fa-film"></i>',
+            html: `
+                <div class="suggestion-layout">
+                    <div class="suggestion-main-info">
+                        <h2 class="suggestion-title">${filmeSugerido.titulo}</h2>
+                        <p><strong>Ano:</strong> ${filmeSugerido.ano || 'N/A'}</p>
+                        <p><strong>Direção:</strong> ${filmeSugerido.direcao?.join(', ') || 'N/A'}</p>
+                    </div>
+                    <div class="suggestion-side-info">
+                        <div class="suggestion-note">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <span>${filmeSugerido.nota ? filmeSugerido.nota.toFixed(1) : 'N/A'}</span>
                         </div>
-                        <div class="suggestion-side-info">
-                            <div class="suggestion-note">
-                                <i class="fas fa-star" aria-hidden="true"></i>
-                                <span>${filmeSugerido.nota ? filmeSugerido.nota.toFixed(1) : 'N/A'}</span>
-                            </div>
-                            <div class="suggestion-genres">
-                                ${filmeSugerido.genero?.map(g => `<span class="tag-pill">${g}</span>`).join('') || '<span class="text-muted">Nenhum gênero</span>'}
-                            </div>
+                        <div class="suggestion-genres">
+                            ${filmeSugerido.genero?.map(g => `<span class="tag-pill">${g}</span>`).join('') || '<span class="text-muted">Nenhum gênero</span>'}
                         </div>
                     </div>
-                `,
-                // Configuração correta dos botões
-                showCancelButton: true,
-                confirmButtonText: 'Ótima ideia!',
-                cancelButtonText: 'Sugerir outro',
-                showDenyButton: true, 
-                denyButtonText: '<i class="fas fa-check-circle me-1"></i> Marcar como assistido',
-                customClass: {
-                    container: 'suggestion-swal-container',
-                    popup: 'suggestion-swal-popup',
-                    confirmButton: 'suggestion-confirm-btn',
-                    cancelButton: 'suggestion-cancel-btn',
-                    denyButton: 'suggestion-deny-btn'
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Ótima ideia!',
+            cancelButtonText: 'Sugerir outro',
+            showDenyButton: true, 
+            denyButtonText: '<i class="fas fa-check-circle me-1"></i> Marcar como assistido',
+            customClass: {
+                container: 'suggestion-swal-container',
+                popup: 'suggestion-swal-popup',
+                confirmButton: 'suggestion-confirm-btn',
+                cancelButton: 'suggestion-cancel-btn',
+                denyButton: 'suggestion-deny-btn'
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                // Não faz nada
+            } else if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+                sugerirFilmeAleatorio();
+            } else if (result.isDenied) {
+                try {
+                    const filmeRef = getUserFilmeDoc(filmeSugerido.id);
+                    if (!filmeRef) return;
+                    
+                    await updateDoc(filmeRef, {
+                        assistido: true,
+                        dataAssistido: new Date().toISOString().slice(0, 10)
+                    });
+                    showToast('Filme marcado como assistido!');
+                    carregarFilmes();
+                } catch (error) {
+                    console.error("Erro ao marcar como assistido:", error);
+                    Swal.fire('Erro!', 'Não foi possível atualizar o filme.', 'error');
                 }
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    // O usuário gostou da ideia, não fazemos nada.
-                } else if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
-                    sugerirFilmeAleatorio();
-                } else if (result.isDenied) {
-                    // Lógica de "marcar como assistido" COM A FUNÇÃO DE LOGIN
-                    try {
-                        const filmeRef = getUserFilmeDoc(filmeSugerido.id); // Correto, usa a função do usuário
-                        if (!filmeRef) return; // Checagem de segurança
-                        
-                        await updateDoc(filmeRef, {
-                            assistido: true,
-                            dataAssistido: new Date().toISOString().slice(0, 10)
-                        });
-                        showToast('Filme marcado como assistido!');
-                        carregarFilmes();
-                    } catch (error) {
-                        console.error("Erro ao marcar como assistido:", error);
-                        Swal.fire('Erro!', 'Não foi possível atualizar o filme.', 'error');
-                    }
-                }
-            });
-        };
+            }
+        });
+    };
 
     // --- FUNÇÕES DE RENDERIZAÇÃO, ESTATÍSTICAS E GRÁFICOS ---
-
-    
-    // ... renderizarTabela() ...
-    // ... criarRanking() ...
-    // ... renderizarRanking() ...
-    // ... atualizarEstatisticas() ...
-    // ... renderizarGraficos() e todas as sub-funções de gráfico ...
-    
     
     function renderizarTabela(listaDeFilmes, containerId) {
         const container = document.getElementById(containerId);
@@ -543,7 +634,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function atualizarEstatisticas(listaDeFilmes) {
         const statTitleH2 = document.querySelector('#estatisticas-section h2');
-        const totalGlobalAssistidos = filmes.filter(f => f.assistido).length; // Nota: Isso agora é o total do usuário
+        const totalGlobalAssistidos = filmes.filter(f => f.assistido).length;
         const totalFiltrado = listaDeFilmes.length;
         const isFiltered = totalGlobalAssistidos !== totalFiltrado || (filterElements.busca.value || filterElements.genero.value || filterElements.diretor.value || filterElements.ator.value || filterElements.ano.value !== 'todos' || filterElements.origem.value !== 'todos' || filterElements.assistido.value !== 'todos');
         
@@ -677,7 +768,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- FUNÇÕES DE IMPORTAÇÃO/EXPORTAÇÃO (Atualizadas) ---
+    // --- FUNÇÕES DE IMPORTAÇÃO/EXPORTAÇÃO ---
     const obterDataFormatada = () => new Date().toISOString().slice(0, 10);
     const baixarArquivo = (conteudo, nomeArquivo, tipoConteudo) => { const a = document.createElement("a"); const arquivo = new Blob([conteudo], { type: tipoConteudo }); a.href = URL.createObjectURL(arquivo); a.download = nomeArquivo; a.click(); URL.revokeObjectURL(a.href); };
     const exportarParaJSON = () => { const filmesFiltrados = aplicarFiltrosEordenacao(filmes); if (filmesFiltrados.length === 0) return Swal.fire('Atenção', 'Não há filmes na lista para exportar.', 'warning'); baixarArquivo(JSON.stringify(filmesFiltrados, null, 2), `meus_filmes_${obterDataFormatada()}.json`, 'application/json'); showToast('Lista exportada para JSON!'); };
@@ -716,7 +807,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filmesParaAdicionar = filmesImportados.filter(f => f.titulo && !titulosExistentes.has(f.titulo.toLowerCase())); 
         const numNovos = filmesParaAdicionar.length, numDuplicados = filmesImportados.length - numNovos; 
         
-        if (numNovos === 0) return Swal.fire('Importação Concluída', `Nenhum filme novo para adicionar. ${numDuplicados} filmes duplicados foram ignorados.`, 'info'); 
+        if (numNovos === 0) return Swal.fire('Importação Concluída', `Nenhum filme novo para adicionar. ${numDuplicados} duplicados foram ignorados.`, 'info'); 
         
         const { isConfirmed } = await Swal.fire({ title: 'Confirmar Importação', icon: 'question', showCancelButton: true, html: `Encontrados <b>${numNovos}</b> novos filmes para adicionar.<br>${numDuplicados} duplicados foram ignorados.<br>Deseja continuar?`, confirmButtonText: 'Sim, importar!', cancelButtonText: 'Cancelar' }); 
         
@@ -726,7 +817,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const batch = writeBatch(db); 
                 
                 filmesParaAdicionar.forEach(filme => { 
-                    const docRef = doc(colRef); // Cria novo doc na coleção do usuário
+                    const docRef = doc(colRef);
                     batch.set(docRef, { ...filme, cadastradoEm: serverTimestamp(), assistido: filme.assistido || false, nota: filme.nota || 0 }); 
                 }); 
                 
@@ -743,7 +834,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         loginForm.addEventListener('submit', handleLogin);
         registerForm.addEventListener('submit', handleRegister);
         logoutBtn.addEventListener('click', handleLogout);
-
+        forgotPasswordLink.addEventListener('click', handleForgotPassword);
+        changePasswordBtn.addEventListener('click', handleChangePassword); // NOVO LISTENER
+        
         showRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
             loginCard.style.display = 'none';
@@ -755,7 +848,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             registerCard.style.display = 'none';
         });
 
-        // --- LISTENERS DO TEMA (Seu código original) ---
+        // --- LISTENERS DO TEMA ---
         const temaSalvo = localStorage.getItem('theme') || 'dark';
         body.classList.toggle('dark-mode', temaSalvo === 'dark');
         themeToggleBtn.innerHTML = temaSalvo === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
@@ -766,7 +859,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             atualizarUI();
         });
 
-        // --- LISTENERS DO APP (Seu código original) ---
+        // --- LISTENERS DO APP ---
         document.getElementById('export-json-btn').addEventListener('click', exportarParaJSON);
         document.getElementById('export-csv-btn').addEventListener('click', exportarParaCSV);
         document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file-input').click());
@@ -817,5 +910,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- INICIALIZAÇÃO ---
     popularSugestoesDeGenero();
     setupEventListeners();
-    // A função onAuthStateChanged vai cuidar de chamar carregarFilmes() no momento certo.
+    // onAuthStateChanged chamar carregarFilmes()
 });
