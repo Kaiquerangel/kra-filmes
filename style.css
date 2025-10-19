@@ -1,117 +1,87 @@
 /* ==========================================================================
    [ 1 ] CONFIGURAÇÕES GLOBAIS E VARIÁVEIS
    ========================================================================== */
-
-/* C.1.1 - Import de Fontes */
+/* ... (todo o seu CSS existente das seções 1-8 está aqui, intacto) ... */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* C.1.2 - Variáveis de Cor (Custom Properties) */
 :root {
-  /* TEMA CLARO (PADRÃO) */
-  --cor-fundo: #f4f7f6;
-  --cor-texto: #1a1a1a;
-  --cor-card: #ffffff;
-  --cor-borda: #dddddd;
-  --cor-texto-secundario: #555555;
-  --cor-acento-principal: #64748b;
-  --cor-acento-secundario: #94a3b8;
-
-  /* TEMA ESCURO */
-  --cor-fundo-dark: #111827;
-  --cor-fundo-dark-gradiente: linear-gradient(180deg, #1f2937, #111827);
-  --cor-texto-dark: #e2e8f0;
-  --cor-card-dark: rgba(31, 41, 55, 0.5);
-  --cor-borda-dark: rgba(255, 255, 255, 0.1);
-  --cor-texto-secundario-dark: #94a3b8;
+ --cor-fundo: #f4f7f6;
+ --cor-texto: #1a1a1a;
+ --cor-card: #ffffff;
+ --cor-borda: #dddddd;
+ --cor-texto-secundario: #555555;
+ --cor-acento-principal: #64748b;
+ --cor-acento-secundario: #94a3b8;
+ --cor-fundo-dark: #111827;
+ --cor-fundo-dark-gradiente: linear-gradient(180deg, #1f2937, #111827);
+ --cor-texto-dark: #e2e8f0;
+ --cor-card-dark: rgba(31, 41, 55, 0.5);
+ --cor-borda-dark: rgba(255, 255, 255, 0.1);
+ --cor-texto-secundario-dark: #94a3b8;
 }
-
-/* C.1.3 - Estilos Base */
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--cor-fundo);
-  color: var(--cor-texto);
-  padding-top: 70px; /* Espaço para o navbar fixo */
-  scroll-behavior: smooth;
-  transition: background-color 0.3s, color 0.3s;
+ font-family: 'Inter', sans-serif;
+ background-color: var(--cor-fundo);
+ color: var(--cor-texto);
+ padding-top: 70px; 
+ scroll-behavior: smooth;
+ transition: background-color 0.3s, color 0.3s;
 }
-
-
 /* ==========================================================================
    [ 2 ] LAYOUT
    ========================================================================== */
-   
-/* L.1 - Navegação Principal (Navbar) */
 .navbar {
-  background-color: var(--cor-acento-principal) !important;
+ background-color: var(--cor-acento-principal) !important;
 }
-
 .navbar .navbar-brand,
 .navbar .nav-link {
-  color: #ffffff !important;
+ color: #ffffff !important;
 }
-
-/* L.2 - Seções Principais */
-/* Correção para rolagem de âncora com cabeçalho fixo */
 section[id] {
-  scroll-margin-top: 80px;
+ scroll-margin-top: 80px;
 }
-
-
 /* ==========================================================================
    [ 3 ] COMPONENTES
    ========================================================================== */
-
-/* C.1 - Cards */
 .card {
-  background-color: var(--cor-card);
-  border: 1px solid var(--cor-borda);
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+ background-color: var(--cor-card);
+ border: 1px solid var(--cor-borda);
+ border-radius: 1rem;
+ box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+ transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
-
 .card-title {
-  color: var(--cor-texto-secundario);
-  font-weight: 600;
+ color: var(--cor-texto-secundario);
+ font-weight: 600;
 }
-
 .card-title i {
-  color: var(--cor-acento-principal);
-  margin-right: 0.25rem;
+ color: var(--cor-acento-principal);
+ margin-right: 0.25rem;
 }
-
-/* C.2 - Botões */
 .btn-gradient {
-  background: linear-gradient(90deg, var(--cor-acento-principal), var(--cor-acento-secundario));
-  border: none;
-  color: white;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+ background: linear-gradient(90deg, var(--cor-acento-principal), var(--cor-acento-secundario));
+ border: none;
+ color: white;
+ font-weight: 600;
+ padding: 0.75rem 1.5rem;
+ border-radius: 0.75rem;
+ transition: all 0.3s ease;
+ box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
 }
-
 .btn-gradient:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6);
-  filter: brightness(1.1);
+ transform: translateY(-2px);
+ box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6);
+ filter: brightness(1.1);
 }
-
-/* C.3 - Formulários */
 .form-label {
-  color: var(--cor-texto-secundario);
-  font-weight: 500;
+ color: var(--cor-texto-secundario);
+ font-weight: 500;
 }
-
 .form-control,
 .form-select {
-  background-color: #f8f9fa;
-  border: 1px solid #ced4da;
-  color: var(--cor-texto);
+ background-color: #f8f9fa;
+ border: 1px solid #ced4da;
+ color: var(--cor-texto);
 }
-
-/* C.4 - Campo de Tags (Gênero) */
 .tag-container {
     display: flex;
     flex-wrap: wrap;
@@ -123,7 +93,6 @@ section[id] {
     background-color: #f8f9fa;
     cursor: text;
 }
-
 .tag-container input {
     flex-grow: 1;
     border: none;
@@ -132,7 +101,6 @@ section[id] {
     padding: 0.25rem 0;
     min-width: 150px;
 }
-
 .tag-pill {
     display: inline-flex;
     align-items: center;
@@ -143,7 +111,6 @@ section[id] {
     font-size: 0.875rem;
     font-weight: 500;
 }
-
 .tag-remove-btn {
     background: none;
     border: none;
@@ -155,22 +122,19 @@ section[id] {
     opacity: 0.7;
     transition: opacity 0.2s;
 }
-
 .tag-remove-btn:hover {
     opacity: 1;
 }
-
-/* C.5 - Tabela de Filmes */
 .tabela-filmes {
-  vertical-align: middle;
-  white-space: nowrap;
-  font-size: 0.9rem;
+ vertical-align: middle;
+ white-space: nowrap;
+ font-size: 0.9rem;
 }
 .tabela-filmes .col-titulo,
 .tabela-filmes .col-direcao,
 .tabela-filmes .col-atores,
 .tabela-filmes .col-genero {
-  white-space: normal;
+ white-space: normal;
 }
 .tabela-filmes .col-num { width: 50px; }
 .tabela-filmes .col-titulo { min-width: 250px; }
@@ -185,45 +149,35 @@ section[id] {
 .tabela-filmes .col-acoes { width: 150px; text-align: right; }
 .tabela-filmes .action-buttons { display: flex; gap: 0.5rem; justify-content: flex-end; }
 .tabela-filmes th.sortable { cursor: pointer; user-select: none; }
-
-/* Funcionalidade de arrastar para rolar */
 .table-responsive { cursor: grab; user-select: none; }
 .table-responsive.active { cursor: grabbing; cursor: -webkit-grabbing; }
-
-/* C.6 - Ícones */
 .social-icon i { font-size: 1.4rem; transition: color 0.2s ease-in-out, transform 0.2s ease-in-out; }
 .social-icon:hover i { color: var(--cor-texto-dark); transform: scale(1.1); }
-
-/* C.7 - Abas (Tabs) */
 .nav-tabs { border-bottom: none; }
 .nav-link { 
-  background-color: transparent; 
-  border: 1px solid transparent; 
-  border-radius: .5rem; 
-  color: var(--cor-texto-secundario); /* Cor para tema claro por padrão */
-  font-weight: 600; 
-  margin: 0 .25rem; 
-  padding: .5rem 1rem; 
-  transition: all .3s ease; 
+ background-color: transparent; 
+ border: 1px solid transparent; 
+ border-radius: .5rem; 
+ color: var(--cor-texto-secundario); 
+ font-weight: 600; 
+ margin: 0 .25rem; 
+ padding: .5rem 1rem; 
+ transition: all .3s ease; 
 }
 .nav-link:not(.active):hover {
-  color: var(--cor-texto);
-  background-color: rgba(0,0,0,.05);
+ color: var(--cor-texto);
+ background-color: rgba(0,0,0,.05);
 }
 .nav-link.active {
-  background-color: var(--cor-acento-principal);
-  border-color: var(--cor-acento-principal);
-  box-shadow: 0 0 15px rgba(100,116,139,.4);
-  color: #ffffff;
+ background-color: var(--cor-acento-principal);
+ border-color: var(--cor-acento-principal);
+ box-shadow: 0 0 15px rgba(100,116,139,.4);
+ color: #ffffff;
 }
 .tab-content { padding-top: 1.5rem; }
-
-
 /* ==========================================================================
    [ 4 ] SEÇÕES DA PÁGINA
    ========================================================================== */
-
-/* S.1 - Seção Estatísticas */
 .stat-card { background-color: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.1); padding: .75rem; border-radius: .75rem; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .stat-card-title { font-size: .7rem; font-weight: 600; text-transform: uppercase; color: var(--cor-texto-secundario-dark); margin-bottom: .25rem; }
 .stat-card-value { font-size: 1.75rem; font-weight: 700; color: #fff; line-height: 1.2; }
@@ -231,213 +185,187 @@ section[id] {
 .ranking-count { background-color: #333; color: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; }
 .list-group-item { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; padding: .5rem .2rem; background-color: transparent; border-color: #eee; color: var(--cor-texto); }
 .list-group-item span { font-weight: 600; background-color: var(--cor-acento-principal); color: #fff; padding: .1rem .4rem; border-radius: 5px; font-size: .8rem; }
-
-/* S.2 - Seção Gráficos */
 .ranking-title { color: var(--cor-acento-principal); font-weight: 600; margin-bottom: 1rem; text-align: center; }
 canvas { max-height: 350px; }
-
-
 /* ==========================================================================
    [ 5 ] MODIFICADORES DE TEMA
    ========================================================================== */
-
-/* M.1 - TEMA CLARO (Light Mode) */
 body:not(.dark-mode) .table.table-dark {
-  --bs-table-bg: #ffffff;
-  --bs-table-color: var(--cor-texto);
-  --bs-table-border-color: #dee2e6;
-  --bs-table-striped-bg: #f8f9fa;
-  --bs-table-hover-bg: #f1f7ff;
+ --bs-table-bg: #ffffff;
+ --bs-table-color: var(--cor-texto);
+ --bs-table-border-color: #dee2e6;
+ --bs-table-striped-bg: #f8f9fa;
+ --bs-table-hover-bg: #f1f7ff;
 }
 body:not(.dark-mode) .tabela-filmes {
-  border: 1px solid #dee2e6;
-  border-radius: 0.5rem;
-  overflow: hidden;
+ border: 1px solid #dee2e6;
+ border-radius: 0.5rem;
+ overflow: hidden;
 }
 body:not(.dark-mode) .tabela-filmes thead {
-  background-color: #f1f3f5;
+ background-color: #f1f3f5;
 }
 body:not(.dark-mode) .tabela-filmes td {
-  color: #495057;
+ color: #495057;
 }
 body:not(.dark-mode) .tabela-filmes .btn-info { background-color: #0dcaf0; border-color: #0dcaf0; color: white; }
 body:not(.dark-mode) .tabela-filmes .btn-danger { background-color: #dc3545; border-color: #dc3545; color: white; }
 body:not(.dark-mode) .tabela-filmes th.sortable:hover { background-color: rgba(0, 0, 0, 0.05); }
-
-
-/* M.2 - TEMA ESCURO (Dark Mode) */
 body.dark-mode {
-  background-color: var(--cor-fundo-dark);
-  background-image: var(--cor-fundo-dark-gradiente);
-  color: var(--cor-texto-dark);
-  background-attachment: fixed;
+ background-color: var(--cor-fundo-dark);
+ background-image: var(--cor-fundo-dark-gradiente);
+ color: var(--cor-texto-dark);
+ background-attachment: fixed;
 }
 body.dark-mode .navbar {
-  background-color: rgba(17, 24, 39, 0.6) !important;
-  border-bottom: 1px solid var(--cor-borda-dark);
-  backdrop-filter: blur(10px);
+ background-color: rgba(17, 24, 39, 0.6) !important;
+ border-bottom: 1px solid var(--cor-borda-dark);
+ backdrop-filter: blur(10px);
 }
 body.dark-mode .card {
-  background-color: var(--cor-card-dark);
-  border: 1px solid var(--cor-borda-dark);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+ background-color: var(--cor-card-dark);
+ border: 1px solid var(--cor-borda-dark);
+ backdrop-filter: blur(12px);
+ box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 body.dark-mode .card-title,
 body.dark-mode .form-label {
-  color: var(--cor-texto-secundario-dark);
+ color: var(--cor-texto-secundario-dark);
 }
 body.dark-mode .form-control,
 body.dark-mode .form-select,
 body.dark-mode .tag-container {
-  background-color: rgba(17, 24, 39, 0.8);
-  border-color: var(--cor-borda-dark);
-  color: var(--cor-texto-dark);
+ background-color: rgba(17, 24, 39, 0.8);
+ border-color: var(--cor-borda-dark);
+ color: var(--cor-texto-dark);
 }
 body.dark-mode .tag-container input {
     color: var(--cor-texto-dark);
 }
 body.dark-mode .form-control::placeholder {
-  color: var(--cor-texto-secundario-dark);
-  opacity: 0.7;
+ color: var(--cor-texto-secundario-dark);
+ opacity: 0.7;
 }
 body.dark-mode .form-select {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e2e8f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+ background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e2e8f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
 body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+ filter: invert(1);
 }
 body.dark-mode .tabela-filmes th.sortable:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+ background-color: rgba(255, 255, 255, 0.05);
 }
 body.dark-mode .list-group-item {
-  color: var(--cor-texto-dark);
-  border-color: rgba(255, 255, 255, 0.1);
+ color: var(--cor-texto-dark);
+ border-color: rgba(255, 255, 255, 0.1);
 }
 body.dark-mode .nav-link {
-  color: var(--cor-texto-dark);
+ color: var(--cor-texto-dark);
 }
 body.dark-mode .nav-link:not(.active):hover { color: var(--cor-texto-dark); background-color: rgba(255,255,255,0.05); }
 body.dark-mode .text-muted { color: var(--cor-texto-secundario-dark) !important; }
-
 body.dark-mode .nav-link.active {
-  background-color: var(--cor-fundo-dark); /* Fundo da aba ativa igual ao fundo da página */
-  border-color: var(--cor-acento-principal); /* A borda ainda destaca a aba */
-  box-shadow: 0 0 15px rgba(100,116,139,.4); /* Mantém o brilho suave */
-  color: var(--cor-texto-dark); /* Cor do texto principal do dark mode */
+ background-color: var(--cor-fundo-dark); 
+ border-color: var(--cor-acento-principal); 
+ box-shadow: 0 0 15px rgba(100,116,139,.4); 
+ color: var(--cor-texto-dark); 
 }
-
+body.dark-mode input[type="date"].form-control,
+body.dark-mode .form-select {
+ color-scheme: dark;
+}
 /* ==========================================================================
    [ 6 ] ESTILOS ESPECÍFICOS PARA SUGESTÃO DE FILME (SWEETALERT2)
    ========================================================================== */
-
 .suggestion-swal-popup {
-    background-color: var(--cor-card-dark) !important; /* Usa a cor do card do tema escuro */
+    background-color: var(--cor-card-dark) !important; 
     border: 1px solid var(--cor-borda-dark) !important;
     backdrop-filter: blur(12px) !important;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
     color: var(--cor-texto-dark) !important;
     border-radius: 1rem !important;
 }
-
 .suggestion-swal-popup .swal2-title {
-    color: var(--cor-texto-dark) !important; /* Título principal do pop-up */
+    color: var(--cor-texto-dark) !important; 
     font-size: 1.8rem !important;
     margin-bottom: 1.5rem !important;
 }
-
 .suggestion-swal-popup .swal2-icon {
     border-color: var(--cor-acento-principal) !important;
     color: var(--cor-acento-principal) !important;
 }
-
-/* Estilos dos Botões no SweetAlert2 */
 .suggestion-swal-popup .swal2-actions {
-    margin-top: 2rem; /* Mais espaço entre o conteúdo e os botões */
-    flex-wrap: wrap; /* Permite que os botões quebrem a linha em telas pequenas */
-    justify-content: center; /* Centraliza os botões */
+    margin-top: 2rem; 
+    flex-wrap: wrap; 
+    justify-content: center; 
 }
-
-.suggestion-confirm-btn { /* Ótima ideia! */
-    background: linear-gradient(90deg, #64748b, #94a3b8) !important; /* Reutiliza seu gradiente */
+.suggestion-confirm-btn { 
+    background: linear-gradient(90deg, #64748b, #94a3b8) !important; 
     border: none !important;
     color: white !important;
     font-weight: 600 !important;
     border-radius: 0.75rem !important;
     box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
     padding: 0.75rem 1.5rem !important;
-    order: 1; /* Garante a ordem dos botões */
-    margin: 0.5rem !important; /* Espaçamento entre botões */
+    order: 1; 
+    margin: 0.5rem !important; 
 }
-
 .suggestion-confirm-btn:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6) !important;
     filter: brightness(1.1) !important;
 }
-
-.suggestion-deny-btn { /* Marcar como assistido */
-    background-color: #dc3545 !important; /* Bootstrap red */
+.suggestion-deny-btn { 
+    background-color: #dc3545 !important; 
     border: none !important;
     color: white !important;
     font-weight: 600 !important;
     border-radius: 0.75rem !important;
     padding: 0.75rem 1.5rem !important;
-    order: 2; /* Garante a ordem dos botões */
+    order: 2; 
     margin: 0.5rem !important;
 }
-
 .suggestion-deny-btn:hover {
     filter: brightness(1.1);
 }
-
-.suggestion-cancel-btn { /* Sugerir outro */
-    background-color: #6c757d !important; /* Bootstrap secondary gray */
+.suggestion-cancel-btn { 
+    background-color: #6c757d !important; 
     border: none !important;
     color: white !important;
     font-weight: 600 !important;
     border-radius: 0.75rem !important;
     padding: 0.75rem 1.5rem !important;
-    order: 3; /* Garante a ordem dos botões */
+    order: 3; 
     margin: 0.5rem !important;
 }
-
 .suggestion-cancel-btn:hover {
     filter: brightness(1.1);
 }
-
 /* ==========================================================================
    [ 7 ] ESTILOS ADICIONAIS SWEETALERT (NOVO)
    ========================================================================== */
-
-/* Estilo para o ícone customizado de filme */
 .suggestion-swal-popup .swal2-icon-content {
-  font-size: 3.5rem; /* Ajusta o tamanho do ícone */
+  font-size: 3.5rem; 
   line-height: 1;
 }
-
 .suggestion-swal-popup .swal2-icon.swal2-html-container {
   border-color: var(--cor-acento-principal) !important;
   color: var(--cor-acento-principal) !important;
 }
-
-/* Estilos para o novo layout do modal de sugestão */
 .suggestion-layout {
     display: flex;
-    flex-wrap: wrap; /* Permite quebrar em telas menores */
-    gap: 2rem; /* Espaço entre as colunas */
-    text-align: left; /* Alinha o texto à esquerda */
+    flex-wrap: wrap; 
+    gap: 2rem; 
+    text-align: left; 
     align-items: center;
     padding: 1rem;
 }
-
 .suggestion-main-info {
-    flex: 2; /* Ocupa 2/3 do espaço */
+    flex: 2; 
     min-width: 200px;
 }
-
 .suggestion-side-info {
-    flex: 1; /* Ocupa 1/3 do espaço */
+    flex: 1; 
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -446,19 +374,15 @@ body.dark-mode .nav-link.active {
     padding: 1rem;
     border-radius: 0.75rem;
 }
-
-/* Ajustes finos nos elementos dentro do novo layout */
 .suggestion-layout .suggestion-title {
     font-size: 2rem;
     text-align: left;
     margin-bottom: 0.75rem;
 }
-
 .suggestion-layout .suggestion-details p {
-    justify-content: flex-start; /* Alinha os 'Ano' e 'Direção' à esquerda */
+    justify-content: flex-start; 
     margin-bottom: 0.25rem;
 }
-
 .suggestion-layout .suggestion-note {
     flex-direction: column;
     gap: 0.5rem;
@@ -467,24 +391,135 @@ body.dark-mode .nav-link.active {
     display: flex;
     align-items: center;
 }
-
 .suggestion-layout .suggestion-note .fas.fa-star {
     margin-right: 0;
     color: #FFD700;
     font-size: 1.3em;
 }
-
 .suggestion-layout .suggestion-note span {
     font-size: 2.5rem;
     font-weight: 700;
     line-height: 1;
     color: #fff;
 }
-
 .suggestion-layout .suggestion-genres {
     margin-top: 0;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.5rem;
+}
+/* ==========================================================================
+   [ 8 ] VALIDADOR DE NICKNAME
+   ========================================================================== */
+.nickname-validator {
+  position: absolute;
+  right: 1rem;
+  top: 70%; 
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+}
+input#register-nickname.is-invalid {
+  background-image: none !important;
+  padding-right: calc(1.5em + .75rem) !important;
+}
+input#register-nickname.is-valid {
+  background-image: none !important;
+  padding-right: calc(1.5em + .75rem) !important;
+}
+
+/* ==========================================================================
+   [ 9 ] SEÇÃO PERFIL E CONQUISTAS (NOVO)
+   ========================================================================== */
+
+/* Mensagem de Boas-vindas na Navbar */
+#welcome-message {
+    color: var(--cor-texto-dark);
+    font-weight: 500;
+    opacity: 0.9;
+}
+body:not(.dark-mode) #welcome-message {
+     color: #ffffff; /* Ajuste para o tema claro */
+}
+
+/* Container das Conquistas */
+.conquistas-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: flex-start; /* Alinha à esquerda no modo dark */
+}
+
+body:not(.dark-mode) .conquistas-container {
+    justify-content: center; /* Centraliza no modo claro */
+}
+
+/* Selo de Conquista Individual */
+.conquista-selo {
+    width: 100px;
+    height: 100px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 2px solid var(--cor-borda-dark);
+    border-radius: 50%; /* Círculo */
+    background-color: rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.conquista-selo i {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.conquista-selo span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    line-height: 1.2;
+}
+
+/* Estado Bloqueado (Padrão) */
+.conquista-selo {
+    opacity: 0.4;
+    filter: grayscale(100%);
+}
+.conquista-selo i {
+    color: #94a3b8; /* Cor secundária */
+}
+
+/* Estado Desbloqueado */
+.conquista-selo.unlocked {
+    opacity: 1;
+    filter: grayscale(0%);
+    border-color: #f97316; /* Cor de destaque (laranja) */
+    box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+}
+
+.conquista-selo.unlocked i {
+    color: #f97316;
+}
+
+/* Efeito hover para mostrar o 'title' */
+.conquista-selo:hover {
+    transform: scale(1.1);
+    cursor: help;
+}
+
+/* Ajuste no modo claro para os selos */
+body:not(.dark-mode) .conquista-selo {
+    border-color: #ddd;
+    background-color: #f8f9fa;
+}
+body:not(.dark-mode) .conquista-selo i {
+    color: #6c757d;
+}
+body:not(.dark-mode) .conquista-selo.unlocked {
+    border-color: #f97316;
+}
+body:not(.dark-mode) .conquista-selo.unlocked i {
+    color: #f97316;
 }

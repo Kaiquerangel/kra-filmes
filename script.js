@@ -2,13 +2,15 @@
 document.addEventListener('DOMContentLoaded', async () => {
     
     // --- CONFIGURAÇÃO FIREBASE ---
-    const { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js");
+    const { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js");
     const { auth } = window.firebaseApp;
-    const { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where } = window.db;
+    
+    const { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where, setDoc, limit, getDoc } = window.db;
+    
     const { onSnapshot } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
 
     // --- ESTADO DA APLICAÇÃO ---
-    let currentUserId = null; // Armazena o ID do usuário logado
+    let currentUserId = null; 
     let unsubscribeFilmes = null;
     let filmes = [];
     let filmeEmEdicao = null;
@@ -16,6 +18,68 @@ document.addEventListener('DOMContentLoaded', async () => {
     let sortBy = 'cadastradoEm';
     let sortDirection = 'asc';
     let generosSelecionadosAtualmente = [];
+
+    // NOVO: Armazena os dados do perfil do usuário logado
+    let currentUserProfile = null;
+
+    let nicknameCheckTimer = null; 
+    let isNicknameValid = false;   
+    let lastCheckedNickname = '';   
+
+    // NOVO: Definição das Conquistas
+    const CONQUISTAS_DEFINICOES = [
+        {
+            id: 'cinefilo_10',
+            nome: 'Cinéfilo Iniciante',
+            descricao: 'Cadastrou 10 filmes na sua lista.',
+            icone: 'fa-solid fa-film',
+            check: (filmes) => filmes.length >= 10
+        },
+        {
+            id: 'critico_10',
+            nome: 'Crítico de Cinema',
+            descricao: 'Deu nota 10 para pelo menos um filme.',
+            icone: 'fa-solid fa-star',
+            check: (filmes) => filmes.some(f => f.nota === 10)
+        },
+        {
+            id: 'nacional_5',
+            nome: 'Viva o Cinema Nacional',
+            descricao: 'Cadastrou 5 filmes de origem "Nacional".',
+            icone: 'fa-solid fa-flag',
+            check: (filmes) => filmes.filter(f => f.origem === 'Nacional').length >= 5
+        },
+        {
+            id: 'fa_carteirinha_3',
+            nome: 'Fã de Carteirinha',
+            descricao: 'Cadastrou 3 ou mais filmes do mesmo diretor.',
+            icone: 'fa-solid fa-user-check',
+            check: (filmes) => {
+                const diretores = {};
+                filmes.flatMap(f => f.direcao || []).forEach(d => {
+                    if(d) diretores[d] = (diretores[d] || 0) + 1;
+                });
+                return Object.values(diretores).some(count => count >= 3);
+            }
+        },
+        {
+            id: 'maratonista_5',
+            nome: 'O Maratonista',
+            descricao: 'Assistiu 5 ou mais filmes no mesmo mês.',
+            icone: 'fa-solid fa-person-running',
+            check: (filmes) => {
+                const meses = {};
+                filmes.filter(f => f.assistido && f.dataAssistido).forEach(f => {
+                    try {
+                        const [ano, mes] = f.dataAssistido.split('-');
+                        const key = `${ano}-${mes}`;
+                        meses[key] = (meses[key] || 0) + 1;
+                    } catch(e) {}
+                });
+                return Object.values(meses).some(count => count >= 5);
+            }
+        }
+    ];
 
     const GENEROS_PREDEFINIDOS = [
         "Action", "Adventure", "Animation", "Comedy", "Crime",
@@ -28,6 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const body = document.body;
     const themeToggleBtn = document.getElementById('theme-toggle');
     const dataAssistidoGroup = document.getElementById('data-assistido-group');
+    const welcomeMessage = document.getElementById('welcome-message'); // NOVO
     
     // Elementos do App
     const appContent = document.getElementById('app-content');
@@ -74,94 +139,321 @@ document.addEventListener('DOMContentLoaded', async () => {
     const generoInput = document.getElementById('genero-input');
 
     // --- FUNÇÕES DE AUTENTICAÇÃO ---
-
-    const handleLogin = (e) => {
+    // (handleLogin e handleRegister estão INTACTAS)
+    const handleLogin = async (e) => {
         e.preventDefault();
-        const email = document.getElementById('login-email').value;
+        const identifier = document.getElementById('login-identifier').value; 
         const password = document.getElementById('login-password').value;
-        
-        signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Sucesso, o onAuthStateChanged vai lidar com a UI
-            })
-            .catch((error) => {
-                console.error("Erro no login:", error.message);
-                Swal.fire({ icon: 'error', title: 'Erro no Login', text: 'Email ou senha inválidos. Por favor, tente novamente.' });
-            });
+        let userEmail = '';
+        try {
+            if (identifier.includes('@')) {
+                userEmail = identifier;
+            } else {
+                const q = query(collection(db, "users"), where("nickname", "==", identifier), limit(1));
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    throw new Error("auth/user-not-found");
+                }
+                const userData = querySnapshot.docs[0].data();
+                userEmail = userData.email;
+            }
+            await signInWithEmailAndPassword(auth, userEmail, password);
+        } catch (error) {
+            console.error("Erro no login:", error);
+            let errorTitle = 'Erro no Login';
+            let errorText = 'Email, nickname ou senha inválidos. Por favor, tente novamente.';
+            if (error.message === "auth/user-not-found") {
+                 errorText = 'Usuário não encontrado com este email ou nickname.';
+            } else if (error.code === 'auth/wrong-password') {
+                 errorText = 'Senha incorreta. Por favor, tente novamente.';
+            }
+            Swal.fire({ icon: 'error', title: errorTitle, text: errorText });
+        }
     };
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
+        const nome = document.getElementById('register-name').value;
+        const nickname = document.getElementById('register-nickname').value;
         const email = document.getElementById('register-email').value;
         const password = document.getElementById('register-password').value;
-
-        if (password.length < 6) {
-             Swal.fire({ icon: 'warning', title: 'Senha Fraca', text: 'Sua senha deve ter pelo menos 6 caracteres.' });
-             return;
+    
+        if (!nome || !nickname || !email || !password) {
+            Swal.fire({ icon: 'warning', title: 'Campos Incompletos', text: 'Por favor, preencha todos os campos do cadastro.' });
+            return;
         }
-
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Sucesso, o onAuthStateChanged vai lidar com a UI
-            })
-            .catch((error) => {
-                console.error("Erro no cadastro:", error.message);
-                if (error.code === 'auth/email-already-in-use') {
-                    Swal.fire({ icon: 'error', title: 'Erro no Cadastro', text: 'Este email já está sendo usado por outra conta.' });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Erro no Cadastro', text: 'Não foi possível criar sua conta. Tente novamente.' });
-                }
+        if (!isNicknameValid || nickname !== lastCheckedNickname) {
+            Swal.fire({ icon: 'error', title: 'Nickname Inválido', text: 'Por favor, escolha um nickname válido e disponível.' });
+            return;
+        }
+        try {
+            const q = query(collection(db, "users"), where("nickname", "==", nickname));
+            const nicknameSnapshot = await getDocs(q);
+            if (!nicknameSnapshot.empty) {
+                Swal.fire({ icon: 'error', title: 'Nickname Já Existe', text: 'Este nickname foi registrado por outro usuário no último segundo. Por favor, escolha outro.' });
+                return;
+            }
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            const userDocRef = doc(db, "users", user.uid);
+            await setDoc(userDocRef, {
+                uid: user.uid,
+                nome: nome,
+                nickname: nickname,
+                email: email,
+                membroDesde: serverTimestamp() 
             });
+        } catch (error) {
+            console.error("Erro no cadastro:", error.message);
+            if (error.code === 'auth/email-already-in-use') {
+                Swal.fire({ icon: 'error', title: 'Erro no Cadastro', text: 'Este email já está sendo usado por outra conta.' });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Erro no Cadastro', text: 'Não foi possível criar sua conta. Tente novamente.' });
+            }
+        }
+    };
+
+    // --- NOVA FUNÇÃO DE MIGRAÇÃO (INSERIDA AQUI) ---
+    const exibirModalCompletarPerfil = async (user) => {
+        Swal.fire({
+            title: 'Complete seu Perfil',
+            html: `
+                <p>Olá! Notamos que este é seu primeiro login com o novo sistema. Por favor, complete seu perfil para continuar.</p>
+                <input type="text" id="swal-nome" class="swal2-input" placeholder="Seu Nome Completo" required>
+                <input type="text" id="swal-nickname" class="swal2-input" placeholder="Seu Nickname (mín. 4 caracteres, sem espaços)" required>
+            `,
+            focusConfirm: false,
+            allowOutsideClick: false, // Força o usuário a preencher
+            allowEscapeKey: false, // Força o usuário a preencher
+            showCancelButton: false, // Não pode cancelar
+            confirmButtonText: 'Salvar e Entrar',
+            preConfirm: async () => {
+                const nome = document.getElementById('swal-nome').value;
+                const nickname = document.getElementById('swal-nickname').value.trim().toLowerCase();
+                const email = user.email; // Pega o email do usuário logado
+
+                // 1. Validação de Nome
+                if (!nome) {
+                    Swal.showValidationMessage('Por favor, insira seu nome.');
+                    return false;
+                }
+
+                // 2. Validação de Nickname (reimplementando a lógica)
+                if (nickname.length < 4) {
+                    Swal.showValidationMessage('Nickname deve ter pelo menos 4 caracteres.');
+                    return false;
+                }
+                if (/\s/.test(nickname)) {
+                    Swal.showValidationMessage('Nickname não pode conter espaços.');
+                    return false;
+                }
+
+                try {
+                    // 3. Validação de Nickname (Disponibilidade)
+                    const q = query(collection(db, "users"), where("nickname", "==", nickname));
+                    const nicknameSnapshot = await getDocs(q);
+                    
+                    if (!nicknameSnapshot.empty) {
+                        Swal.showValidationMessage('Este nickname já está em uso. Escolha outro.');
+                        return false;
+                    }
+
+                    // Se tudo estiver OK, retorna os dados
+                    return { nome, nickname, email };
+
+                } catch (error) {
+                    console.error("Erro ao checar nickname no Swal:", error);
+                    // Isso pode falhar se suas Regras de Segurança estiverem erradas
+                    Swal.showValidationMessage('Erro ao verificar o nickname. Tente novamente.');
+                    return false;
+                }
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed && result.value) {
+                const { nome, nickname, email } = result.value;
+                try {
+                    // 4. Salva o documento do perfil que faltava
+                    const userDocRef = doc(db, "users", user.uid);
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        nome: nome,
+                        nickname: nickname,
+                        email: email,
+                        membroDesde: serverTimestamp() 
+                    });
+
+                    await Swal.fire('Sucesso!', 'Seu perfil foi atualizado.', 'success');
+                    
+                    // 5. Recarrega a página para que o onAuthStateChanged
+                    // rode novamente, mas desta vez com o perfil existente.
+                    window.location.reload();
+
+                } catch (error) {
+                    console.error("Erro ao salvar perfil migrado:", error);
+                    Swal.fire('Erro!', 'Não foi possível salvar seu perfil. Tente logar novamente.', 'error');
+                    handleLogout();
+                }
+            }
+        });
     };
 
     const handleLogout = () => {
         if (unsubscribeFilmes) {
-            unsubscribeFilmes(); // Desconecta o ouvinte do Firestore
+            unsubscribeFilmes(); 
             unsubscribeFilmes = null;
         }
-        signOut(auth).catch((error) => {
-            console.error("Erro no logout:", error);
-        });
-    };
+        signOut(auth).catch((error) => {
+            console.error("Erro no logout:", error);
+        });
+    };
 
-    // --- "PORTEIRO" DA APLICAÇÃO (Auth State Change) ---
-    // Esta é a função central que controla o que é exibido
-    onAuthStateChanged(auth, (user) => {
+    // --- "PORTEIRO" DA APLICAÇÃO (ATUALIZADO) ---
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
             // --- USUÁRIO ESTÁ LOGADO ---
-            currentUserId = user.uid; // Define o ID do usuário globalmente
+            currentUserId = user.uid; 
+            
+            // NOVO: Verifica se o perfil existe
+            const profileExists = await carregarPerfilUsuario(user.uid);
 
-            // Mostra o conteúdo do app e esconde o login
-            appContent.style.display = 'block';
-            logoutContainer.style.display = 'block';
-            authContainer.style.display = 'none';
-            appNavLinks.forEach(link => link.style.display = 'block'); // Mostra links do app na navbar
-
-            // Carrega os filmes DESTE usuário
-            carregarFilmes();
+            if (profileExists) {
+                // --- PERFIL OK, MOSTRA A APP ---
+                appContent.style.display = 'block';
+                logoutContainer.style.display = 'block';
+                authContainer.style.display = 'none';
+                appNavLinks.forEach(link => link.style.display = 'block'); 
+                carregarFilmes();
+            } else {
+                // --- PERFIL NÃO EXISTE, FORÇA MIGRAÇÃO ---
+                appContent.style.display = 'none';
+                logoutContainer.style.display = 'block'; // Deixa deslogar
+                authContainer.style.display = 'none'; // Esconde login/register
+                appNavLinks.forEach(link => link.style.display = 'none'); 
+                
+                // Chama o novo modal de migração
+                exibirModalCompletarPerfil(user);
+            }
 
         } else {
-            // --- USUÁRIO ESTÁ DESLOGADO ---
+            // --- USUÁRIO ESTÁ DESLOGADO --- (Lógica original, está OK)
             currentUserId = null;
-            filmes = []; // Limpa os dados do usuário anterior
+            currentUserProfile = null; // NOVO: Limpa o perfil
+            filmes = []; 
 
-            // Mostra o login e esconde o conteúdo do app
             appContent.style.display = 'none';
             logoutContainer.style.display = 'none';
             authContainer.style.display = 'block';
-            appNavLinks.forEach(link => link.style.display = 'none'); // Esconde links do app na navbar
+            appNavLinks.forEach(link => link.style.display = 'none'); 
+            
+            // NOVO: Esconde a mensagem de boas-vindas
+            welcomeMessage.style.display = 'none';
+            welcomeMessage.textContent = '';
 
-            // Garante que o formulário de login seja o padrão
             loginCard.style.display = 'block';
             registerCard.style.display = 'none';
             
-            // Limpa a UI (tabelas, gráficos, etc.)
             atualizarUI(); 
         }
     });
 
-    // --- FUNÇÕES AUXILIARES (showToast, parseCSV, etc.) ---
-    // (Seu código original, sem mudanças)
+    // --- NOVO: FUNÇÕES DE PERFIL E CONQUISTAS ---
+
+    /**
+     * Busca os dados do perfil do usuário no Firestore e renderiza o perfil.
+     * Retorna 'true' se o perfil existir, 'false' se não existir.
+     */
+    async function carregarPerfilUsuario(uid) {
+        if (!uid) return false; // Adicionado retorno
+        try {
+            const docRef = doc(db, "users", uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                currentUserProfile = docSnap.data();
+                
+                // Popula a mensagem de boas-vindas na navbar
+                welcomeMessage.textContent = `Olá, ${currentUserProfile.nickname}!`;
+                welcomeMessage.style.display = 'block';
+
+                // Renderiza a seção de perfil
+                renderizarPerfil();
+                return true; // <-- SUCESSO, perfil existe
+            } else {
+                console.warn("Documento de perfil do usuário não encontrado! Iniciando migração.");
+                return false; // <-- FALHA, perfil não existe (NÃO DESLOGA MAIS)
+            }
+        } catch (error) {
+            console.error("Erro ao carregar perfil do usuário:", error);
+            Swal.fire({ icon: 'error', title: 'Erro Crítico', text: 'Não foi possível ler o banco de dados de perfis.' });
+            handleLogout(); // Se a LEITURA falhar (ex: regras), deslogar é a única opção.
+            return false; 
+        }
+    }
+
+    /**
+     * Popula a seção de perfil com os dados do usuário e estatísticas.
+     */
+    function renderizarPerfil() {
+        if (!currentUserProfile) return;
+
+        // Popula informações básicas
+        document.getElementById('perfil-nome').textContent = currentUserProfile.nome;
+        document.getElementById('perfil-nickname').textContent = `@${currentUserProfile.nickname}`;
+        
+        if (currentUserProfile.membroDesde) {
+            const dataCadastro = currentUserProfile.membroDesde.toDate();
+            document.getElementById('perfil-membro-desde').textContent = `Membro desde ${dataCadastro.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' })}`;
+        }
+
+        // Popula estatísticas globais (baseado no array 'filmes' global)
+        document.getElementById('perfil-total-filmes').textContent = filmes.length;
+        document.getElementById('perfil-total-assistidos').textContent = filmes.filter(f => f.assistido).length;
+
+        // Calcula e renderiza as conquistas
+        const conquistas = calcularConquistas(filmes);
+        renderizarConquistas(conquistas);
+    }
+
+    /**
+     * Verifica todas as definições de conquistas contra a lista de filmes.
+     */
+    function calcularConquistas(filmes) {
+        return CONQUISTAS_DEFINICOES.map(conquista => {
+            const desbloqueada = conquista.check(filmes);
+            return {
+                ...conquista,
+                unlocked: desbloqueada
+            };
+        });
+    }
+
+    /**
+     * Renderiza os selos de conquista (desbloqueados e bloqueados) no HTML.
+     */
+    function renderizarConquistas(conquistas) {
+        const container = document.getElementById('conquistas-container');
+        if (!container) return;
+        
+        container.innerHTML = ''; // Limpa os selos antigos
+        
+        if (conquistas.length === 0) {
+            container.innerHTML = '<p class="text-muted">Comece a cadastrar filmes para desbloquear conquistas!</p>';
+            return;
+        }
+        
+        conquistas.forEach(conq => {
+            const seloHTML = `
+                <div class="conquista-selo ${conq.unlocked ? 'unlocked' : ''}" title="${conq.unlocked ? conq.descricao : `BLOQUEADA: ${conq.descricao}`}">
+                    <i class="${conq.icone}"></i>
+                    <span>${conq.nome}</span>
+                </div>
+            `;
+            container.innerHTML += seloHTML;
+        });
+    }
+
+
+    // --- FUNÇÕES AUXILIARES (INTACTO) ---
     const showToast = (title) => {
         const Toast = Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
@@ -172,16 +464,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         Toast.fire({ icon: 'success', title: title });
     };
-
     const parseCSV = (string) => string.split(',').map(s => s.trim()).filter(Boolean);
-
     const popularSelect = (selectElement, items, label) => {
         selectElement.innerHTML = `<option value="todos">${label}</option>`;
         [...new Set(items)].sort((a, b) => b - a).forEach(item => {
             if (item) selectElement.add(new Option(item, item));
         });
     };
-
     const ativarArrastarParaRolar = (selector) => {
         const slider = document.querySelector(selector);
         if (!slider) return;
@@ -192,7 +481,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const walk = (x - startX) * 2; slider.scrollLeft = scrollLeft - walk; });
     };
     
-    // --- FUNÇÕES DE TAGS (Seu código original, sem mudanças) ---
+    // --- FUNÇÕES DE TAGS (INTACTO) ---
     function renderizarTags() {
         generoTagContainer.querySelectorAll('.tag-pill').forEach(tagEl => tagEl.remove());
         generosSelecionadosAtualmente.slice().reverse().forEach(label => {
@@ -200,7 +489,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             generoTagContainer.prepend(tagEl);
         });
     }
-
     function criarTag(label) {
         const tagEl = document.createElement('span');
         tagEl.className = 'tag-pill';
@@ -214,7 +502,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         tagEl.appendChild(removeBtn);
         return tagEl;
     }
-
     function adicionarTag(label) {
         const trimmedLabel = label.trim();
         if (!trimmedLabel || !GENEROS_PREDEFINIDOS.includes(trimmedLabel) || generosSelecionadosAtualmente.includes(trimmedLabel)) return;
@@ -223,19 +510,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         generoInput.value = '';
         generoInput.focus();
     }
-
     function removerTag(label) {
         generosSelecionadosAtualmente = generosSelecionadosAtualmente.filter(g => g !== label);
         renderizarTags();
     }
-
     function popularSugestoesDeGenero() {
         const datalist = document.getElementById('generos-sugeridos');
         datalist.innerHTML = GENEROS_PREDEFINIDOS.map(g => `<option value="${g}"></option>`).join('');
     }
 
     // --- LÓGICA PRINCIPAL (Atualizar UI, Filtros) ---
-    // (Seu código original, sem mudanças)
     const atualizarUI = (listaDeFilmes = filmes) => {
         const filmesFiltrados = aplicarFiltrosEordenacao(listaDeFilmes);
         renderizarTabela(filmesFiltrados, 'tabela-todos-container');
@@ -245,12 +529,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         atualizarEstatisticas(filmesParaEstasticas);
         renderizarGraficos(filmesParaEstasticas);
     };
-
     const popularFiltros = (listaDeFilmes) => {
         const todosAnos = listaDeFilmes.map(filme => filme.ano).filter(Boolean);
         popularSelect(filterElements.ano, todosAnos, "Todos os Anos");
     };
-
     const aplicarFiltrosEordenacao = (listaDeFilmes) => {
         let filmesProcessados = [...listaDeFilmes];
         const filtros = {
@@ -279,60 +561,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // --- FUNÇÕES CRUD (ATUALIZADAS PARA USAR currentUserId) ---
-    
-    // Constrói a referência da coleção do usuário
+    // --- FUNÇÕES CRUD (INTACTO) ---
     const getUserFilmesCollection = () => {
         if (!currentUserId) return null;
         return collection(db, "users", currentUserId, "filmes");
     };
-    
-    // Constrói a referência de um documento de filme do usuário
     const getUserFilmeDoc = (id) => {
          if (!currentUserId) return null;
          return doc(db, "users", currentUserId, "filmes", id);
     }
 
-      const carregarFilmes = () => {
-        const colRef = getUserFilmesCollection();
-        if (!colRef) return;
+     const carregarFilmes = () => {
+         const colRef = getUserFilmesCollection();
+         if (!colRef) return;
+         if (unsubscribeFilmes) {
+             unsubscribeFilmes();
+         }
+         const q = query(colRef, orderBy("cadastradoEm", "asc"));
 
-        // Se já existir um "ouvinte" (listener) antigo, desligue-o
-        if (unsubscribeFilmes) {
-            unsubscribeFilmes();
-        }
+         unsubscribeFilmes = onSnapshot(q, (querySnapshot) => {
+             filmes = querySnapshot.docs.map(doc => ({
+                 id: doc.id,
+                 ...doc.data(),
+                 cadastradoEm: doc.data().cadastradoEm?.toDate() || new Date(0)
+             }));
+             
+             // NOVO: Atualiza a seção de perfil com os novos totais e conquistas
+             if (currentUserProfile) {
+                 renderizarPerfil();
+             }
+             
+             popularFiltros(filmes); 
+             atualizarUI();
 
-        const q = query(colRef, orderBy("cadastradoEm", "asc"));
-
-        // onSnapshot "ouve" a coleção.
-        // Ele roda uma vez no início (como o getDocs)
-        // e depois roda DE NOVO automaticamente sempre que 
-        // algo mudar no banco (adicionar, editar, deletar).
-        unsubscribeFilmes = onSnapshot(q, (querySnapshot) => {
-            filmes = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                cadastradoEm: doc.data().cadastradoEm?.toDate() || new Date(0)
-            }));
-            
-            // Como 'filmes' está sempre atualizado, 
-            // apenas chamamos a UI.
-            popularFiltros(filmes); 
-            atualizarUI();
-
-        }, (error) => {
-            // Trata erros de escuta
-            console.error("Erro ao escutar filmes:", error);
-            Swal.fire({ icon: 'error', title: 'Oops...', text: 'Não foi possível carregar os filmes em tempo real.' });
-        });
-    };  
+         }, (error) => {
+             console.error("Erro ao escutar filmes:", error);
+             Swal.fire({ icon: 'error', title: 'Oops...', text: 'Não foi possível carregar os filmes em tempo real.' });
+         });
+    }; 
 
     const salvarFilme = async (event, tituloValue) => {
         event.preventDefault();
         const colRef = getUserFilmesCollection();
-        if (!colRef) return; // Sai se o usuário não estiver logado
+        if (!colRef) return; 
         
-        // Verifica duplicidade apenas para filmes novos
         if (!filmeEmEdicao) {
             try {
                 const q = query(colRef, where("titulo", "==", tituloValue));
@@ -350,13 +622,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const isAssistido = formElements.assistido.value === 'sim';
         const filmeData = {
-            titulo: tituloValue.trim(),    
+            titulo: tituloValue.trim(),     
             ano: parseInt(formElements.ano.value, 10) || null,
             nota: parseFloat(formElements.nota.value) || 0,
             direcao: parseCSV(formElements.direcao.value),
             atores: parseCSV(formElements.atores.value),
             genero: [...generosSelecionadosAtualmente],
-            origem: formElements.origem.value,
+            origem: formElements.origem.value || "", // Salva "" se for "Selecione"
             assistido: isAssistido,
             dataAssistido: isAssistido ? formElements.dataAssistido.value : null,
         };
@@ -375,6 +647,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             generosSelecionadosAtualmente = [];
             renderizarTags();
             filmeEmEdicao = null;
+            
+            formElements.assistido.value = ""; 
+            formElements.origem.value = "";
+            formElements.dataAssistido.removeAttribute('required');
             dataAssistidoGroup.style.display = 'none';
             
         } catch (error) {
@@ -397,9 +673,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         generosSelecionadosAtualmente = filme.genero ? [...filme.genero] : [];
         renderizarTags();
 
-        formElements.origem.value = filme.origem;
+        formElements.origem.value = filme.origem || ""; 
         formElements.assistido.value = filme.assistido ? 'sim' : 'nao';
-        formElements.assistido.dispatchEvent(new Event('change'));
+        formElements.assistido.dispatchEvent(new Event('change')); 
         if (filme.assistido) {
             formElements.dataAssistido.value = filme.dataAssistido;
         }
@@ -411,18 +687,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const deletarFilme = async (id) => {
         const docRef = getUserFilmeDoc(id);
         if (!docRef) return;
-        
         const result = await Swal.fire({
             title: 'Tem certeza?', text: "Esta ação não pode ser revertida!", icon: 'warning',
             showCancelButton: true, confirmButtonColor: '#3085d6', cancelButtonColor: '#d33',
             confirmButtonText: 'Sim, excluir!', cancelButtonText: 'Cancelar'
         });
-        
         if (result.isConfirmed) {
             try {
                 await deleteDoc(docRef);
                 showToast('Filme excluído!');
-                
             } catch (error) {
                 console.error("Erro ao excluir filme:", error);
                 Swal.fire({ icon: 'error', title: 'Oops...', text: 'Erro ao excluir o filme.' });
@@ -430,92 +703,83 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // === FUNÇÃO RESTAURADA ===
     const sugerirFilmeAleatorio = () => {
-            const filmesNaoAssistidos = filmes.filter(filme => !filme.assistido);
-        
-            if (filmesNaoAssistidos.length === 0) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Tudo em dia!',
-                    text: 'Você já assistiu a todos os filmes da sua lista. Adicione novos filmes para receber sugestões.'
-                });
-                return;
-            }
-        
-            const indiceAleatorio = Math.floor(Math.random() * filmesNaoAssistidos.length);
-            const filmeSugerido = filmesNaoAssistidos[indiceAleatorio];
-        
+        const filmesNaoAssistidos = filmes.filter(filme => !filme.assistido);
+    
+        if (filmesNaoAssistidos.length === 0) {
             Swal.fire({
-                title: 'Que tal assistir...',
-                iconHtml: '<i class="fas fa-film"></i>', // Ícone customizado
-                // Bloco HTML com o layout correto
-                html: `
-                    <div class="suggestion-layout">
-                        <div class="suggestion-main-info">
-                            <h2 class="suggestion-title">${filmeSugerido.titulo}</h2>
-                            <p><strong>Ano:</strong> ${filmeSugerido.ano || 'N/A'}</p>
-                            <p><strong>Direção:</strong> ${filmeSugerido.direcao?.join(', ') || 'N/A'}</p>
+                icon: 'info',
+                title: 'Tudo em dia!',
+                text: 'Você já assistiu a todos os filmes da sua lista. Adicione novos filmes para receber sugestões.'
+            });
+            return;
+        }
+    
+        const indiceAleatorio = Math.floor(Math.random() * filmesNaoAssistidos.length);
+        const filmeSugerido = filmesNaoAssistidos[indiceAleatorio];
+    
+        Swal.fire({
+            title: 'Que tal assistir...',
+            iconHtml: '<i class="fas fa-film"></i>', 
+            html: `
+                <div class="suggestion-layout">
+                    <div class="suggestion-main-info">
+                        <h2 class="suggestion-title">${filmeSugerido.titulo}</h2>
+                        <p><strong>Ano:</strong> ${filmeSugerido.ano || 'N/A'}</p>
+                        <p><strong>Direção:</strong> ${filmeSugerido.direcao?.join(', ') || 'N/A'}</p>
+                    </div>
+                    <div class="suggestion-side-info">
+                        <div class="suggestion-note">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <span>${filmeSugerido.nota ? filmeSugerido.nota.toFixed(1) : 'N/A'}</span>
                         </div>
-                        <div class="suggestion-side-info">
-                            <div class="suggestion-note">
-                                <i class="fas fa-star" aria-hidden="true"></i>
-                                <span>${filmeSugerido.nota ? filmeSugerido.nota.toFixed(1) : 'N/A'}</span>
-                            </div>
-                            <div class="suggestion-genres">
-                                ${filmeSugerido.genero?.map(g => `<span class="tag-pill">${g}</span>`).join('') || '<span class="text-muted">Nenhum gênero</span>'}
-                            </div>
+                        <div class="suggestion-genres">
+                            ${filmeSugerido.genero?.map(g => `<span class="tag-pill">${g}</span>`).join('') || '<span class="text-muted">Nenhum gênero</span>'}
                         </div>
                     </div>
-                `,
-                // Configuração correta dos botões
-                showCancelButton: true,
-                confirmButtonText: 'Ótima ideia!',
-                cancelButtonText: 'Sugerir outro',
-                showDenyButton: true, 
-                denyButtonText: '<i class="fas fa-check-circle me-1"></i> Marcar como assistido',
-                customClass: {
-                    container: 'suggestion-swal-container',
-                    popup: 'suggestion-swal-popup',
-                    confirmButton: 'suggestion-confirm-btn',
-                    cancelButton: 'suggestion-cancel-btn',
-                    denyButton: 'suggestion-deny-btn'
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Ótima ideia!',
+            cancelButtonText: 'Sugerir outro',
+            showDenyButton: true, 
+            denyButtonText: '<i class="fas fa-check-circle me-1"></i> Marcar como assistido',
+            customClass: {
+                container: 'suggestion-swal-container',
+                popup: 'suggestion-swal-popup',
+                confirmButton: 'suggestion-confirm-btn',
+                cancelButton: 'suggestion-cancel-btn',
+                denyButton: 'suggestion-deny-btn'
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                // O usuário gostou da ideia, não fazemos nada.
+            } else if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+                sugerirFilmeAleatorio();
+            } else if (result.isDenied) {
+                try {
+                    const filmeRef = getUserFilmeDoc(filmeSugerido.id); 
+                    if (!filmeRef) return; 
+                    
+                    await updateDoc(filmeRef, {
+                        assistido: true,
+                        dataAssistido: new Date().toISOString().slice(0, 10)
+                    });
+                    showToast('Filme marcado como assistido!');
+                    
+                } catch (error) {
+                    console.error("Erro ao marcar como assistido:", error);
+                    Swal.fire('Erro!', 'Não foi possível atualizar o filme.', 'error');
                 }
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    // O usuário gostou da ideia, não fazemos nada.
-                } else if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
-                    sugerirFilmeAleatorio();
-                } else if (result.isDenied) {
-                    // Lógica de "marcar como assistido" COM A FUNÇÃO DE LOGIN
-                    try {
-                        const filmeRef = getUserFilmeDoc(filmeSugerido.id); // Correto, usa a função do usuário
-                        if (!filmeRef) return; // Checagem de segurança
-                        
-                        await updateDoc(filmeRef, {
-                            assistido: true,
-                            dataAssistido: new Date().toISOString().slice(0, 10)
-                        });
-                        showToast('Filme marcado como assistido!');
-                        
-                    } catch (error) {
-                        console.error("Erro ao marcar como assistido:", error);
-                        Swal.fire('Erro!', 'Não foi possível atualizar o filme.', 'error');
-                    }
-                }
-            });
-        };
+            }
+        });
+    };
 
     // --- FUNÇÕES DE RENDERIZAÇÃO, ESTATÍSTICAS E GRÁFICOS ---
-
-    
-    // ... renderizarTabela() ...
-    // ... criarRanking() ...
-    // ... renderizarRanking() ...
-    // ... atualizarEstatisticas() ...
-    // ... renderizarGraficos() e todas as sub-funções de gráfico ...
-    
     
     function renderizarTabela(listaDeFilmes, containerId) {
+        // ... (Corpo da função intacto)
         const container = document.getElementById(containerId);
         if (!container) return;
         if (listaDeFilmes.length === 0) {
@@ -546,6 +810,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     function criarRanking(listaDeFilmes, campo) {
+        // ... (Corpo da função intacto)
         const contagem = listaDeFilmes.flatMap(f => f[campo] || []).reduce((acc, item) => {
             if (item) acc[item] = (acc[item] || 0) + 1;
             return acc;
@@ -554,6 +819,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     function renderizarRanking(elementId, ranking) {
+        // ... (Corpo da função intacto)
         const ul = document.getElementById(elementId);
         ul.innerHTML = ranking.length > 0
             ? ranking.map(([nome, qtd]) => `<li class="list-group-item">${nome}<span class="ranking-count">${qtd}</span></li>`).join('')
@@ -561,15 +827,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     function atualizarEstatisticas(listaDeFilmes) {
+        // ... (Corpo da função intacto)
         const statTitleH2 = document.querySelector('#estatisticas-section h2');
-        const totalGlobalAssistidos = filmes.filter(f => f.assistido).length; // Nota: Isso agora é o total do usuário
+        const totalGlobalAssistidos = filmes.filter(f => f.assistido).length;
         const totalFiltrado = listaDeFilmes.length;
         const isFiltered = totalGlobalAssistidos !== totalFiltrado || (filterElements.busca.value || filterElements.genero.value || filterElements.diretor.value || filterElements.ator.value || filterElements.ano.value !== 'todos' || filterElements.origem.value !== 'todos' || filterElements.assistido.value !== 'todos');
-        
         if (statTitleH2) {
              statTitleH2.innerHTML = isFiltered ? `<i class="fas fa-filter me-2"></i> Estatísticas do Filtro (${totalFiltrado} de ${totalGlobalAssistidos} assistidos)` : `<i class="fas fa-chart-bar me-2"></i> Estatísticas dos Filmes Assistidos`;
         }
-        
         const totalFilmes = listaDeFilmes.length;
         if (totalFilmes === 0) {
             ['stat-total-filmes', 'stat-media-notas', 'stat-melhor-filme', 'stat-pior-filme', 'stat-decada-popular', 'stat-ator-frequente', 'stat-pct-nacionais', 'stat-pct-internacionais'].forEach(id => {
@@ -582,28 +847,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             return;
         }
-
         const mediaNotas = (listaDeFilmes.reduce((acc, f) => acc + (f.nota || 0), 0) / totalFilmes).toFixed(1);
         document.getElementById('stat-total-filmes').innerText = totalFilmes;
         document.getElementById('stat-media-notas').innerText = mediaNotas;
         if (document.getElementById('stat-media-notas-grafico')) document.getElementById('stat-media-notas-grafico').innerText = mediaNotas;
-        
         const melhorFilme = listaDeFilmes.reduce((p, c) => (p.nota || 0) > (c.nota || 0) ? p : c);
         document.getElementById('stat-melhor-filme').innerText = melhorFilme.titulo;
         const piorFilme = listaDeFilmes.reduce((p, c) => (p.nota || 10) < (c.nota || 10) ? p : c);
         document.getElementById('stat-pior-filme').innerText = piorFilme.titulo;
-
         const nacionais = listaDeFilmes.filter(f => f.origem === 'Nacional').length;
         document.getElementById('stat-pct-nacionais').innerText = `${Math.round((nacionais / totalFilmes) * 100)}%`;
         document.getElementById('stat-pct-internacionais').innerText = `${Math.round(((totalFilmes - nacionais) / totalFilmes) * 100)}%`;
-
         const decadas = listaDeFilmes.reduce((acc, f) => { if(f.ano) { const decada = Math.floor(f.ano / 10) * 10; acc[decada] = (acc[decada] || 0) + 1; } return acc; }, {});
         const decadaPopular = Object.keys(decadas).length ? Object.entries(decadas).sort(([,a],[,b]) => b-a)[0][0] : '-';
         document.getElementById('stat-decada-popular').innerText = decadaPopular !== '-' ? `Anos ${decadaPopular}` : '-';
-
         const rankingAtores = criarRanking(listaDeFilmes, 'atores');
         document.getElementById('stat-ator-frequente').innerText = rankingAtores.length ? rankingAtores[0][0] : '-';
-        
         renderizarRanking('ranking-generos', criarRanking(listaDeFilmes, 'genero'));
         renderizarRanking('ranking-atores', rankingAtores);
         renderizarRanking('ranking-diretores', criarRanking(listaDeFilmes, 'direcao'));
@@ -611,6 +870,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderizarRanking('ranking-anos', Object.entries(anos).sort(([,a],[,b]) => b-a).slice(0,10));
     }
     
+    // === FUNÇÕES DE GRÁFICOS RESTAURADAS ===
     function renderizarGraficos(listaDeFilmes) {
         Object.values(charts).forEach(chart => chart?.destroy());
         const isDarkMode = body.classList.contains('dark-mode');
@@ -696,11 +956,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- FUNÇÕES DE IMPORTAÇÃO/EXPORTAÇÃO (Atualizadas) ---
+    // --- FUNÇÕES DE IMPORTAÇÃO/EXPORTAÇÃO (RESTAURADAS) ---
     const obterDataFormatada = () => new Date().toISOString().slice(0, 10);
-    const baixarArquivo = (conteudo, nomeArquivo, tipoConteudo) => { const a = document.createElement("a"); const arquivo = new Blob([conteudo], { type: tipoConteudo }); a.href = URL.createObjectURL(arquivo); a.download = nomeArquivo; a.click(); URL.revokeObjectURL(a.href); };
-    const exportarParaJSON = () => { const filmesFiltrados = aplicarFiltrosEordenacao(filmes); if (filmesFiltrados.length === 0) return Swal.fire('Atenção', 'Não há filmes na lista para exportar.', 'warning'); baixarArquivo(JSON.stringify(filmesFiltrados, null, 2), `meus_filmes_${obterDataFormatada()}.json`, 'application/json'); showToast('Lista exportada para JSON!'); };
-    const exportarParaCSV = () => { const filmesFiltrados = aplicarFiltrosEordenacao(filmes); if (filmesFiltrados.length === 0) return Swal.fire('Atenção', 'Não há filmes na lista para exportar.', 'warning'); const cabecalho = ['titulo', 'ano', 'nota', 'direcao', 'atores', 'genero', 'origem', 'assistido', 'dataAssistido']; const formatarValorCSV = v => { let s=String(v==null?'':v); if(s.includes(',')){s='"'+s.replace(/"/g,'""')+'"'} return s; }; const linhas = filmesFiltrados.map(f => cabecalho.map(c => formatarValorCSV(Array.isArray(f[c])?f[c].join('; '):f[c])).join(',')); baixarArquivo([cabecalho.join(','), ...linhas].join('\n'), `meus_filmes_${obterDataFormatada()}.csv`, 'text/csv;charset=utf-8;'); showToast('Lista exportada para CSV!'); };
+    
+    const baixarArquivo = (conteudo, nomeArquivo, tipoConteudo) => { 
+        const a = document.createElement("a"); 
+        const arquivo = new Blob([conteudo], { type: tipoConteudo }); 
+        a.href = URL.createObjectURL(arquivo); 
+        a.download = nomeArquivo; a.click(); 
+        URL.revokeObjectURL(a.href); 
+    };
+    
+    const exportarParaJSON = () => { 
+        const filmesFiltrados = aplicarFiltrosEordenacao(filmes); 
+        if (filmesFiltrados.length === 0) return Swal.fire('Atenção', 'Não há filmes na lista para exportar.', 'warning'); 
+        baixarArquivo(JSON.stringify(filmesFiltrados, null, 2), `meus_filmes_${obterDataFormatada()}.json`, 'application/json'); 
+        showToast('Lista exportada para JSON!'); 
+    };
+    
+    const exportarParaCSV = () => { 
+        const filmesFiltrados = aplicarFiltrosEordenacao(filmes); 
+        if (filmesFiltrados.length === 0) return Swal.fire('Atenção', 'Não há filmes na lista para exportar.', 'warning'); 
+        const cabecalho = ['titulo', 'ano', 'nota', 'direcao', 'atores', 'genero', 'origem', 'assistido', 'dataAssistido']; 
+        const formatarValorCSV = v => { let s=String(v==null?'':v); if(s.includes(',')){s='"'+s.replace(/"/g,'""')+'"'} return s; }; 
+        const linhas = filmesFiltrados.map(f => cabecalho.map(c => formatarValorCSV(Array.isArray(f[c])?f[c].join('; '):f[c])).join(',')); 
+        baixarArquivo([cabecalho.join(','), ...linhas].join('\n'), `meus_filmes_${obterDataFormatada()}.csv`, 'text/csv;charset=utf-8;'); 
+        showToast('Lista exportada para CSV!'); 
+    };
     
     const importarDeArquivo = (event) => {
         if (!currentUserId) {
@@ -745,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const batch = writeBatch(db); 
                 
                 filmesParaAdicionar.forEach(filme => { 
-                    const docRef = doc(colRef); // Cria novo doc na coleção do usuário
+                    const docRef = doc(colRef); 
                     batch.set(docRef, { ...filme, cadastradoEm: serverTimestamp(), assistido: filme.assistido || false, nota: filme.nota || 0 }); 
                 }); 
                 
@@ -755,6 +1037,61 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch(error) { Swal.fire('Erro!', 'Ocorreu um erro ao salvar os filmes importados.', 'error'); } 
         } 
     };
+    
+    // --- FUNÇÕES DE VALIDAÇÃO DE NICKNAME (INTACTO) ---
+    function setNicknameValidationUI(state, message = '') {
+        const loading = document.getElementById('nickname-loading');
+        const success = document.getElementById('nickname-success');
+        const error = document.getElementById('nickname-error');
+        const input = document.getElementById('register-nickname');
+        const feedback = document.getElementById('nickname-invalid-feedback');
+        loading.style.display = 'none';
+        success.style.display = 'none';
+        error.style.display = 'none';
+        input.classList.remove('is-valid', 'is-invalid');
+        if (state === 'loading') {
+            loading.style.display = 'block';
+        } else if (state === 'success') {
+            success.style.display = 'block';
+            input.classList.add('is-valid');
+        } else if (state === 'error') {
+            error.style.display = 'block';
+            input.classList.add('is-invalid');
+            feedback.textContent = message; 
+        }
+    }
+    async function checkNicknameAvailability() {
+        const input = document.getElementById('register-nickname');
+        const nickname = input.value.trim().toLowerCase();
+        lastCheckedNickname = nickname; 
+        if (nickname.length < 4) {
+            setNicknameValidationUI('error', 'Nickname deve ter pelo menos 4 caracteres.');
+            isNicknameValid = false;
+            return;
+        }
+        if (/\s/.test(nickname)) {
+            setNicknameValidationUI('error', 'Nickname não pode conter espaços.');
+            isNicknameValid = false;
+            return;
+        }
+        setNicknameValidationUI('loading'); 
+        try {
+            const q = query(collection(db, "users"), where("nickname", "==", nickname));
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                setNicknameValidationUI('success');
+                isNicknameValid = true;
+            } else {
+                setNicknameValidationUI('error', 'Este nickname já está em uso.');
+                isNicknameValid = false;
+            }
+        } catch (error) {
+            console.error("Erro ao checar nickname:", error);
+            setNicknameValidationUI('error', 'Erro ao verificar. Tente novamente.');
+            isNicknameValid = false;
+        }
+    }
+
 
     // --- EVENT LISTENERS ---
     function setupEventListeners() {
@@ -762,6 +1099,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         loginForm.addEventListener('submit', handleLogin);
         registerForm.addEventListener('submit', handleRegister);
         logoutBtn.addEventListener('click', handleLogout);
+
+        document.getElementById('register-nickname').addEventListener('input', () => {
+            clearTimeout(nicknameCheckTimer);
+            const nickname = document.getElementById('register-nickname').value;
+            if (nickname.length < 4) {
+                 setNicknameValidationUI('idle'); 
+                 isNicknameValid = false;
+            }
+            nicknameCheckTimer = setTimeout(() => {
+                if (nickname.length >= 4 && nickname !== lastCheckedNickname) {
+                    checkNicknameAvailability();
+                }
+            }, 500); 
+        });
+
 
         showRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -774,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             registerCard.style.display = 'none';
         });
 
-        // --- LISTENERS DO TEMA (Seu código original) ---
+        // --- LISTENERS DO TEMA (INTACTO) ---
         const temaSalvo = localStorage.getItem('theme') || 'dark';
         body.classList.toggle('dark-mode', temaSalvo === 'dark');
         themeToggleBtn.innerHTML = temaSalvo === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
@@ -785,60 +1137,58 @@ document.addEventListener('DOMContentLoaded', async () => {
             atualizarUI();
         });
 
-        // --- LISTENERS DO APP (Seu código original) ---
+        // --- NOVO: LISTENER DO BOTÃO DE REDEFINIR SENHA ---
+        document.getElementById('perfil-trocar-senha-btn').addEventListener('click', async () => {
+            if (!currentUserProfile || !currentUserProfile.email) {
+                Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível encontrar seu e-mail de cadastro.' });
+                return;
+            }
+            
+            try {
+                await sendPasswordResetEmail(auth, currentUserProfile.email);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'E-mail Enviado!',
+                    text: `Enviamos um link de redefinição de senha para ${currentUserProfile.email}.`
+                });
+            } catch (error) {
+                console.error("Erro ao enviar e-mail de redefinição de senha:", error);
+                Swal.fire({ icon: 'error', title: 'Oops...', text: 'Não foi possível enviar o e-mail. Tente novamente mais tarde.' });
+            }
+        });
+
+
+        // --- LISTENERS DO APP (INTACTO) ---
         document.getElementById('export-json-btn').addEventListener('click', exportarParaJSON);
         document.getElementById('export-csv-btn').addEventListener('click', exportarParaCSV);
         document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file-input').click());
         document.getElementById('import-file-input').addEventListener('change', importarDeArquivo);
         document.getElementById('sugerir-filme-btn').addEventListener('click', sugerirFilmeAleatorio);
 
-        // Este novo bloco vai "escutar" o clique no botão Salvar
         formElements.form.addEventListener('submit', (event) => {
-            // Impede o envio padrão do formulário
             event.preventDefault();
             event.stopPropagation();
-
             const tituloValue = formElements.titulo.value.trim();
-
-            // 1. O Bootstrap verifica TODOS os campos (required, min, max, etc)
             if (!formElements.form.checkValidity()) {
-                // Se for inválido, não faz nada (apenas mostra os erros)
+                // (não faz nada, mostra erros)
             } else {
-                // 2. Se for VÁLIDO, chama sua função salvarFilme
-                //    (Passamos o 'event' e o 'tituloValue' que já pegamos)
                 salvarFilme(event, tituloValue);
-
-                // 3. Reseta o visual verde/vermelho do formulário
                 formElements.form.classList.remove('was-validated');
                 return;
             }
-
-            // 4. Adiciona as classes (vermelho/verde) para mostrar o feedback visual
             formElements.form.classList.add('was-validated');
         });
 
-        //formElements.assistido.addEventListener('change', () => { dataAssistidoGroup.style.display = formElements.assistido.value === 'sim' ? 'block' : 'none'; });
-        document.getElementById('export-json-btn').addEventListener('click', exportarParaJSON);
-        document.getElementById('export-csv-btn').addEventListener('click', exportarParaCSV);
-
-        formElements.form.addEventListener('submit', (event) => {
-        });
         formElements.assistido.addEventListener('change', () => {
             const isSim = formElements.assistido.value === 'sim';
             dataAssistidoGroup.style.display = isSim ? 'block' : 'none';
-            
             if (isSim) {
-                // Se for "Sim", torna o campo de data OBRIGATÓRIA
                 formElements.dataAssistido.setAttribute('required', 'required');
             } else {
-                // Se for "Não" (ou "Selecione..."), torna o campo de data OPCIONAL (e limpa o valor)
                 formElements.dataAssistido.removeAttribute('required');
-                formElements.dataAssistido.value = ''; // Limpa a data se voltar para "Não"
+                formElements.dataAssistido.value = ''; 
             }
         });
-
-        filterElements.container.addEventListener('input', () => atualizarUI());
-        // ... (resto dos listeners) ...
 
         filterElements.container.addEventListener('input', () => atualizarUI());
         filterElements.limparBtn.addEventListener('click', () => {
