@@ -123,6 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // Elementos dos Filtros
+    // **NOTA: Estes podem ser nulos no início, serão verificados em setupAppEventListeners**
     const filterElements = {
         container: document.getElementById('filtros-container'),
         busca: document.getElementById('filtro-busca'),
@@ -263,8 +264,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 } catch (error) {
                     console.error("Erro ao checar nickname no Swal:", error);
-                    // Isso pode falhar se suas Regras de Segurança estiverem erradas
-                    Swal.showValidationMessage('Erro ao verificar o nickname. Tente novamente.');
+                    // AQUI ESTÁ A ALTERAÇÃO PARA MOSTRAR O ERRO REAL
+                    Swal.showValidationMessage(`Erro: ${error.message}`); 
                     return false;
                 }
             }
@@ -322,6 +323,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 logoutContainer.style.display = 'block';
                 authContainer.style.display = 'none';
                 appNavLinks.forEach(link => link.style.display = 'block'); 
+                
+                // **NOVO: ATIVA OS LISTENERS DO APP AQUI**
+                setupAppEventListeners(); 
+                
                 carregarFilmes();
             } else {
                 // --- PERFIL NÃO EXISTE, FORÇA MIGRAÇÃO ---
@@ -352,7 +357,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             loginCard.style.display = 'block';
             registerCard.style.display = 'none';
             
-            atualizarUI(); 
+            // **CORREÇÃO: Remove a chamada que quebrava o script**
+            // atualizarUI(); 
         }
     });
 
@@ -466,6 +472,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     const parseCSV = (string) => string.split(',').map(s => s.trim()).filter(Boolean);
     const popularSelect = (selectElement, items, label) => {
+        // **NOVA VERIFICAÇÃO**
+        if (!selectElement) return; 
         selectElement.innerHTML = `<option value="todos">${label}</option>`;
         [...new Set(items)].sort((a, b) => b - a).forEach(item => {
             if (item) selectElement.add(new Option(item, item));
@@ -483,6 +491,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // --- FUNÇÕES DE TAGS (INTACTO) ---
     function renderizarTags() {
+        // **NOVA VERIFICAÇÃO**
+        if (!generoTagContainer) return; 
         generoTagContainer.querySelectorAll('.tag-pill').forEach(tagEl => tagEl.remove());
         generosSelecionadosAtualmente.slice().reverse().forEach(label => {
             const tagEl = criarTag(label);
@@ -507,8 +517,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!trimmedLabel || !GENEROS_PREDEFINIDOS.includes(trimmedLabel) || generosSelecionadosAtualmente.includes(trimmedLabel)) return;
         generosSelecionadosAtualmente.push(trimmedLabel);
         renderizarTags();
-        generoInput.value = '';
-        generoInput.focus();
+        if (generoInput) {
+            generoInput.value = '';
+            generoInput.focus();
+        }
     }
     function removerTag(label) {
         generosSelecionadosAtualmente = generosSelecionadosAtualmente.filter(g => g !== label);
@@ -516,7 +528,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     function popularSugestoesDeGenero() {
         const datalist = document.getElementById('generos-sugeridos');
-        datalist.innerHTML = GENEROS_PREDEFINIDOS.map(g => `<option value="${g}"></option>`).join('');
+        // **NOVA VERIFICAÇÃO**
+        if(datalist) {
+            datalist.innerHTML = GENEROS_PREDEFINIDOS.map(g => `<option value="${g}"></option>`).join('');
+        }
     }
 
     // --- LÓGICA PRINCIPAL (Atualizar UI, Filtros) ---
@@ -535,6 +550,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     const aplicarFiltrosEordenacao = (listaDeFilmes) => {
         let filmesProcessados = [...listaDeFilmes];
+        // **NOVA VERIFICAÇÃO** (se os filtros não existirem, retorna a lista)
+        if (!filterElements.busca) return filmesProcessados; 
+
         const filtros = {
             busca: filterElements.busca.value.toLowerCase(),
             genero: filterElements.genero.value.toLowerCase(),
@@ -821,6 +839,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderizarRanking(elementId, ranking) {
         // ... (Corpo da função intacto)
         const ul = document.getElementById(elementId);
+        // **NOVA VERIFICAÇÃO**
+        if(!ul) return;
         ul.innerHTML = ranking.length > 0
             ? ranking.map(([nome, qtd]) => `<li class="list-group-item">${nome}<span class="ranking-count">${qtd}</span></li>`).join('')
             : '<li class="list-group-item">N/A</li>';
@@ -831,7 +851,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const statTitleH2 = document.querySelector('#estatisticas-section h2');
         const totalGlobalAssistidos = filmes.filter(f => f.assistido).length;
         const totalFiltrado = listaDeFilmes.length;
-        const isFiltered = totalGlobalAssistidos !== totalFiltrado || (filterElements.busca.value || filterElements.genero.value || filterElements.diretor.value || filterElements.ator.value || filterElements.ano.value !== 'todos' || filterElements.origem.value !== 'todos' || filterElements.assistido.value !== 'todos');
+        const isFiltered = totalGlobalAssistidos !== totalFiltrado || (filterElements.busca && (filterElements.busca.value || filterElements.genero.value || filterElements.diretor.value || filterElements.ator.value || filterElements.ano.value !== 'todos' || filterElements.origem.value !== 'todos' || filterElements.assistido.value !== 'todos'));
         if (statTitleH2) {
              statTitleH2.innerHTML = isFiltered ? `<i class="fas fa-filter me-2"></i> Estatísticas do Filtro (${totalFiltrado} de ${totalGlobalAssistidos} assistidos)` : `<i class="fas fa-chart-bar me-2"></i> Estatísticas dos Filmes Assistidos`;
         }
@@ -848,21 +868,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         const mediaNotas = (listaDeFilmes.reduce((acc, f) => acc + (f.nota || 0), 0) / totalFilmes).toFixed(1);
-        document.getElementById('stat-total-filmes').innerText = totalFilmes;
-        document.getElementById('stat-media-notas').innerText = mediaNotas;
-        if (document.getElementById('stat-media-notas-grafico')) document.getElementById('stat-media-notas-grafico').innerText = mediaNotas;
+        
+        // **NOVAS VERIFICAÇÕES** para todos os getElementById
+        const elStatTotal = document.getElementById('stat-total-filmes');
+        if (elStatTotal) elStatTotal.innerText = totalFilmes;
+        
+        const elStatMedia = document.getElementById('stat-media-notas');
+        if (elStatMedia) elStatMedia.innerText = mediaNotas;
+        
+        const elStatMediaGrafico = document.getElementById('stat-media-notas-grafico');
+        if (elStatMediaGrafico) elStatMediaGrafico.innerText = mediaNotas;
+        
         const melhorFilme = listaDeFilmes.reduce((p, c) => (p.nota || 0) > (c.nota || 0) ? p : c);
-        document.getElementById('stat-melhor-filme').innerText = melhorFilme.titulo;
+        const elStatMelhor = document.getElementById('stat-melhor-filme');
+        if (elStatMelhor) elStatMelhor.innerText = melhorFilme.titulo;
+        
         const piorFilme = listaDeFilmes.reduce((p, c) => (p.nota || 10) < (c.nota || 10) ? p : c);
-        document.getElementById('stat-pior-filme').innerText = piorFilme.titulo;
+        const elStatPior = document.getElementById('stat-pior-filme');
+        if (elStatPior) elStatPior.innerText = piorFilme.titulo;
+        
         const nacionais = listaDeFilmes.filter(f => f.origem === 'Nacional').length;
-        document.getElementById('stat-pct-nacionais').innerText = `${Math.round((nacionais / totalFilmes) * 100)}%`;
-        document.getElementById('stat-pct-internacionais').innerText = `${Math.round(((totalFilmes - nacionais) / totalFilmes) * 100)}%`;
+        const elStatNacionais = document.getElementById('stat-pct-nacionais');
+        if (elStatNacionais) elStatNacionais.innerText = `${Math.round((nacionais / totalFilmes) * 100)}%`;
+        
+        const elStatInternacionais = document.getElementById('stat-pct-internacionais');
+        if (elStatInternacionais) elStatInternacionais.innerText = `${Math.round(((totalFilmes - nacionais) / totalFilmes) * 100)}%`;
+        
         const decadas = listaDeFilmes.reduce((acc, f) => { if(f.ano) { const decada = Math.floor(f.ano / 10) * 10; acc[decada] = (acc[decada] || 0) + 1; } return acc; }, {});
         const decadaPopular = Object.keys(decadas).length ? Object.entries(decadas).sort(([,a],[,b]) => b-a)[0][0] : '-';
-        document.getElementById('stat-decada-popular').innerText = decadaPopular !== '-' ? `Anos ${decadaPopular}` : '-';
+        const elStatDecada = document.getElementById('stat-decada-popular');
+        if (elStatDecada) elStatDecada.innerText = decadaPopular !== '-' ? `Anos ${decadaPopular}` : '-';
+        
         const rankingAtores = criarRanking(listaDeFilmes, 'atores');
-        document.getElementById('stat-ator-frequente').innerText = rankingAtores.length ? rankingAtores[0][0] : '-';
+        const elStatAtor = document.getElementById('stat-ator-frequente');
+        if (elStatAtor) elStatAtor.innerText = rankingAtores.length ? rankingAtores[0][0] : '-';
+        
         renderizarRanking('ranking-generos', criarRanking(listaDeFilmes, 'genero'));
         renderizarRanking('ranking-atores', rankingAtores);
         renderizarRanking('ranking-diretores', criarRanking(listaDeFilmes, 'direcao'));
@@ -1045,6 +1085,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const error = document.getElementById('nickname-error');
         const input = document.getElementById('register-nickname');
         const feedback = document.getElementById('nickname-invalid-feedback');
+        
+        // **NOVA VERIFICAÇÃO** (Se os elementos não existirem, não faz nada)
+        if (!loading || !success || !error || !input || !feedback) return;
+
         loading.style.display = 'none';
         success.style.display = 'none';
         error.style.display = 'none';
@@ -1087,150 +1131,190 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             console.error("Erro ao checar nickname:", error);
-            setNicknameValidationUI('error', 'Erro ao verificar. Tente novamente.');
+            // AQUI ESTÁ A ALTERAÇÃO PARA MOSTRAR O ERRO REAL
+            setNicknameValidationUI('error', `Erro: ${error.message}`);
             isNicknameValid = false;
         }
     }
 
-
-    // --- EVENT LISTENERS ---
-    function setupEventListeners() {
+    // --- **NOVA FUNÇÃO** (EVENT LISTENERS SOMENTE DA AUTENTICAÇÃO) ---
+    function setupAuthEventListeners() {
         // --- LISTENERS DE AUTENTICAÇÃO ---
-        loginForm.addEventListener('submit', handleLogin);
-        registerForm.addEventListener('submit', handleRegister);
-        logoutBtn.addEventListener('click', handleLogout);
+        if (loginForm) loginForm.addEventListener('submit', handleLogin);
+        if (registerForm) registerForm.addEventListener('submit', handleRegister);
+        if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
 
-        document.getElementById('register-nickname').addEventListener('input', () => {
-            clearTimeout(nicknameCheckTimer);
-            const nickname = document.getElementById('register-nickname').value;
-            if (nickname.length < 4) {
-                 setNicknameValidationUI('idle'); 
-                 isNicknameValid = false;
-            }
-            nicknameCheckTimer = setTimeout(() => {
-                if (nickname.length >= 4 && nickname !== lastCheckedNickname) {
-                    checkNicknameAvailability();
+        const registerNicknameInput = document.getElementById('register-nickname');
+        if (registerNicknameInput) {
+            registerNicknameInput.addEventListener('input', () => {
+                clearTimeout(nicknameCheckTimer);
+                const nickname = registerNicknameInput.value;
+                if (nickname.length < 4) {
+                    setNicknameValidationUI('idle'); 
+                    isNicknameValid = false;
                 }
-            }, 500); 
-        });
+                nicknameCheckTimer = setTimeout(() => {
+                    if (nickname.length >= 4 && nickname !== lastCheckedNickname) {
+                        checkNicknameAvailability();
+                    }
+                }, 500); 
+            });
+        }
 
 
-        showRegisterLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginCard.style.display = 'none';
-            registerCard.style.display = 'block';
-        });
-        showLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginCard.style.display = 'block';
-            registerCard.style.display = 'none';
-        });
+        if (showRegisterLink) {
+            showRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginCard.style.display = 'none';
+                registerCard.style.display = 'block';
+            });
+        }
+        if (showLoginLink) {
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginCard.style.display = 'block';
+                registerCard.style.display = 'none';
+            });
+        }
 
         // --- LISTENERS DO TEMA (INTACTO) ---
         const temaSalvo = localStorage.getItem('theme') || 'dark';
         body.classList.toggle('dark-mode', temaSalvo === 'dark');
-        themeToggleBtn.innerHTML = temaSalvo === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-        themeToggleBtn.addEventListener('click', () => {
-            const isDark = body.classList.toggle('dark-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeToggleBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-            atualizarUI();
-        });
-
-        // --- NOVO: LISTENER DO BOTÃO DE REDEFINIR SENHA ---
-        document.getElementById('perfil-trocar-senha-btn').addEventListener('click', async () => {
-            if (!currentUserProfile || !currentUserProfile.email) {
-                Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível encontrar seu e-mail de cadastro.' });
-                return;
-            }
-            
-            try {
-                await sendPasswordResetEmail(auth, currentUserProfile.email);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'E-mail Enviado!',
-                    text: `Enviamos um link de redefinição de senha para ${currentUserProfile.email}.`
-                });
-            } catch (error) {
-                console.error("Erro ao enviar e-mail de redefinição de senha:", error);
-                Swal.fire({ icon: 'error', title: 'Oops...', text: 'Não foi possível enviar o e-mail. Tente novamente mais tarde.' });
-            }
-        });
-
-
-        // --- LISTENERS DO APP (INTACTO) ---
-        document.getElementById('export-json-btn').addEventListener('click', exportarParaJSON);
-        document.getElementById('export-csv-btn').addEventListener('click', exportarParaCSV);
-        document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file-input').click());
-        document.getElementById('import-file-input').addEventListener('change', importarDeArquivo);
-        document.getElementById('sugerir-filme-btn').addEventListener('click', sugerirFilmeAleatorio);
-
-        formElements.form.addEventListener('submit', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            const tituloValue = formElements.titulo.value.trim();
-            if (!formElements.form.checkValidity()) {
-                // (não faz nada, mostra erros)
-            } else {
-                salvarFilme(event, tituloValue);
-                formElements.form.classList.remove('was-validated');
-                return;
-            }
-            formElements.form.classList.add('was-validated');
-        });
-
-        formElements.assistido.addEventListener('change', () => {
-            const isSim = formElements.assistido.value === 'sim';
-            dataAssistidoGroup.style.display = isSim ? 'block' : 'none';
-            if (isSim) {
-                formElements.dataAssistido.setAttribute('required', 'required');
-            } else {
-                formElements.dataAssistido.removeAttribute('required');
-                formElements.dataAssistido.value = ''; 
-            }
-        });
-
-        filterElements.container.addEventListener('input', () => atualizarUI());
-        filterElements.limparBtn.addEventListener('click', () => {
-            filterElements.container.querySelectorAll('input, select').forEach(el => el.value = el.tagName === 'SELECT' ? 'todos' : '');
-            atualizarUI();
-        });
-        document.getElementById('filmesTabContent').addEventListener('click', (event) => {
-            const target = event.target;
-            const header = target.closest('th.sortable');
-            const editBtn = target.closest('.btn-edit');
-            const deleteBtn = target.closest('.btn-delete');
-            if (header) {
-                const column = header.dataset.sort;
-                sortDirection = sortBy === column && sortDirection === 'asc' ? 'desc' : 'asc';
-                sortBy = column;
+        if (themeToggleBtn) {
+            themeToggleBtn.innerHTML = temaSalvo === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            themeToggleBtn.addEventListener('click', () => {
+                const isDark = body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                themeToggleBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
                 atualizarUI();
-            } else if (editBtn) prepararEdicao(editBtn.closest('tr').dataset.id);
-            else if (deleteBtn) deletarFilme(deleteBtn.closest('tr').dataset.id);
-        });
+            });
+        }
+    }
 
-        generoTagContainer.addEventListener('click', () => {
-            generoInput.focus();
-        });
-        generoInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                adicionarTag(generoInput.value);
-            } else if (e.key === 'Backspace' && generoInput.value === '') {
-                if (generosSelecionadosAtualmente.length > 0) {
-                    removerTag(generosSelecionadosAtualmente[generosSelecionadosAtualmente.length - 1]);
+    // --- **NOVA FUNÇÃO** (EVENT LISTENERS SOMENTE DO APP) ---
+    function setupAppEventListeners() {
+        // --- NOVO: LISTENER DO BOTÃO DE REDEFINIR SENHA ---
+        const perfilTrocarSenhaBtn = document.getElementById('perfil-trocar-senha-btn');
+        if (perfilTrocarSenhaBtn) {
+            perfilTrocarSenhaBtn.addEventListener('click', async () => {
+                if (!currentUserProfile || !currentUserProfile.email) {
+                    Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível encontrar seu e-mail de cadastro.' });
+                    return;
                 }
-            }
-        });
-        generoInput.addEventListener('input', () => {
-            if (GENEROS_PREDEFINIDOS.includes(generoInput.value)) {
-                adicionarTag(generoInput.value);
-            }
-        });
+                
+                try {
+                    await sendPasswordResetEmail(auth, currentUserProfile.email);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'E-mail Enviado!',
+                        text: `Enviamos um link de redefinição de senha para ${currentUserProfile.email}.`
+                    });
+                } catch (error) {
+                    console.error("Erro ao enviar e-mail de redefinição de senha:", error);
+                    Swal.fire({ icon: 'error', title: 'Oops...', text: 'Não foi possível enviar o e-mail. Tente novamente mais tarde.' });
+                }
+            });
+        }
+
+        // --- LISTENERS DO APP (AGORA COM VERIFICAÇÃO) ---
+        const exportJsonBtn = document.getElementById('export-json-btn');
+        if (exportJsonBtn) exportJsonBtn.addEventListener('click', exportarParaJSON);
+        
+        const exportCsvBtn = document.getElementById('export-csv-btn');
+        if (exportCsvBtn) exportCsvBtn.addEventListener('click', exportarParaCSV);
+        
+        const importBtn = document.getElementById('import-btn');
+        if (importBtn) importBtn.addEventListener('click', () => document.getElementById('import-file-input').click());
+        
+        const importFileInput = document.getElementById('import-file-input');
+        if (importFileInput) importFileInput.addEventListener('change', importarDeArquivo);
+        
+        const sugerirFilmeBtn = document.getElementById('sugerir-filme-btn');
+        if (sugerirFilmeBtn) sugerirFilmeBtn.addEventListener('click', sugerirFilmeAleatorio);
+
+        if (formElements.form) {
+            formElements.form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const tituloValue = formElements.titulo.value.trim();
+                if (!formElements.form.checkValidity()) {
+                    // (não faz nada, mostra erros)
+                } else {
+                    salvarFilme(event, tituloValue);
+                    formElements.form.classList.remove('was-validated');
+                    return;
+                }
+                formElements.form.classList.add('was-validated');
+            });
+        }
+
+        if (formElements.assistido) {
+            formElements.assistido.addEventListener('change', () => {
+                const isSim = formElements.assistido.value === 'sim';
+                dataAssistidoGroup.style.display = isSim ? 'block' : 'none';
+                if (isSim) {
+                    formElements.dataAssistido.setAttribute('required', 'required');
+                } else {
+                    formElements.dataAssistido.removeAttribute('required');
+                    formElements.dataAssistido.value = ''; 
+                }
+            });
+        }
+
+        if (filterElements.container) {
+            filterElements.container.addEventListener('input', () => atualizarUI());
+        }
+        if (filterElements.limparBtn) {
+            filterElements.limparBtn.addEventListener('click', () => {
+                filterElements.container.querySelectorAll('input, select').forEach(el => el.value = el.tagName === 'SELECT' ? 'todos' : '');
+                atualizarUI();
+            });
+        }
+        
+        const filmesTabContent = document.getElementById('filmesTabContent');
+        if (filmesTabContent) {
+            filmesTabContent.addEventListener('click', (event) => {
+                const target = event.target;
+                const header = target.closest('th.sortable');
+                const editBtn = target.closest('.btn-edit');
+                const deleteBtn = target.closest('.btn-delete');
+                if (header) {
+                    const column = header.dataset.sort;
+                    sortDirection = sortBy === column && sortDirection === 'asc' ? 'desc' : 'asc';
+                    sortBy = column;
+                    atualizarUI();
+                } else if (editBtn) prepararEdicao(editBtn.closest('tr').dataset.id);
+                else if (deleteBtn) deletarFilme(deleteBtn.closest('tr').dataset.id);
+            });
+        }
+
+        if (generoTagContainer) {
+            generoTagContainer.addEventListener('click', () => {
+                if (generoInput) generoInput.focus();
+            });
+        }
+        if (generoInput) {
+            generoInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    adicionarTag(generoInput.value);
+                } else if (e.key === 'Backspace' && generoInput.value === '') {
+                    if (generosSelecionadosAtualmente.length > 0) {
+                        removerTag(generosSelecionadosAtualmente[generosSelecionadosAtualmente.length - 1]);
+                    }
+                }
+            });
+            generoInput.addEventListener('input', () => {
+                if (GENEROS_PREDEFINIDOS.includes(generoInput.value)) {
+                    adicionarTag(generoInput.value);
+                }
+            });
+        }
     };
 
     // --- INICIALIZAÇÃO ---
     popularSugestoesDeGenero();
-    setupEventListeners();
-    // A função onAuthStateChanged vai cuidar de chamar carregarFilmes() no momento certo.
+    // **CHAMA APENAS OS LISTENERS DE AUTENTICAÇÃO**
+    setupAuthEventListeners(); 
+    // A função onAuthStateChanged vai cuidar de chamar setupAppEventListeners() e carregarFilmes() no momento certo.
 });
