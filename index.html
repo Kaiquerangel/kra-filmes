@@ -226,7 +226,7 @@
                                     <option value="sim">Sim</option>
                                 </select>
                                 <div class="invalid-tooltip">
-                                     Por favor, informe se assistiu ao filme.
+                                        Por favor, informe se assistiu ao filme.
                                 </div>
                             </div>
                             <div class="col-md-6 position-relative" id="data-assistido-group" style="display: none;">
@@ -243,7 +243,7 @@
                                 <i class="fas fa-save me-2" aria-hidden="true"></i> Salvar Filme
                             </button>
                         </div>
-        
+                
                     </form>
                 </div>
             </div>
@@ -251,17 +251,126 @@
 
         <section id="estatisticas-section" class="mb-5" aria-labelledby="estatisticas-titulo">
              <div class="card glass-card">
-                <div class="card-body">
-                    <h2 id="estatisticas-titulo" class="card-title mb-4"><i class="fas fa-chart-bar me-2"></i> Estatísticas dos Filmes Assistidos</h2>
-                    </div>
-            </div>
+                 <div class="card-body">
+                     <h2 id="estatisticas-titulo" class="card-title mb-4"><i class="fas fa-chart-bar me-2"></i> Estatísticas dos Filmes Assistidos</h2>
+
+                     <div class="row g-3 text-center mb-4">
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Filmes Assistidos</span>
+                                <span class="stat-card-value" id="stat-total-filmes">0</span>
+                                </div>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Média de Notas</span>
+                                <span class="stat-card-value" id="stat-media-notas">0.0</span>
+                                </div>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">% Nacional</span>
+                                <span class="stat-card-value" id="stat-pct-nacionais">0%</span>
+                                </div>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">% Internacional</span>
+                                <span class="stat-card-value" id="stat-pct-internacionais">0%</span>
+                                </div>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Década Popular</span>
+                                <span class="stat-card-value-text" id="stat-decada-popular">-</span>
+                                </div>
+                        </div>
+                         <div class="col-lg-2 col-md-4 col-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Ator Mais Frequente</span>
+                                <span class="stat-card-value-text" id="stat-ator-frequente">-</span>
+                                </div>
+                        </div>
+                     </div>
+
+                     <div class="row g-3 text-center mb-4">
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Melhor Filme (Nota)</span>
+                                <span class="stat-card-value-text" id="stat-melhor-filme">-</span>
+                                </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Pior Filme (Nota)</span>
+                                <span class="stat-card-value-text" id="stat-pior-filme">-</span>
+                                </div>
+                        </div>
+                     </div>
+
+                     <div class="row g-4 mt-3">
+                         <div class="col-md-6">
+                             <h5 class="ranking-title">Top Gêneros</h5>
+                             <div class="ranking-bars-container" id="ranking-generos-bars">
+                                 </div>
+                         </div>
+                         <div class="col-md-6">
+                             <h5 class="ranking-title">Top Atores/Atrizes</h5>
+                             <div class="ranking-bars-container" id="ranking-atores-bars">
+                                 </div>
+                         </div>
+                         <div class="col-md-6">
+                             <h5 class="ranking-title">Top Direção</h5>
+                             <div class="ranking-bars-container" id="ranking-diretores-bars">
+                                 </div>
+                         </div>
+                         <div class="col-md-6">
+                             <h5 class="ranking-title">Top Anos</h5>
+                             <div class="ranking-bars-container" id="ranking-anos-bars">
+                                 </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
         </section>
 
         <section id="graficos-section" class="mb-5" aria-labelledby="graficos-titulo">
             <div class="card glass-card">
                 <div class="card-body">
                     <h2 id="graficos-titulo" class="card-title mb-4"><i class="fas fa-palette me-2" aria-hidden="true"></i> Análise Visual</h2>
+                    
+                    <div class="row g-4">
+                        <div class="col-lg-4 col-md-6">
+                            <h5 class="ranking-title">Top 5 Gêneros</h5>
+                            <div style="height: 300px;"><canvas id="generosChart"></canvas></div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <h5 class="ranking-title">Top 5 Diretores</h5>
+                            <div style="height: 300px;"><canvas id="diretoresChart"></canvas></div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <h5 class="ranking-title">Origem dos Filmes</h5>
+                            <div style="height: 300px;"><canvas id="origemChart"></canvas></div>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <h5 class="ranking-title">Filmes por Ano (Top 10 Recentes)</h5>
+                            <div style="height: 300px;"><canvas id="anosChart"></canvas></div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="ranking-title">Distribuição de Notas</h5>
+                            <div style="height: 300px;"><canvas id="notasChart"></canvas></div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="ranking-title">Média de Notas por Ano</h5>
+                            <div style="height: 300px;"><canvas id="mediaNotasAnoChart"></canvas></div>
+                        </div>
+                         <div class="col-lg-6">
+                            <h5 class="ranking-title">Filmes Assistidos (Últimos 12 Meses)</h5>
+                            <div style="height: 300px;"><canvas id="assistidosMesChart"></canvas></div>
+                        </div>
                     </div>
+                    
+                </div>
             </div>
         </section>
 
@@ -299,12 +408,113 @@
             </div>
         </section>
 
-
         <section id="lista-section" class="mb-5" aria-labelledby="lista-titulo">
             <div class="card glass-card">
                 <div class="card-body">
-                    <h2 id="lista-titulo" class="card-title mb-4"><i class="fas fa-list me-2" aria-hidden="true"></i> Lista de Filmes</h2>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                        <h2 id="lista-titulo" class="card-title mb-0"><i class="fas fa-list me-2" aria-hidden="true"></i> Lista de Filmes</h2>
+                        <div class="import-export-buttons d-flex flex-wrap gap-2 mt-3 mt-md-0">
+                            <div class="btn-group btn-group-sm">
+                                <button id="export-json-btn" class="btn btn-outline-light" title="Exportar para JSON">
+                                    <i class="fas fa-file-export"></i> JSON
+                                </button>
+                                <button id="export-csv-btn" class="btn btn-outline-light" title="Exportar para CSV">
+                                    <i class="fas fa-file-csv"></i> CSV
+                                </button>
+                            </div>
+                            <button id="import-btn" class="btn btn-outline-light btn-sm" title="Importar de JSON/CSV">
+                                <i class="fas fa-file-import"></i> Importar
+                            </button>
+                            <input type="file" id="import-file-input" accept=".json, .csv" style="display: none;">
+                        </div>
                     </div>
+        
+                    <div id="filtros-container" class="row g-2 mb-3 align-items-end">
+                        <div class="col-lg-3 col-md-6">
+                            <label for="filtro-busca" class="form-label form-label-sm visually-hidden">Buscar por Título</label>
+                            <input type="text" class="form-control form-control-sm" id="filtro-busca" placeholder="Buscar por Título...">
+                        </div>
+                        <div class="col-lg col-md-3 col-6">
+                            <label for="filtro-genero" class="form-label form-label-sm visually-hidden">Gênero</label>
+                            <input type="text" class="form-control form-control-sm" id="filtro-genero" placeholder="Gênero...">
+                        </div>
+                        <div class="col-lg col-md-3 col-6">
+                            <label for="filtro-diretor" class="form-label form-label-sm visually-hidden">Direção</label>
+                            <input type="text" class="form-control form-control-sm" id="filtro-diretor" placeholder="Direção...">
+                        </div>
+                        <div class="col-lg col-md-3 col-6">
+                            <label for="filtro-ator" class="form-label form-label-sm visually-hidden">Ator/Atriz</label>
+                            <input type="text" class="form-control form-control-sm" id="filtro-ator" placeholder="Ator/Atriz...">
+                        </div>
+                        <div class="col-lg-1 col-md-3 col-6">
+                            <label for="filtro-ano" class="form-label form-label-sm visually-hidden">Ano</label>
+                            <select id="filtro-ano" class="form-select form-select-sm">
+                                <option value="todos">Ano</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-1 col-md-3 col-6">
+                            <label for="filtro-origem" class="form-label form-label-sm visually-hidden">Origem</label>
+                            <select id="filtro-origem" class="form-select form-select-sm">
+                                <option value="todos">Origem</option>
+                                <option value="Nacional">Nacional</option>
+                                <option value="Internacional">Internacional</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-1 col-md-3 col-6">
+                            <label for="filtro-assistido" class="form-label form-label-sm visually-hidden">Status</label>
+                            <select id="filtro-assistido" class="form-select form-select-sm">
+                                <option value="todos">Status</option>
+                                <option value="sim">Assistido</option>
+                                <option value="nao">Não Assistido</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-auto col-md-12 mt-md-2 mt-lg-0">
+                            <button id="limpar-filtros" class="btn btn-outline-secondary btn-sm w-100">Limpar Filtros</button>
+                        </div>
+                    </div>
+        
+                    <div class="text-center my-4">
+                         <button id="sugerir-filme-btn" class="btn btn-gradient px-4 py-2">
+                             <i class="fas fa-random me-2"></i> Sugerir Filme Aleatório
+                         </button>
+                    </div>
+        
+                    <ul class="nav nav-tabs nav-fill mb-3" id="filmesTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="todos-tab" data-bs-toggle="tab" data-bs-target="#todos-tab-pane" type="button" role="tab" aria-controls="todos-tab-pane" aria-selected="true">
+                                <i class="fas fa-list me-1"></i> Todos os Filmes
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="assistidos-tab" data-bs-toggle="tab" data-bs-target="#assistidos-tab-pane" type="button" role="tab" aria-controls="assistidos-tab-pane" aria-selected="false">
+                                <i class="fas fa-check-circle me-1"></i> Assistidos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="nao-assistidos-tab" data-bs-toggle="tab" data-bs-target="#nao-assistidos-tab-pane" type="button" role="tab" aria-controls="nao-assistidos-tab-pane" aria-selected="false">
+                                <i class="fas fa-clock me-1"></i> Para Assistir
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="filmesTabContent">
+                        <div class="tab-pane fade show active" id="todos-tab-pane" role="tabpanel" aria-labelledby="todos-tab" tabindex="0">
+                            <div class="table-responsive" id="tabela-todos-container">
+                                <p class="text-center text-muted pt-3">Carregando filmes...</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="assistidos-tab-pane" role="tabpanel" aria-labelledby="assistidos-tab" tabindex="0">
+                            <div class="table-responsive" id="tabela-assistidos-container">
+                                 <p class="text-center text-muted pt-3">Carregando filmes...</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="nao-assistidos-tab-pane" role="tabpanel" aria-labelledby="nao-assistidos-tab" tabindex="0">
+                            <div class="table-responsive" id="tabela-nao-assistidos-container">
+                                 <p class="text-center text-muted pt-3">Carregando filmes...</p>
+                            </div>
+                        </div>
+                    </div>
+        
+                </div>
             </div>
         </section>
         
@@ -322,12 +532,12 @@
         
         const firebaseConfig = {
             // ... suas chaves do firebase ...
-            apiKey: "AIzaSyBnd-aZz1JIIHsgaBUZRlM38xwz3BjKhyI",
-            authDomain: "meus-filmes-app.firebaseapp.com",
-            projectId: "meus-filmes-app",
-            storageBucket: "meus-filmes-app.appspot.com",
-            messagingSenderId: "857152940365",
-            appId: "1:857152940365:web:3b239a77ff87aded822f04"
+             apiKey: "AIzaSyBnd-aZz1JIIHsgaBUZRlM38xwz3BjKhyI",
+             authDomain: "meus-filmes-app.firebaseapp.com",
+             projectId: "meus-filmes-app",
+             storageBucket: "meus-filmes-app.appspot.com",
+             messagingSenderId: "857152940365",
+             appId: "1:857152940365:web:3b239a77ff87aded822f04"
         };
         
         const app = initializeApp(firebaseConfig);

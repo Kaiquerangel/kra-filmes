@@ -1,7 +1,6 @@
 /* ==========================================================================
    [ 1 ] CONFIGURAÇÕES GLOBAIS E VARIÁVEIS
    ========================================================================== */
-/* ... (todo o seu CSS existente das seções 1-8 está aqui, intacto) ... */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 :root {
  --cor-fundo: #f4f7f6;
@@ -16,13 +15,14 @@
  --cor-texto-dark: #e2e8f0;
  --cor-card-dark: rgba(31, 41, 55, 0.5);
  --cor-borda-dark: rgba(255, 255, 255, 0.1);
- --cor-texto-secundario-dark: #94a3b8;
+ --cor-texto-secundario-dark: #94a3b8; /* Cor original, pode ser usada onde o contraste é bom */
+ --cor-texto-secundario-dark-claro: #cbd5e1; /* Cinza mais claro para melhor contraste */
 }
 body {
  font-family: 'Inter', sans-serif;
  background-color: var(--cor-fundo);
  color: var(--cor-texto);
- padding-top: 70px; 
+ padding-top: 70px;
  scroll-behavior: smooth;
  transition: background-color 0.3s, color 0.3s;
 }
@@ -154,15 +154,15 @@ section[id] {
 .social-icon i { font-size: 1.4rem; transition: color 0.2s ease-in-out, transform 0.2s ease-in-out; }
 .social-icon:hover i { color: var(--cor-texto-dark); transform: scale(1.1); }
 .nav-tabs { border-bottom: none; }
-.nav-link { 
- background-color: transparent; 
- border: 1px solid transparent; 
- border-radius: .5rem; 
- color: var(--cor-texto-secundario); 
- font-weight: 600; 
- margin: 0 .25rem; 
- padding: .5rem 1rem; 
- transition: all .3s ease; 
+.nav-link {
+ background-color: transparent;
+ border: 1px solid transparent;
+ border-radius: .5rem;
+ color: var(--cor-texto-secundario);
+ font-weight: 600;
+ margin: 0 .25rem;
+ padding: .5rem 1rem;
+ transition: all .3s ease;
 }
 .nav-link:not(.active):hover {
  color: var(--cor-texto);
@@ -182,13 +182,13 @@ section[id] {
 .stat-card-title { font-size: .7rem; font-weight: 600; text-transform: uppercase; color: var(--cor-texto-secundario-dark); margin-bottom: .25rem; }
 .stat-card-value { font-size: 1.75rem; font-weight: 700; color: #fff; line-height: 1.2; }
 .stat-card-value-text { font-size: 1rem; font-weight: 600; color: #fff; line-height: 1.3; }
-.ranking-count { background-color: #333; color: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; }
-.list-group-item { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; padding: .5rem .2rem; background-color: transparent; border-color: #eee; color: var(--cor-texto); }
-.list-group-item span { font-weight: 600; background-color: var(--cor-acento-principal); color: #fff; padding: .1rem .4rem; border-radius: 5px; font-size: .8rem; }
-.ranking-title { color: var(--cor-acento-principal); font-weight: 600; margin-bottom: 1rem; text-align: center; }
+.ranking-count { background-color: #333; color: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; } /* Esta regra não será mais usada para barras */
+.list-group-item { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; padding: .5rem .2rem; background-color: transparent; border-color: #eee; color: var(--cor-texto); } /* Esta regra não será mais usada para barras */
+.list-group-item span { font-weight: 600; background-color: var(--cor-acento-principal); color: #fff; padding: .1rem .4rem; border-radius: 5px; font-size: .8rem; } /* Esta regra não será mais usada para barras */
+.ranking-title { color: var(--cor-acento-principal); font-weight: 600; margin-bottom: 1rem; text-align: center; } /* Será sobrescrita na seção 10 */
 canvas { max-height: 350px; }
 /* ==========================================================================
-   [ 5 ] MODIFICADORES DE TEMA
+   [ 5 ] MODIFICADORES DE TEMA (AJUSTES DE CONTRASTE ADICIONADOS AQUI)
    ========================================================================== */
 body:not(.dark-mode) .table.table-dark {
  --bs-table-bg: #ffffff;
@@ -211,6 +211,8 @@ body:not(.dark-mode) .tabela-filmes td {
 body:not(.dark-mode) .tabela-filmes .btn-info { background-color: #0dcaf0; border-color: #0dcaf0; color: white; }
 body:not(.dark-mode) .tabela-filmes .btn-danger { background-color: #dc3545; border-color: #dc3545; color: white; }
 body:not(.dark-mode) .tabela-filmes th.sortable:hover { background-color: rgba(0, 0, 0, 0.05); }
+
+/* --- DARK MODE --- */
 body.dark-mode {
  background-color: var(--cor-fundo-dark);
  background-image: var(--cor-fundo-dark-gradiente);
@@ -228,10 +230,23 @@ body.dark-mode .card {
  backdrop-filter: blur(12px);
  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
+
+/* Título principal do card (Meu Perfil, Login, Cadastro) */
 body.dark-mode .card-title,
-body.dark-mode .form-label {
- color: var(--cor-texto-secundario-dark);
+/* Títulos "Minhas Estatísticas", "Minhas Conquistas" */
+body.dark-mode h4,
+/* Nome do usuário */
+body.dark-mode #perfil-nome {
+  color: var(--cor-texto-dark); /* Usar a cor de texto principal (branca) */
+  opacity: 0.9; /* Leve transparência para não ser tão forte */
 }
+
+/* Labels de formulário */
+body.dark-mode .form-label {
+ color: var(--cor-texto-secundario-dark-claro); /* Usar cinza claro */
+}
+
+/* Inputs, Selects, Tag Container */
 body.dark-mode .form-control,
 body.dark-mode .form-select,
 body.dark-mode .tag-container {
@@ -263,22 +278,43 @@ body.dark-mode .nav-link {
  color: var(--cor-texto-dark);
 }
 body.dark-mode .nav-link:not(.active):hover { color: var(--cor-texto-dark); background-color: rgba(255,255,255,0.05); }
-body.dark-mode .text-muted { color: var(--cor-texto-secundario-dark) !important; }
+
+/* Textos secundários (Nickname, Membro desde, Texto geral muted) */
+body.dark-mode .text-muted,
+body.dark-mode #perfil-nickname,
+body.dark-mode #perfil-membro-desde {
+  color: var(--cor-texto-secundario-dark-claro) !important; /* Usar cinza mais claro */
+  opacity: 0.8;
+}
+
 body.dark-mode .nav-link.active {
- background-color: var(--cor-fundo-dark); 
- border-color: var(--cor-acento-principal); 
- box-shadow: 0 0 15px rgba(100,116,139,.4); 
- color: var(--cor-texto-dark); 
+ background-color: var(--cor-fundo-dark);
+ border-color: var(--cor-acento-principal);
+ box-shadow: 0 0 15px rgba(100,116,139,.4);
+ color: var(--cor-texto-dark);
 }
 body.dark-mode input[type="date"].form-control,
 body.dark-mode .form-select {
  color-scheme: dark;
 }
+
+/* Títulos dentro dos cards menores de estatística */
+body.dark-mode .stat-card-title {
+  color: var(--cor-texto-secundario-dark-claro); /* Usar cinza mais claro */
+  opacity: 0.9;
+}
+
+/* Ícone grande de usuário */
+body.dark-mode .fa-user-circle.fa-8x {
+    opacity: 0.3; /* Aumentar um pouco a opacidade */
+    color: var(--cor-texto-secundario-dark); /* Garantir que tenha uma cor base */
+}
+
 /* ==========================================================================
    [ 6 ] ESTILOS ESPECÍFICOS PARA SUGESTÃO DE FILME (SWEETALERT2)
    ========================================================================== */
 .suggestion-swal-popup {
-    background-color: var(--cor-card-dark) !important; 
+    background-color: var(--cor-card-dark) !important;
     border: 1px solid var(--cor-borda-dark) !important;
     backdrop-filter: blur(12px) !important;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
@@ -286,7 +322,7 @@ body.dark-mode .form-select {
     border-radius: 1rem !important;
 }
 .suggestion-swal-popup .swal2-title {
-    color: var(--cor-texto-dark) !important; 
+    color: var(--cor-texto-dark) !important;
     font-size: 1.8rem !important;
     margin-bottom: 1.5rem !important;
 }
@@ -295,47 +331,47 @@ body.dark-mode .form-select {
     color: var(--cor-acento-principal) !important;
 }
 .suggestion-swal-popup .swal2-actions {
-    margin-top: 2rem; 
-    flex-wrap: wrap; 
-    justify-content: center; 
+    margin-top: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
-.suggestion-confirm-btn { 
-    background: linear-gradient(90deg, #64748b, #94a3b8) !important; 
+.suggestion-confirm-btn {
+    background: linear-gradient(90deg, #64748b, #94a3b8) !important;
     border: none !important;
     color: white !important;
     font-weight: 600 !important;
     border-radius: 0.75rem !important;
     box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
     padding: 0.75rem 1.5rem !important;
-    order: 1; 
-    margin: 0.5rem !important; 
+    order: 1;
+    margin: 0.5rem !important;
 }
 .suggestion-confirm-btn:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6) !important;
     filter: brightness(1.1) !important;
 }
-.suggestion-deny-btn { 
-    background-color: #dc3545 !important; 
+.suggestion-deny-btn {
+    background-color: #dc3545 !important;
     border: none !important;
     color: white !important;
     font-weight: 600 !important;
     border-radius: 0.75rem !important;
     padding: 0.75rem 1.5rem !important;
-    order: 2; 
+    order: 2;
     margin: 0.5rem !important;
 }
 .suggestion-deny-btn:hover {
     filter: brightness(1.1);
 }
-.suggestion-cancel-btn { 
-    background-color: #6c757d !important; 
+.suggestion-cancel-btn {
+    background-color: #6c757d !important;
     border: none !important;
     color: white !important;
     font-weight: 600 !important;
     border-radius: 0.75rem !important;
     padding: 0.75rem 1.5rem !important;
-    order: 3; 
+    order: 3;
     margin: 0.5rem !important;
 }
 .suggestion-cancel-btn:hover {
@@ -345,7 +381,7 @@ body.dark-mode .form-select {
    [ 7 ] ESTILOS ADICIONAIS SWEETALERT (NOVO)
    ========================================================================== */
 .suggestion-swal-popup .swal2-icon-content {
-  font-size: 3.5rem; 
+  font-size: 3.5rem;
   line-height: 1;
 }
 .suggestion-swal-popup .swal2-icon.swal2-html-container {
@@ -354,18 +390,18 @@ body.dark-mode .form-select {
 }
 .suggestion-layout {
     display: flex;
-    flex-wrap: wrap; 
-    gap: 2rem; 
-    text-align: left; 
+    flex-wrap: wrap;
+    gap: 2rem;
+    text-align: left;
     align-items: center;
     padding: 1rem;
 }
 .suggestion-main-info {
-    flex: 2; 
+    flex: 2;
     min-width: 200px;
 }
 .suggestion-side-info {
-    flex: 1; 
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -380,7 +416,7 @@ body.dark-mode .form-select {
     margin-bottom: 0.75rem;
 }
 .suggestion-layout .suggestion-details p {
-    justify-content: flex-start; 
+    justify-content: flex-start;
     margin-bottom: 0.25rem;
 }
 .suggestion-layout .suggestion-note {
@@ -413,23 +449,23 @@ body.dark-mode .form-select {
    [ 8 ] VALIDADOR DE NICKNAME
    ========================================================================== */
 .nickname-validator {
-  position: absolute;
-  right: 1rem;
-  top: 70%; 
-  transform: translateY(-50%);
-  font-size: 1.25rem;
+ position: absolute;
+ right: 1rem;
+ top: 70%;
+ transform: translateY(-50%);
+ font-size: 1.25rem;
 }
 input#register-nickname.is-invalid {
-  background-image: none !important;
-  padding-right: calc(1.5em + .75rem) !important;
+ background-image: none !important;
+ padding-right: calc(1.5em + .75rem) !important;
 }
 input#register-nickname.is-valid {
-  background-image: none !important;
-  padding-right: calc(1.5em + .75rem) !important;
+ background-image: none !important;
+ padding-right: calc(1.5em + .75rem) !important;
 }
 
 /* ==========================================================================
-   [ 9 ] SEÇÃO PERFIL E CONQUISTAS (NOVO)
+   [ 9 ] SEÇÃO PERFIL E CONQUISTAS (AJUSTES DE CONTRASTE ADICIONADOS AQUI)
    ========================================================================== */
 
 /* Mensagem de Boas-vindas na Navbar */
@@ -475,21 +511,29 @@ body:not(.dark-mode) .conquistas-container {
     line-height: 1;
 }
 
+/* Texto dentro dos selos de conquista */
 .conquista-selo span {
     font-size: 0.75rem;
     font-weight: 600;
     margin-top: 0.5rem;
     line-height: 1.2;
+    color: var(--cor-texto-dark); /* FORÇAR cor branca no dark mode */
 }
 
 /* Estado Bloqueado (Padrão) */
 .conquista-selo {
-    opacity: 0.4;
-    filter: grayscale(100%);
+    opacity: 0.5; /* Aumentar um pouco a opacidade geral do bloqueado */
+    filter: grayscale(80%); /* Reduzir um pouco o grayscale */
 }
-.conquista-selo i {
-    color: #94a3b8; /* Cor secundária */
+body.dark-mode .conquista-selo i {
+    color: #64748b; /* Um cinza azulado um pouco mais visível */
 }
+/* Garantir que o texto do selo bloqueado ainda seja legível */
+body.dark-mode .conquista-selo span {
+     color: var(--cor-texto-secundario-dark-claro); /* Usar um cinza claro para o texto bloqueado */
+     opacity: 0.9;
+}
+
 
 /* Estado Desbloqueado */
 .conquista-selo.unlocked {
@@ -498,9 +542,13 @@ body:not(.dark-mode) .conquistas-container {
     border-color: #f97316; /* Cor de destaque (laranja) */
     box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
 }
-
 .conquista-selo.unlocked i {
     color: #f97316;
+}
+/* Garantir cor branca no texto do selo desbloqueado */
+body.dark-mode .conquista-selo.unlocked span {
+    color: var(--cor-texto-dark); /* Branco */
+    opacity: 1;
 }
 
 /* Efeito hover para mostrar o 'title' */
@@ -509,17 +557,129 @@ body:not(.dark-mode) .conquistas-container {
     cursor: help;
 }
 
-/* Ajuste no modo claro para os selos */
+/* Ajustes no modo claro para manter consistência */
 body:not(.dark-mode) .conquista-selo {
     border-color: #ddd;
     background-color: #f8f9fa;
+    opacity: 0.6; /* Deixar bloqueado mais apagado */
+    filter: grayscale(100%);
+}
+body:not(.dark-mode) .conquista-selo span {
+    color: var(--cor-texto-secundario); /* Cor de texto padrão no modo claro */
+}
+body:not(.dark-mode) .conquista-selo.unlocked span {
+    color: var(--cor-texto); /* Cor de texto principal para destaque */
 }
 body:not(.dark-mode) .conquista-selo i {
-    color: #6c757d;
+    color: #adb5bd; /* Ícone cinza claro para bloqueado */
 }
 body:not(.dark-mode) .conquista-selo.unlocked {
-    border-color: #f97316;
+     opacity: 1;
+     filter: grayscale(0%);
+     border-color: #f97316;
 }
 body:not(.dark-mode) .conquista-selo.unlocked i {
-    color: #f97316;
+    color: #f97316; /* Laranja para desbloqueado */
+}
+
+/* ==========================================================================
+   [ 10 ] ESTILOS PARA RANKING COM BARRAS (NOVO)
+   ========================================================================== */
+
+.ranking-bars-container {
+    font-size: 0.85rem; /* Tamanho da fonte menor para os itens */
+}
+
+.ranking-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Espaço entre label, barra e contador */
+}
+
+.ranking-bar-label {
+    flex-basis: 120px; /* Largura fixa para o texto (ajuste conforme necessário) */
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Adiciona "..." se o nome for muito longo */
+    text-align: left;
+    color: var(--cor-texto-secundario-dark-claro); /* Cor mais clara para o label */
+}
+
+body:not(.dark-mode) .ranking-bar-label {
+    color: var(--cor-texto-secundario);
+}
+
+
+.ranking-bar-container {
+    flex-grow: 1; /* Faz a barra ocupar o espaço restante */
+    background-color: rgba(128, 128, 128, 0.15); /* Fundo da barra 'vazia' */
+    border-radius: 3px;
+    height: 10px; /* Altura da barra */
+    overflow: hidden; /* Garante que a barra interna não ultrapasse */
+}
+
+body:not(.dark-mode) .ranking-bar-container {
+     background-color: #e9ecef; /* Fundo mais claro para tema light */
+}
+
+.ranking-bar {
+    height: 100%;
+    background-color: var(--cor-acento-principal); /* Cor da barra preenchida */
+    border-radius: 3px;
+    transition: width 0.3s ease-out; /* Animação suave */
+}
+
+body:not(.dark-mode) .ranking-bar {
+     background-color: #64748b; /* Cor principal no tema claro */
+}
+
+
+.ranking-bar-count {
+    font-weight: 600;
+    min-width: 25px; /* Largura mínima para o número */
+    text-align: right;
+    color: var(--cor-texto-dark);
+}
+
+body:not(.dark-mode) .ranking-bar-count {
+    color: var(--cor-texto);
+}
+
+/* Ajuste nos títulos do ranking para garantir alinhamento à esquerda */
+.ranking-title {
+    text-align: left !important; /* Força alinhamento à esquerda */
+    color: var(--cor-texto-secundario-dark-claro); /* Cor mais clara para o título */
+    font-size: 0.9rem; /* Tamanho um pouco menor */
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+body:not(.dark-mode) .ranking-title {
+     color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================================
+   [ 11 ] CORREÇÃO DE CONTRASTE - LOGIN/CADASTRO (NOVO)
+   ========================================================================== */
+
+/* Define a cor do texto ('Não tem conta?' / 'Já tem conta?') */
+body.dark-mode #login-card p,
+body.dark-mode #register-card p {
+    color: var(--cor-texto-secundario-dark-claro); /* Usar o cinza mais claro */
+    opacity: 0.9;
+}
+
+/* Define a cor dos links ('Cadastre-se' / 'Faça o login') */
+body.dark-mode #login-card p a,
+body.dark-mode #register-card p a {
+    color: var(--cor-texto-dark); /* Usar a cor principal (branco) para destaque */
+    opacity: 1; /* Garante visibilidade total */
+    text-decoration: underline; /* Mantém o sublinhado para indicar link */
+}
+
+/* Opcional: Efeito hover para os links */
+body.dark-mode #login-card p a:hover,
+body.dark-mode #register-card p a:hover {
+    color: var(--cor-texto-secundario-dark-claro); /* Muda para cinza claro no hover */
 }

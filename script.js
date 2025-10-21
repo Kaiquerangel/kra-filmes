@@ -616,7 +616,7 @@ document.addEventListener('DOMContentLoaded', async () => {
              console.error("Erro ao escutar filmes:", error);
              Swal.fire({ icon: 'error', title: 'Oops...', text: 'Não foi possível carregar os filmes em tempo real.' });
          });
-    }; 
+     }; 
 
     const salvarFilme = async (event, tituloValue) => {
         event.preventDefault();
@@ -836,18 +836,60 @@ document.addEventListener('DOMContentLoaded', async () => {
         return Object.entries(contagem).sort(([, a], [, b]) => b - a).slice(0, 10);
     };
 
-    function renderizarRanking(elementId, ranking) {
-        // ... (Corpo da função intacto)
-        const ul = document.getElementById(elementId);
-        // **NOVA VERIFICAÇÃO**
-        if(!ul) return;
-        ul.innerHTML = ranking.length > 0
-            ? ranking.map(([nome, qtd]) => `<li class="list-group-item">${nome}<span class="ranking-count">${qtd}</span></li>`).join('')
-            : '<li class="list-group-item">N/A</li>';
-    };
+    /**
+     * Renderiza um ranking como barras horizontais dentro de um container específico.
+     */
+    function renderizarRankingBarras(elementId, rankingData) {
+        const container = document.getElementById(elementId);
+        if (!container) return;
+
+        container.innerHTML = ''; // Limpa o container
+
+        if (!rankingData || rankingData.length === 0) {
+            container.innerHTML = '<p class="text-muted small">N/A</p>';
+            return;
+        }
+
+        // Encontra o valor máximo para calcular a proporção da barra
+        const maxCount = rankingData.reduce((max, [, count]) => Math.max(max, count), 0);
+        if (maxCount === 0) return; // Evita divisão por zero
+
+        rankingData.forEach(([name, count]) => {
+            const barPercentage = (count / maxCount) * 100;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'ranking-bar-item mb-2'; // Adiciona margem inferior
+
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'ranking-bar-label';
+            labelSpan.textContent = name;
+
+            const barContainer = document.createElement('div');
+            barContainer.className = 'ranking-bar-container';
+
+            const barDiv = document.createElement('div');
+            barDiv.className = 'ranking-bar';
+            // Define a largura da barra dinamicamente
+            barDiv.style.width = `${barPercentage}%`;
+            // Opcional: Adicionar title para ver o valor exato no hover
+            barDiv.title = `${name}: ${count}`;
+
+            const countSpan = document.createElement('span');
+            countSpan.className = 'ranking-bar-count';
+            countSpan.textContent = count;
+
+            barContainer.appendChild(barDiv);
+
+            itemDiv.appendChild(labelSpan);
+            itemDiv.appendChild(barContainer);
+            itemDiv.appendChild(countSpan);
+
+            container.appendChild(itemDiv);
+        });
+    }
 
     function atualizarEstatisticas(listaDeFilmes) {
-        // ... (Corpo da função intacto)
+        // ... (código inicial igual)
         const statTitleH2 = document.querySelector('#estatisticas-section h2');
         const totalGlobalAssistidos = filmes.filter(f => f.assistido).length;
         const totalFiltrado = listaDeFilmes.length;
@@ -861,9 +903,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const el = document.getElementById(id);
                 if (el) el.innerText = id.includes('pct') ? '0%' : (id.includes('media') ? '0.0' : (id.includes('total') ? '0' : '-'));
             });
-            ['ranking-generos', 'ranking-atores', 'ranking-diretores', 'ranking-anos'].forEach(id => {
+            // Limpa containers de barras
+            ['ranking-generos-bars', 'ranking-atores-bars', 'ranking-diretores-bars', 'ranking-anos-bars'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) renderizarRanking(id, []);
+                if (el) renderizarRankingBarras(id, []);
             });
             return;
         }
@@ -876,8 +919,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const elStatMedia = document.getElementById('stat-media-notas');
         if (elStatMedia) elStatMedia.innerText = mediaNotas;
         
-        const elStatMediaGrafico = document.getElementById('stat-media-notas-grafico');
-        if (elStatMediaGrafico) elStatMediaGrafico.innerText = mediaNotas;
+        // Removido stat-media-notas-grafico pois não existe nesse layout
         
         const melhorFilme = listaDeFilmes.reduce((p, c) => (p.nota || 0) > (c.nota || 0) ? p : c);
         const elStatMelhor = document.getElementById('stat-melhor-filme');
@@ -903,11 +945,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const elStatAtor = document.getElementById('stat-ator-frequente');
         if (elStatAtor) elStatAtor.innerText = rankingAtores.length ? rankingAtores[0][0] : '-';
         
-        renderizarRanking('ranking-generos', criarRanking(listaDeFilmes, 'genero'));
-        renderizarRanking('ranking-atores', rankingAtores);
-        renderizarRanking('ranking-diretores', criarRanking(listaDeFilmes, 'direcao'));
-        const anos = listaDeFilmes.reduce((acc, f) => { if(f.ano) acc[f.ano] = (acc[f.ano] || 0) + 1; return acc; }, {});
-        renderizarRanking('ranking-anos', Object.entries(anos).sort(([,a],[,b]) => b-a).slice(0,10));
+        // Renderiza os rankings usando as barras
+        const anosRankingData = Object.entries(listaDeFilmes.reduce((acc, f) => { if(f.ano) acc[f.ano] = (acc[f.ano] || 0) + 1; return acc; }, {}))
+                                     .sort(([,a],[,b]) => b-a)
+                                     .slice(0,10); 
+
+        renderizarRankingBarras('ranking-generos-bars', criarRanking(listaDeFilmes, 'genero'));
+        renderizarRankingBarras('ranking-atores-bars', rankingAtores); // rankingAtores já calculado antes
+        renderizarRankingBarras('ranking-diretores-bars', criarRanking(listaDeFilmes, 'direcao'));
+        renderizarRankingBarras('ranking-anos-bars', anosRankingData);
     }
     
     // === FUNÇÕES DE GRÁFICOS RESTAURADAS ===
@@ -1073,7 +1119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 await batch.commit(); 
                 showToast(`${numNovos} filmes importados com sucesso!`); 
-                 
+                
             } catch(error) { Swal.fire('Erro!', 'Ocorreu um erro ao salvar os filmes importados.', 'error'); } 
         } 
     };
