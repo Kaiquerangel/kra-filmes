@@ -149,8 +149,27 @@ section[id] {
 .tabela-filmes .col-acoes { width: 150px; text-align: right; }
 .tabela-filmes .action-buttons { display: flex; gap: 0.5rem; justify-content: flex-end; }
 .tabela-filmes th.sortable { cursor: pointer; user-select: none; }
-.table-responsive { cursor: grab; user-select: none; }
-.table-responsive.active { cursor: grabbing; cursor: -webkit-grabbing; }
+
+/* --- ATUALIZAÇÃO DRAG TO SCROLL VERTICAL --- */
+.table-responsive {
+    /* Altura máxima para ativar o scroll vertical */
+   /* max-height: 600px;*/
+    
+    /* Habilita scroll em ambos os eixos */
+    /* overflow-y: auto; */
+    overflow-x: auto;
+    
+    /* Estética */
+    cursor: grab;
+    user-select: none;
+    padding-bottom: 1rem; /* Espaço extra para o menu dropdown não cortar */
+}
+
+.table-responsive.active { 
+    cursor: grabbing; 
+    cursor: -webkit-grabbing; 
+}
+
 .social-icon i { font-size: 1.4rem; transition: color 0.2s ease-in-out, transform 0.2s ease-in-out; }
 .social-icon:hover i { color: var(--cor-texto-dark); transform: scale(1.1); }
 .nav-tabs { border-bottom: none; }
@@ -182,10 +201,10 @@ section[id] {
 .stat-card-title { font-size: .7rem; font-weight: 600; text-transform: uppercase; color: var(--cor-texto-secundario-dark); margin-bottom: .25rem; }
 .stat-card-value { font-size: 1.75rem; font-weight: 700; color: #fff; line-height: 1.2; }
 .stat-card-value-text { font-size: 1rem; font-weight: 600; color: #fff; line-height: 1.3; }
-.ranking-count { background-color: #333; color: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; } /* Esta regra não será mais usada para barras */
-.list-group-item { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; padding: .5rem .2rem; background-color: transparent; border-color: #eee; color: var(--cor-texto); } /* Esta regra não será mais usada para barras */
-.list-group-item span { font-weight: 600; background-color: var(--cor-acento-principal); color: #fff; padding: .1rem .4rem; border-radius: 5px; font-size: .8rem; } /* Esta regra não será mais usada para barras */
-.ranking-title { color: var(--cor-acento-principal); font-weight: 600; margin-bottom: 1rem; text-align: center; } /* Será sobrescrita na seção 10 */
+.ranking-count { background-color: #333; color: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; } 
+.list-group-item { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; padding: .5rem .2rem; background-color: transparent; border-color: #eee; color: var(--cor-texto); } 
+.list-group-item span { font-weight: 600; background-color: var(--cor-acento-principal); color: #fff; padding: .1rem .4rem; border-radius: 5px; font-size: .8rem; } 
+.ranking-title { color: var(--cor-acento-principal); font-weight: 600; margin-bottom: 1rem; text-align: center; } 
 canvas { max-height: 350px; }
 /* ==========================================================================
    [ 5 ] MODIFICADORES DE TEMA (AJUSTES DE CONTRASTE ADICIONADOS AQUI)
@@ -237,13 +256,13 @@ body.dark-mode .card-title,
 body.dark-mode h4,
 /* Nome do usuário */
 body.dark-mode #perfil-nome {
-  color: var(--cor-texto-dark); /* Usar a cor de texto principal (branca) */
-  opacity: 0.9; /* Leve transparência para não ser tão forte */
+  color: var(--cor-texto-dark); 
+  opacity: 0.9; 
 }
 
 /* Labels de formulário */
 body.dark-mode .form-label {
- color: var(--cor-texto-secundario-dark-claro); /* Usar cinza claro */
+ color: var(--cor-texto-secundario-dark-claro); 
 }
 
 /* Inputs, Selects, Tag Container */
@@ -283,7 +302,7 @@ body.dark-mode .nav-link:not(.active):hover { color: var(--cor-texto-dark); back
 body.dark-mode .text-muted,
 body.dark-mode #perfil-nickname,
 body.dark-mode #perfil-membro-desde {
-  color: var(--cor-texto-secundario-dark-claro) !important; /* Usar cinza mais claro */
+  color: var(--cor-texto-secundario-dark-claro) !important; 
   opacity: 0.8;
 }
 
@@ -300,14 +319,14 @@ body.dark-mode .form-select {
 
 /* Títulos dentro dos cards menores de estatística */
 body.dark-mode .stat-card-title {
-  color: var(--cor-texto-secundario-dark-claro); /* Usar cinza mais claro */
+  color: var(--cor-texto-secundario-dark-claro); 
   opacity: 0.9;
 }
 
 /* Ícone grande de usuário */
 body.dark-mode .fa-user-circle.fa-8x {
-    opacity: 0.3; /* Aumentar um pouco a opacidade */
-    color: var(--cor-texto-secundario-dark); /* Garantir que tenha uma cor base */
+    opacity: 0.3; 
+    color: var(--cor-texto-secundario-dark); 
 }
 
 /* ==========================================================================
@@ -475,7 +494,7 @@ input#register-nickname.is-valid {
     opacity: 0.9;
 }
 body:not(.dark-mode) #welcome-message {
-     color: #ffffff; /* Ajuste para o tema claro */
+     color: #ffffff; 
 }
 
 /* Container das Conquistas */
@@ -483,11 +502,11 @@ body:not(.dark-mode) #welcome-message {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    justify-content: flex-start; /* Alinha à esquerda no modo dark */
+    justify-content: flex-start; 
 }
 
 body:not(.dark-mode) .conquistas-container {
-    justify-content: center; /* Centraliza no modo claro */
+    justify-content: center; 
 }
 
 /* Selo de Conquista Individual */
@@ -526,11 +545,11 @@ body:not(.dark-mode) .conquistas-container {
     filter: grayscale(80%); /* Reduzir um pouco o grayscale */
 }
 body.dark-mode .conquista-selo i {
-    color: #64748b; /* Um cinza azulado um pouco mais visível */
+    color: #64748b; 
 }
 /* Garantir que o texto do selo bloqueado ainda seja legível */
 body.dark-mode .conquista-selo span {
-     color: var(--cor-texto-secundario-dark-claro); /* Usar um cinza claro para o texto bloqueado */
+     color: var(--cor-texto-secundario-dark-claro); 
      opacity: 0.9;
 }
 
@@ -565,13 +584,13 @@ body:not(.dark-mode) .conquista-selo {
     filter: grayscale(100%);
 }
 body:not(.dark-mode) .conquista-selo span {
-    color: var(--cor-texto-secundario); /* Cor de texto padrão no modo claro */
+    color: var(--cor-texto-secundario); 
 }
 body:not(.dark-mode) .conquista-selo.unlocked span {
-    color: var(--cor-texto); /* Cor de texto principal para destaque */
+    color: var(--cor-texto); 
 }
 body:not(.dark-mode) .conquista-selo i {
-    color: #adb5bd; /* Ícone cinza claro para bloqueado */
+    color: #adb5bd; 
 }
 body:not(.dark-mode) .conquista-selo.unlocked {
      opacity: 1;
@@ -587,23 +606,23 @@ body:not(.dark-mode) .conquista-selo.unlocked i {
    ========================================================================== */
 
 .ranking-bars-container {
-    font-size: 0.85rem; /* Tamanho da fonte menor para os itens */
+    font-size: 0.85rem; 
 }
 
 .ranking-bar-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem; /* Espaço entre label, barra e contador */
+    gap: 0.75rem; 
 }
 
 .ranking-bar-label {
-    flex-basis: 120px; /* Largura fixa para o texto (ajuste conforme necessário) */
+    flex-basis: 120px; 
     flex-shrink: 0;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Adiciona "..." se o nome for muito longo */
+    text-overflow: ellipsis; 
     text-align: left;
-    color: var(--cor-texto-secundario-dark-claro); /* Cor mais clara para o label */
+    color: var(--cor-texto-secundario-dark-claro); 
 }
 
 body:not(.dark-mode) .ranking-bar-label {
@@ -612,32 +631,32 @@ body:not(.dark-mode) .ranking-bar-label {
 
 
 .ranking-bar-container {
-    flex-grow: 1; /* Faz a barra ocupar o espaço restante */
-    background-color: rgba(128, 128, 128, 0.15); /* Fundo da barra 'vazia' */
+    flex-grow: 1; 
+    background-color: rgba(128, 128, 128, 0.15); 
     border-radius: 3px;
-    height: 10px; /* Altura da barra */
-    overflow: hidden; /* Garante que a barra interna não ultrapasse */
+    height: 10px; 
+    overflow: hidden; 
 }
 
 body:not(.dark-mode) .ranking-bar-container {
-     background-color: #e9ecef; /* Fundo mais claro para tema light */
+     background-color: #e9ecef; 
 }
 
 .ranking-bar {
     height: 100%;
-    background-color: var(--cor-acento-principal); /* Cor da barra preenchida */
+    background-color: var(--cor-acento-principal); 
     border-radius: 3px;
-    transition: width 0.3s ease-out; /* Animação suave */
+    transition: width 0.3s ease-out; 
 }
 
 body:not(.dark-mode) .ranking-bar {
-     background-color: #64748b; /* Cor principal no tema claro */
+     background-color: #64748b; 
 }
 
 
 .ranking-bar-count {
     font-weight: 600;
-    min-width: 25px; /* Largura mínima para o número */
+    min-width: 25px; 
     text-align: right;
     color: var(--cor-texto-dark);
 }
@@ -648,9 +667,9 @@ body:not(.dark-mode) .ranking-bar-count {
 
 /* Ajuste nos títulos do ranking para garantir alinhamento à esquerda */
 .ranking-title {
-    text-align: left !important; /* Força alinhamento à esquerda */
-    color: var(--cor-texto-secundario-dark-claro); /* Cor mais clara para o título */
-    font-size: 0.9rem; /* Tamanho um pouco menor */
+    text-align: left !important; 
+    color: var(--cor-texto-secundario-dark-claro); 
+    font-size: 0.9rem; 
     font-weight: 600;
     margin-bottom: 0.75rem;
 }
@@ -666,20 +685,287 @@ body:not(.dark-mode) .ranking-title {
 /* Define a cor do texto ('Não tem conta?' / 'Já tem conta?') */
 body.dark-mode #login-card p,
 body.dark-mode #register-card p {
-    color: var(--cor-texto-secundario-dark-claro); /* Usar o cinza mais claro */
+    color: var(--cor-texto-secundario-dark-claro); 
     opacity: 0.9;
 }
 
 /* Define a cor dos links ('Cadastre-se' / 'Faça o login') */
 body.dark-mode #login-card p a,
 body.dark-mode #register-card p a {
-    color: var(--cor-texto-dark); /* Usar a cor principal (branco) para destaque */
-    opacity: 1; /* Garante visibilidade total */
-    text-decoration: underline; /* Mantém o sublinhado para indicar link */
+    color: var(--cor-texto-dark); 
+    opacity: 1; 
+    text-decoration: underline; 
 }
 
 /* Opcional: Efeito hover para os links */
 body.dark-mode #login-card p a:hover,
 body.dark-mode #register-card p a:hover {
-    color: var(--cor-texto-secundario-dark-claro); /* Muda para cinza claro no hover */
+    color: var(--cor-texto-secundario-dark-claro); 
+}
+
+/* ==========================================================================
+   [ 12 ] ESTILOS DA CAPA DO FILME (NOVO)
+   ========================================================================== */
+
+.poster-preview-container {
+    position: relative;
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+    aspect-ratio: 2 / 3; 
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 2px dashed var(--cor-borda);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.poster-preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.poster-placeholder {
+    text-align: center;
+    padding: 1rem;
+}
+
+/* Overlay de Loading na Capa */
+.api-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(2px);
+}
+
+/* Ajustes para Dark Mode */
+body.dark-mode .poster-preview-container {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--cor-borda-dark);
+}
+
+body.dark-mode .poster-placeholder i,
+body.dark-mode .poster-placeholder p {
+    color: var(--cor-texto-secundario-dark);
+}
+
+/* Miniatura na Tabela */
+.poster-thumb {
+    width: 40px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    background-color: #ccc; /* Fallback */
+}
+
+/* ==========================================================================
+   [ 13 ] GRID DE FILMES (NETFLIX STYLE) - NOVO
+   ========================================================================== */
+
+.movies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.movie-card {
+    position: relative;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    aspect-ratio: 2 / 3;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    background-color: #2b3035;
+}
+
+.movie-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+.movie-poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Informações que aparecem sobre a capa */
+.movie-info-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
+    padding: 1rem 0.5rem 0.5rem;
+    color: white;
+    opacity: 1; /* Sempre visível ou opacity: 0 para hover only */
+    transition: opacity 0.3s ease;
+}
+
+.movie-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.movie-card-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #ddd;
+}
+
+.movie-card-rating i {
+    color: #FFD700;
+    margin-right: 2px;
+}
+
+/* Badge de Assistido na Grid */
+.movie-watched-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(16, 185, 129, 0.9); /* Verde */
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* ==========================================================================
+   [ 14 ] MICRO-INTERAÇÕES TABELA (NOVO)
+   ========================================================================== */
+
+/* Zoom na capa da tabela */
+.poster-thumb {
+    transition: transform 0.2s ease;
+    cursor: zoom-in;
+}
+.poster-thumb:hover {
+    transform: scale(2);
+    z-index: 100;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* Tags clicáveis na tabela */
+.clickable-tag {
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+.clickable-tag:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    text-decoration: underline;
+}
+
+/* Botões de View (Tabela/Grade) */
+#view-btn-table.active, #view-btn-grid.active {
+    background-color: var(--cor-acento-principal);
+    border-color: var(--cor-acento-principal);
+    color: white;
+}
+
+/* Ajuste no accordion transparente */
+.accordion-button:not(.collapsed) {
+    background-color: rgba(255,255,255,0.1);
+    color: var(--cor-texto);
+}
+body.dark-mode .accordion-button:not(.collapsed) {
+    color: white;
+}
+
+/* ==========================================================================
+   [ 15 ] AJUSTES FINAIS E INTERAÇÕES (NOVO)
+   ========================================================================== */
+
+/* Garante que os botões de ação na Grade apareçam apenas no Hover */
+.movie-card .opacity-0 {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.movie-card:hover .opacity-0 {
+    opacity: 1 !important;
+}
+
+/* Ajuste para garantir que o overlay cubra bem o card */
+.movie-card .movie-info-overlay {
+    z-index: 20; /* Fica acima da imagem */
+}
+
+.movie-card .position-absolute.opacity-0 {
+    z-index: 30; /* Botões ficam acima de tudo */
+    background: rgba(0,0,0,0.6); /* Fundo escuro para destacar botões */
+    backdrop-filter: blur(2px); /* Leve desfoque no fundo */
+}
+
+/* ==========================================================================
+   [ 16 ] AJUSTES TABELA EXPANSÍVEL E DROPDOWN (NOVO)
+   ========================================================================== */
+
+/* Permite que o Dropdown "vaze" para fora da tabela sem ser cortado */
+.table-responsive {
+    overflow: visible !important; 
+}
+
+/* Em telas pequenas, precisamos do scroll horizontal, mas com espaço embaixo pro menu */
+@media (max-width: 992px) {
+    .table-responsive {
+        overflow-x: auto !important;
+        padding-bottom: 150px; /* Espaço extra para o menu não cortar */
+    }
+}
+
+/* Remove borda superior da linha de detalhes para parecer continuação */
+.linha-detalhes td {
+    border-top: none !important;
+}
+
+/* Animação da setinha de expansão */
+.btn-detalhes i {
+    transition: transform 0.3s ease;
+}
+
+/* Ajuste visual do botão de menu (três pontos) */
+.dropdown-toggle::after {
+    display: none; /* Remove a setinha padrão do Bootstrap no dropdown */
+}
+
+.dropdown-item {
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+    background-color: var(--cor-acento-principal);
+    color: white;
+}
+
+.dropdown-menu-dark {
+    border: 1px solid var(--cor-borda-dark);
+    background-color: #1f2937; /* Combina com o Dark Mode */
 }
