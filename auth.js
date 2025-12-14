@@ -217,3 +217,4 @@ async function handleCompleteProfile(user) {
         } catch(e) { UI.alert('Erro', 'Falha ao salvar.', 'error'); }
     }
 }
+// Atualização Mobile

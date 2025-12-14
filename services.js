@@ -78,3 +78,5 @@ export const MovieService = {
         });
     }
 };
+
+// Atualização Mobile
