@@ -1034,3 +1034,28 @@ tr[data-id] {
     transform: translateZ(0);
     backface-visibility: hidden;
 }
+/* =========================================
+   CELULAR (MOBILE)
+   ========================================= */
+@media (max-width: 991px) {
+    /* Aumenta o espaço no topo para o conteúdo não ficar atrás do menu */
+    body {
+        padding-top: 130px; 
+    }
+
+    /* Ajusta os cards para não ficarem colados na borda */
+    .container {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    /* Esconde os ícones sociais (GitHub/LinkedIn) no celular para ganhar espaço */
+    .navbar-nav.mx-auto {
+        display: none;
+    }
+    
+    /* Ajusta tamanho da fonte do título no celular */
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+}
