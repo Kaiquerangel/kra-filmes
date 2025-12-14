@@ -1059,3 +1059,37 @@ tr[data-id] {
         font-size: 1.2rem;
     }
 }
+
+/* =========================================
+   Versão MOBILE
+   ========================================= */
+@media (max-width: 991px) {
+    /* 1. Garante que o menu tenha fundo visível */
+    .navbar-collapse {
+        background-color: #1a1a2e; /* Mesma cor do fundo do site */
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        margin-top: 10px;
+    }
+
+    /* 2. Garante que os itens do menu tenham cor e tamanho */
+    .navbar-nav .nav-link {
+        color: #ffffff !important;
+        padding: 10px 0;
+        font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* 3. Ajusta o botão de tema e sair para não ficarem colados */
+    #theme-toggle, #logout-btn {
+        margin-top: 15px;
+        width: 100%; /* Botão ocupa a largura toda no celular fica melhor */
+        text-align: center;
+    }
+    
+    /* 4. Esconde os ícones sociais (Github/LinkedIn) no celular para limpar a vista */
+    .navbar-nav.mx-auto {
+        display: none !important;
+    }
+}
