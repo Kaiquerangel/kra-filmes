@@ -42,10 +42,8 @@ let generosSelecionados = [];    // Array para guardar as tags do formulário
 
 // Lista para o autocomplete de Gêneros
 const GENEROS_PREDEFINIDOS = [
-    "Ação", "Aventura", "Animação", "Biografia", "Comédia", "Crime", 
-    "Documentário", "Drama", "Esporte", "Fantasia", "Família", "Faroeste", 
-    "Ficção Científica", "Guerra", "História", "Mistério", "Musical", 
-    "Romance", "Suspense", "Terror"
+    "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", 
+    "History", "Horror", "Music", "Mystery", "Romance", "Science Fiction", "Thriller", "War", "Western"
 ].sort();
 
 // Regras para as Conquistas (Gamification)
