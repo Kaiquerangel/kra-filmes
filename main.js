@@ -10,8 +10,8 @@
 // 1. IMPORTAÇÕES
 // Funcionalidades do Firebase e módulos locais.
 // O uso de 'type="module"' no HTML permite esses imports.
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+//import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+//import { onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { auth, db } from './config.js';
 import { Auth } from './auth.js';
 import { AuthService, MovieService } from './services.js'; // Regras de negócio
