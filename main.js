@@ -13,6 +13,7 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { auth, db } from './config.js';
+import { Auth } from './auth.js';
 import { AuthService, MovieService } from './services.js'; // Regras de negócio
 import { UI } from './ui.js'; // Manipulação do DOM (HTML)
 
