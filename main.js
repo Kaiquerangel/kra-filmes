@@ -1,35 +1,35 @@
 /* ==========================================================================
-   MAIN.JS - CONTROLADOR PRINCIPAL
+   MAIN.JS - CONTROLADOR PRINCIPAL DO SISTEMA
+   (Versão Integrada: Auth + Filmes + Conquistas + Import/Export)
    ========================================================================== */
 
 // 1. IMPORTAÇÕES
-// Trazemos as ferramentas necessárias do Firebase e dos nossos módulos locais.
 import { onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { auth } from './config.js';
 import { AuthService, MovieService } from './services.js';
-import { UI } from './ui.js';     
-import { Auth } from './auth.js'; // Essencial: Trazemos o Auth para desenhar a tela inicial
+import { UI } from './ui.js';
+import { Auth } from './auth.js'; // O Gerente de Login
 
 // ==========================================================================
-// 2. ESTADO GLOBAL (VARIÁVEIS)
+// 2. ESTADO GLOBAL DA APLICAÇÃO
 // ==========================================================================
 let currentUser = null;          // Usuário logado
-let currentUserProfile = null;   // Perfil do Firestore (com nickname)
-let unsubscribeFilmes = null;    // Para parar de ouvir o banco ao deslogar
-let filmes = [];                 // Lista completa
-let filmesFiltrados = [];        // Lista filtrada
-let filmeEmEdicaoId = null;      // ID do filme sendo editado (null se for novo)
+let currentUserProfile = null;   // Dados do perfil (nickname, etc)
+let unsubscribeFilmes = null;    // Controle do Listener do Firestore
+let filmes = [];                 // Lista completa de filmes
+let filmesFiltrados = [];        // Lista filtrada na tela
+let filmeEmEdicaoId = null;      // ID se estiver editando, null se for novo
 
-// Estado da Interface
+// Configurações da Interface
 let currentView = 'table';       // 'table' ou 'grid'
-let sortBy = 'cadastradoEm';     // Campo de ordenação
-let sortDirection = 'asc';       // 'asc' ou 'desc'
-let generosSelecionados = [];    // Tags do formulário
+let sortBy = 'cadastradoEm';     // Campo usado para ordenar
+let sortDirection = 'asc';       // Direção da ordenação
+let generosSelecionados = [];    // Tags temporárias do formulário
 
-// Dados estáticos para autocomplete e lógica
+// Dados Estáticos (Autocomplete)
 const GENEROS_PREDEFINIDOS = ["Ação", "Aventura", "Animação", "Comédia", "Crime", "Documentário", "Drama", "Fantasia", "História", "Terror", "Música", "Mistério", "Romance", "Ficção Científica", "Suspense", "Guerra", "Faroeste"].sort();
 
-// Definições das Conquistas (Gamification)
+// Regras das Conquistas (Gamification)
 const CONQUISTAS_DEFINICOES = [
     { id: 'cinefilo_10', nome: 'Cinéfilo Iniciante', descricao: 'Cadastrou 10 filmes.', icone: 'fa-solid fa-film', check: (lista) => lista.length >= 10 },
     { id: 'critico_10', nome: 'Crítico de Cinema', descricao: 'Deu nota 10 para um filme.', icone: 'fa-solid fa-star', check: (lista) => lista.some(f => f.nota === 10) },
@@ -47,122 +47,107 @@ const CONQUISTAS_DEFINICOES = [
 ];
 
 // ==========================================================================
-// 3. INICIALIZAÇÃO DO APP
+// 3. INICIALIZAÇÃO (BOOTSTRAP)
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Inicializa o sistema de Autenticação.
-    // O Auth.js vai desenhar a tela de Login ou, se já estiver logado,
-    // chamar a função de sucesso abaixo.
+    // Inicia o Auth.js -> Ele desenha o Login ou devolve o usuário logado
     Auth.init(
-        // Callback de SUCESSO (Login efetuado)
+        // SUCESSO: Usuário Logou
         (user) => {
-            console.log("Main detectou login:", user.email);
+            console.log("App iniciado para:", user.email);
             currentUser = user;
             carregarPerfilEConectar(user);
         },
-        // Callback de SAÍDA (Logout)
+        // SAÍDA: Usuário Deslogou
         () => {
-            console.log("Main detectou logout");
+            console.log("App encerrado (Logout)");
             currentUser = null;
             currentUserProfile = null;
             filmes = [];
             filmesFiltrados = [];
-            
-            // Para de consumir dados do Firebase
             if (unsubscribeFilmes) unsubscribeFilmes();
-            
-            // Limpa a interface visualmente
-            UI.clearMoviesList();
+            UI.clearMoviesList(); // Limpa visualmente a tela
         }
     );
 
-    // Configura listeners que funcionam mesmo sem estar logado
+    // Configura listeners que não dependem de login (ex: Importar Arquivo na tela de login se houver)
     setupGenericListeners();
 });
 
 // ==========================================================================
-// 4. CONEXÃO COM O BANCO E CARREGAMENTO
+// 4. CONEXÃO COM O BANCO DE DADOS
 // ==========================================================================
 async function carregarPerfilEConectar(user) {
     try {
-        // Busca dados extras do usuário (como o nickname)
         const profile = await AuthService.getProfile(user.uid);
-        
         if (profile) {
             currentUserProfile = profile;
             
-            // Agora que temos certeza que o App foi desenhado (UI.toggleAuthView true),
-            // podemos ativar os botões e formulários do sistema principal.
+            // Só configuramos os botões do APP depois que o usuário loga
             setupAppListeners(); 
             setupFormListeners();
             
-            // Popula o autocomplete de gêneros
+            // Preenche o datalist de gêneros
             const datalist = document.getElementById('generos-sugeridos');
             if(datalist) datalist.innerHTML = GENEROS_PREDEFINIDOS.map(g => `<option value="${g}"></option>`).join('');
             
-            // Inicia a conexão em tempo real com os filmes
+            // Conecta ao Firestore
             initRealtimeData(user.uid);
-            
-        } else {
-            console.warn("Perfil não encontrado, aguardando criação...");
-            // O auth.js geralmente lida com isso chamando handleCompleteProfile
         }
     } catch (e) {
-        console.error("Erro ao carregar perfil no Main:", e);
-        UI.toast("Erro ao carregar perfil", "error");
+        console.error("Erro ao carregar perfil:", e);
+        UI.toast("Erro ao carregar seus dados", "error");
     }
 }
 
 function initRealtimeData(uid) {
-    // Se já tinha uma conexão aberta, fecha ela antes de abrir nova
     if (unsubscribeFilmes) unsubscribeFilmes();
 
+    // Query básica ordenada por data de cadastro
     const q = query(MovieService.getCollection(uid), orderBy("cadastradoEm", "asc"));
 
-    // Listener Realtime: Roda sempre que houver mudança no banco
     unsubscribeFilmes = onSnapshot(q, (snapshot) => {
+        // Mapeia os documentos do Firestore para objetos JS normais
         filmes = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
             cadastradoEm: doc.data().cadastradoEm?.toDate() || new Date(0)
         }));
 
-        // Atualiza filtros dinâmicos (Anos disponíveis)
+        // Atualiza as opções do filtro de Ano com base nos filmes existentes
         updateFilterOptions();
         
-        // Verifica e renderiza Conquistas
+        // Verifica Conquistas
         if(currentUserProfile) {
             const conquistasCalculadas = CONQUISTAS_DEFINICOES.map(c => ({
                 ...c, unlocked: c.check(filmes)
             }));
             UI.renderAchievements(conquistasCalculadas);
-            // Atualiza barra lateral com stats
             UI.renderProfile(currentUserProfile, filmes);
         }
 
-        // Desenha a lista na tela
+        // Renderiza a tela
         refreshUI();
     }, (error) => {
-        console.error("Erro no Snapshot:", error);
-        UI.toast("Erro de conexão com banco de dados", "error");
+        console.error("Erro no Realtime:", error);
+        UI.toast("Perda de conexão com o banco", "error");
     });
 }
 
 function updateFilterOptions() {
-    // Cria lista única de anos existentes
     const anos = [...new Set(filmes.map(f => f.ano).filter(Boolean))].sort((a,b)=>b-a);
     const selectAno = document.getElementById('filtro-ano');
     if(selectAno) {
         const currentVal = selectAno.value;
         selectAno.innerHTML = '<option value="todos">Ano</option>';
         anos.forEach(ano => selectAno.add(new Option(ano, ano)));
-        selectAno.value = currentVal; // Mantém seleção do usuário
+        selectAno.value = currentVal;
     }
 }
 
 // ==========================================================================
-// 5. LÓGICA DE UI (FILTRAGEM E ORDENAÇÃO)
+// 5. LÓGICA DE VISUALIZAÇÃO (FILTRO E ORDENAÇÃO)
 // ==========================================================================
 function refreshUI() {
     filmesFiltrados = aplicarFiltros(filmes);
@@ -171,7 +156,6 @@ function refreshUI() {
 }
 
 function aplicarFiltros(lista) {
-    // Pega valores dos inputs
     const termo = document.getElementById('filtro-busca')?.value.toLowerCase() || '';
     const genero = document.getElementById('filtro-genero')?.value.toLowerCase() || '';
     const diretor = document.getElementById('filtro-diretor')?.value.toLowerCase() || '';
@@ -180,7 +164,6 @@ function aplicarFiltros(lista) {
     const origem = document.getElementById('filtro-origem')?.value || 'todos';
     const status = document.getElementById('filtro-assistido')?.value || 'todos';
 
-    // Filtra array
     return lista.filter(f => {
         if (termo && !f.titulo.toLowerCase().includes(termo)) return false;
         if (genero && !f.genero?.some(g => g.toLowerCase().includes(genero))) return false;
@@ -205,24 +188,21 @@ function aplicarOrdenacao(lista) {
         if (valB === null || valB === undefined) valB = '';
 
         let comparison = 0;
-        // Detecta tipo para ordenar corretamente
         if (valA instanceof Date && valB instanceof Date) comparison = valA - valB;
         else if (typeof valA === 'number' && typeof valB === 'number') comparison = valA - valB;
         else comparison = String(valA).toLowerCase().localeCompare(String(valB).toLowerCase());
 
         if (comparison !== 0) return sortDirection === 'asc' ? comparison : -comparison;
-        
-        // Desempate por título
         return (a.titulo || '').localeCompare(b.titulo || '');
     });
 }
 
 // ==========================================================================
-// 6. EVENT DELEGATION (LISTENERS DA APLICAÇÃO)
+// 6. LISTENERS DA APLICAÇÃO (EVENT DELEGATION)
 // ==========================================================================
 function setupAppListeners() {
     
-    // --- Inputs de Filtro ---
+    // Inputs de Filtro (Digitação e Seleção)
     const inputsFiltro = document.querySelectorAll('#filtros-container input, #filtros-container select');
     inputsFiltro.forEach(el => {
         el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => refreshUI());
@@ -233,7 +213,7 @@ function setupAppListeners() {
         refreshUI();
     });
 
-    // --- Alternar Visualização (Grid/Table) ---
+    // Alternar Visualização (Tabela vs Grid)
     document.getElementById('view-btn-table')?.addEventListener('click', () => {
         currentView = 'table';
         document.getElementById('view-btn-table').classList.add('active');
@@ -247,29 +227,28 @@ function setupAppListeners() {
         refreshUI();
     });
 
-    // --- Troca de Tema ---
+    // Tema (Dark/Light)
     document.getElementById('theme-toggle')?.addEventListener('click', () => {
         const theme = UI.toggleTheme();
         localStorage.setItem('theme', theme);
-        // Se houver gráficos na tela, redesenha para ajustar cores
+        // Redesenha gráficos se necessário
         UI.renderCharts(filmesFiltrados.filter(f => f.assistido));
     });
+    // Aplica tema salvo
     const savedTheme = localStorage.getItem('theme') || 'dark';
     UI.setTheme(savedTheme);
 
-    // --- LISTENER GLOBAL (Tabela/Grid) ---
-    // Gerencia cliques em elementos dinâmicos
+    // LISTENER GLOBAL DE CLIQUES (Melhor performance)
     document.addEventListener('click', async (e) => {
         const target = e.target;
 
-        // 1. Ordenação (Cabeçalho da Tabela)
+        // 1. Cabeçalho da Tabela (Ordenação)
         const header = target.closest('th.sortable');
         if (header) {
             const col = header.dataset.sort;
             if (sortBy === col) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
             else { sortBy = col; sortDirection = 'asc'; }
             
-            // Atualiza ícones visuais
             document.querySelectorAll('th.sortable i').forEach(icon => icon.className = 'fas fa-sort');
             const activeIcon = header.querySelector('i');
             if(activeIcon) activeIcon.className = sortDirection === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
@@ -277,7 +256,7 @@ function setupAppListeners() {
             return;
         }
 
-        // 2. Ações nos Itens (Botões dentro dos Cards ou Linhas)
+        // 2. Elementos com ID (Filmes)
         const itemEl = target.closest('[data-id]');
         if (!itemEl) return;
         const id = itemEl.dataset.id;
@@ -302,7 +281,7 @@ function setupAppListeners() {
             return;
         }
 
-        // Expandir Detalhes (Mobile/Tabela)
+        // Expandir Detalhes (Tabela)
         const btnDetalhes = target.closest('.btn-detalhes');
         if (btnDetalhes) {
             const icon = btnDetalhes.querySelector('i');
@@ -313,7 +292,7 @@ function setupAppListeners() {
             return;
         }
 
-        // Clique na Linha da Tabela (Atalho para expandir)
+        // Clique na Linha (Abre detalhes)
         if (currentView === 'table' && !target.closest('.dropdown') && !target.closest('button') && !target.closest('a')) {
              const row = target.closest('tr[data-id]');
              if(row) {
@@ -323,7 +302,7 @@ function setupAppListeners() {
              return;
         }
 
-        // Clique no Card da Grid (Abre Modal de Detalhes)
+        // Clique no Card (Grid) -> Modal
         if (currentView === 'grid' && !target.closest('.dropdown') && !target.closest('button')) {
             const filme = filmes.find(f => f.id === id);
             if (filme) {
@@ -335,12 +314,12 @@ function setupAppListeners() {
         }
     });
 
-    // Botão Sugerir Filme
+    // Botão "Sugerir Filme"
     document.getElementById('sugerir-filme-btn')?.addEventListener('click', sugerirFilme);
 }
 
 function setupGenericListeners() {
-    // Listeners que não dependem do DOM do app principal
+    // Importação e Exportação
     document.getElementById('export-json-btn')?.addEventListener('click', exportarJSON);
     document.getElementById('export-csv-btn')?.addEventListener('click', exportarCSV);
     document.getElementById('import-btn')?.addEventListener('click', () => document.getElementById('import-file-input').click());
@@ -348,7 +327,7 @@ function setupGenericListeners() {
 }
 
 // ==========================================================================
-// 7. FORMULÁRIO (SALVAR, EDITAR, OMDB)
+// 7. LISTENERS DE FORMULÁRIO (SALVAR / API)
 // ==========================================================================
 function setupFormListeners() {
     const form = document.getElementById('filme-form');
@@ -360,7 +339,7 @@ function setupFormListeners() {
         if(e.key === 'Enter') { e.preventDefault(); buscarOMDb(); }
     });
 
-    // Input de Tags (Gêneros)
+    // Tags (Gêneros)
     const generoInput = document.getElementById('genero-input');
     if (generoInput) {
         generoInput.addEventListener('keydown', (e) => {
@@ -369,13 +348,12 @@ function setupFormListeners() {
                 if(generosSelecionados.length) removerGenero(generosSelecionados[generosSelecionados.length-1]);
             }
         });
-        // Auto-adicionar se selecionar do datalist
         generoInput.addEventListener('input', () => {
              if (GENEROS_PREDEFINIDOS.includes(generoInput.value)) adicionarGenero(generoInput.value);
         });
     }
 
-    // Toggle de Data Assistido
+    // Toggle Data Assistido
     document.getElementById('assistido')?.addEventListener('change', (e) => {
         UI.toggleDataAssistido(e.target.value === 'sim');
     });
@@ -390,9 +368,8 @@ function setupFormListeners() {
         }
 
         const titulo = document.getElementById('titulo').value.trim();
-        
-        // Validação básica da URL do poster
         let posterUrl = document.getElementById('poster-preview-img').src;
+        // Validação simples para não salvar placeholder
         if (posterUrl.includes(window.location.href) || posterUrl === '') posterUrl = '';
 
         const dados = {
@@ -408,7 +385,6 @@ function setupFormListeners() {
             posterUrl: posterUrl
         };
 
-        // UI Loading
         const btn = form.querySelector('button[type="submit"]');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
@@ -431,7 +407,7 @@ function setupFormListeners() {
 }
 
 // ==========================================================================
-// 8. FUNÇÕES AUXILIARES E DE NEGÓCIO
+// 8. HELPERS (LÓGICA AUXILIAR)
 // ==========================================================================
 
 async function buscarOMDb() {
@@ -510,7 +486,9 @@ function sugerirFilme() {
     );
 }
 
-// --- Importação e Exportação (Helpers) ---
+// ==========================================================================
+// 9. IMPORTAÇÃO E EXPORTAÇÃO (CSV/JSON)
+// ==========================================================================
 
 function exportarJSON() {
     if(!filmesFiltrados.length) return UI.toast('Lista vazia', 'warning');
@@ -521,14 +499,15 @@ function exportarCSV() {
     if(!filmesFiltrados.length) return UI.toast('Lista vazia', 'warning');
     const headers = ['titulo', 'ano', 'nota', 'direcao', 'atores', 'genero', 'origem', 'assistido', 'dataAssistido', 'posterUrl'];
     
+    // Gera CSV manualmente para garantir compatibilidade
     const csvContent = [
         headers.join(','),
         ...filmesFiltrados.map(f => headers.map(h => {
             let val = f[h];
             if(Array.isArray(val)) val = val.join('; ');
             if(val == null) val = '';
-            val = String(val).replace(/"/g, '""');
-            if(val.includes(',')) val = `"${val}"`;
+            val = String(val).replace(/"/g, '""'); // Escapa aspas duplas
+            if(val.includes(',')) val = `"${val}"`; // Adiciona aspas se tiver vírgula
             return val;
         }).join(','))
     ].join('\n');
@@ -561,7 +540,9 @@ function importarArquivo(event) {
                     const vals = line.split(','); 
                     return headers.reduce((obj, header, i) => {
                         let val = vals[i]; 
+                        // Remove aspas do CSV
                         if(val && val.startsWith('"') && val.endsWith('"')) val = val.slice(1,-1);
+                        
                         // Conversão de tipos
                         if(['genero','direcao','atores'].includes(header)) obj[header] = val ? val.split(';').map(s=>s.trim()) : [];
                         else if(['ano','nota'].includes(header)) obj[header] = Number(val);
