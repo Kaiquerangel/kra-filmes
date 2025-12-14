@@ -37,7 +37,7 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-                        <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#cadastro-section"><i class="fas fa-plus-circle me-1"></i> Cadastrar</a></li>
+                        <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#cadastro-section"><i class="fas fa-plus-circle me-1"></i>Cadastrar</a></li>
                         <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#estatisticas-section"><i class="fas fa-chart-bar me-1"></i> Estatísticas</a></li>
                         <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#lista-section"><i class="fas fa-list me-1"></i> Lista</a></li>
                         <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#perfil-section"><i class="fas fa-user-circle me-1"></i> Perfil</a></li>
@@ -104,7 +104,7 @@
                                     <input type="text" class="form-control" id="direcao" required>
                                 </div>
                                 <div class="mb-3 position-relative">
-                                    <label for="atores" class="form-label">Atores</label>
+                                    <label for="atores" class="form-label">Artistas</label>
                                     <input type="text" class="form-control" id="atores" required>
                                 </div>
                                 <div class="row g-3 mb-3">
@@ -158,7 +158,7 @@
                         <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">% Nacional</span><span class="stat-card-value" id="stat-pct-nacionais">0%</span></div></div>
                         <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">% Internacional</span><span class="stat-card-value" id="stat-pct-internacionais">0%</span></div></div>
                         <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">Década Popular</span><span class="stat-card-value-text" id="stat-decada-popular">-</span></div></div>
-                        <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">Ator Mais Frequente</span><span class="stat-card-value-text" id="stat-ator-frequente">-</span></div></div>
+                        <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">Artistas Mais Frequente</span><span class="stat-card-value-text" id="stat-ator-frequente">-</span></div></div>
                      </div>
                      <div class="row g-3 text-center mb-4">
                         <div class="col-md-6"><div class="stat-card"><span class="stat-card-title">Melhor Filme(Nota)</span><span class="stat-card-value-text" id="stat-melhor-filme">-</span></div></div>
@@ -166,9 +166,9 @@
                      </div>
                      <div class="row g-4 mt-3">
                          <div class="col-md-6"><h5 class="ranking-title">Top Gêneros</h5><div class="ranking-bars-container" id="ranking-generos-bars"></div></div>
-                         <div class="col-md-6"><h5 class="ranking-title">Top Atores</h5><div class="ranking-bars-container" id="ranking-atores-bars"></div></div>
+                         <div class="col-md-6"><h5 class="ranking-title">Top Artistas</h5><div class="ranking-bars-container" id="ranking-atores-bars"></div></div>
                          <div class="col-md-6"><h5 class="ranking-title">Top Direção</h5><div class="ranking-bars-container" id="ranking-diretores-bars"></div></div>
-                         <div class="col-md-6"><h5 class="ranking-title">Top Anos</h5><div class="ranking-bars-container" id="ranking-anos-bars"></div></div>
+                         <div class="col-md-6"><h5 class="ranking-title">Top Ano</h5><div class="ranking-bars-container" id="ranking-anos-bars"></div></div>
                      </div>
                  </div>
              </div>
@@ -180,11 +180,11 @@
                     <h2 class="card-title mb-4"><i class="fas fa-palette me-2"></i> Análise Visual</h2>
                     <div class="row g-4">
                         <div class="col-lg-4 col-md-6"><h5 class="ranking-title">Top 5 Gêneros</h5><div style="height: 300px;"><canvas id="generosChart"></canvas></div></div>
-                        <div class="col-lg-4 col-md-6"><h5 class="ranking-title">Top 5 Diretores</h5><div style="height: 300px;"><canvas id="diretoresChart"></canvas></div></div>
+                        <div class="col-lg-4 col-md-6"><h5 class="ranking-title">Top 5 Direção</h5><div style="height: 300px;"><canvas id="diretoresChart"></canvas></div></div>
                         <div class="col-lg-4 col-md-6"><h5 class="ranking-title">Origem dos Filmes</h5><div style="height: 300px;"><canvas id="origemChart"></canvas></div></div>
                         <div class="col-lg-6 col-md-6"><h5 class="ranking-title">Filmes por Ano (Top 10 Recentes)</h5><div style="height: 300px;"><canvas id="anosChart"></canvas></div></div>
                         <div class="col-lg-6"><h5 class="ranking-title">Distribuição de Notas</h5><div style="height: 300px;"><canvas id="notasChart"></canvas></div></div>
-                        <div class="col-lg-6"><h5 class="ranking-title">Média Notas por Ano</h5><div style="height: 300px;"><canvas id="mediaNotasAnoChart"></canvas></div></div>
+                        <div class="col-lg-6"><h5 class="ranking-title">Média de Notas por Ano</h5><div style="height: 300px;"><canvas id="mediaNotasAnoChart"></canvas></div></div>
                         <div class="col-lg-6"><h5 class="ranking-title">Assistidos (Últimos 12 Meses)</h5><div style="height: 300px;"><canvas id="assistidosMesChart"></canvas></div></div>
                     </div>
                 </div>
