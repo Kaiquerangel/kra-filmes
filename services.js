@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where, setDoc, getDoc, limit, startAfter} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { auth, db, OMDB_API_KEY } from './config.js';
 
 export const AuthService = {
@@ -42,6 +42,19 @@ export const AuthService = {
 
 export const MovieService = {
     getCollection: (uid) => collection(db, "users", uid, "filmes"),
+
+    getPaginated: async (uid, ultimoDocVisivel = null, tamanhoPagina = 24) => { // <--- Garanta que está 24 aqui
+        const col = collection(db, "users", uid, "filmes");
+        
+        // CORREÇÃO: Mudei de "desc" para "asc" para voltar à ordem original (antigos primeiro)
+        let q = query(col, orderBy("cadastradoEm", "asc"), limit(tamanhoPagina));
+
+        if (ultimoDocVisivel) {
+            q = query(q, startAfter(ultimoDocVisivel));
+        }
+
+        return await getDocs(q);
+    },
     
     // ATUALIZADO: Aceita ano opcional para filtrar remakes
     searchOMDb: async (titulo, ano = null) => {

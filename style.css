@@ -244,10 +244,12 @@ body.dark-mode .navbar {
  backdrop-filter: blur(10px);
 }
 body.dark-mode .card {
- background-color: var(--cor-card-dark);
- border: 1px solid var(--cor-borda-dark);
- backdrop-filter: blur(12px);
- box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    /* Usamos uma cor mais sólida e opaca para não precisar do blur */
+    background-color: #1f2937; /* Cor sólida de fundo (Dark Gray) */
+    background-color: rgba(31, 41, 55, 0.95); /* Ou levemente transparente sem blur */
+    border: 1px solid var(--cor-borda-dark);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra mais leve */
+    /* backdrop-filter: none; */ /* Garante que o blur está desligado */
 }
 
 /* Título principal do card (Meu Perfil, Login, Cadastro) */
@@ -1058,4 +1060,230 @@ tr[data-id] {
     .navbar-brand {
         font-size: 1.2rem;
     }
+}
+
+/* ==========================================================================
+   [ 17 ] FILTROS (VERSÃO FINAL CLEAN)
+   ========================================================================== */
+
+/* Container de Filtros */
+.filter-compact {
+    background-color: rgba(0, 0, 0, 0.02);
+    /* Borda sutil apenas ao redor do box inteiro */
+    border: 1px solid rgba(0,0,0,0.1); 
+}
+
+body.dark-mode .filter-compact {
+    background-color: rgba(255, 255, 255, 0.02);
+    /* Borda muito sutil e transparente para não brilhar no escuro */
+    border-color: rgba(255, 255, 255, 0.08) !important; 
+}
+
+/* Inputs e Selects */
+.filter-compact .form-control,
+.filter-compact .form-select,
+.filter-compact .input-group-text {
+    font-size: 0.9rem;
+    border-color: rgba(0,0,0,0.15);
+}
+
+body.dark-mode .filter-compact .form-control,
+body.dark-mode .filter-compact .form-select,
+body.dark-mode .filter-compact .input-group-text {
+    border-color: rgba(255, 255, 255, 0.1); /* Borda escura suave */
+    background-color: rgba(17, 24, 39, 0.6);
+    color: var(--cor-texto-dark);
+}
+
+/* Ícone de busca */
+.filter-compact .input-group-text {
+    background-color: white;
+}
+body.dark-mode .filter-compact .input-group-text {
+    background-color: rgba(17, 24, 39, 0.6);
+}
+
+/* Botão Sugerir */
+#sugerir-filme-btn {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s;
+}
+#sugerir-filme-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Botão Limpar */
+#limpar-filtros {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+#limpar-filtros:hover {
+    opacity: 1;
+    color: #dc3545 !important;
+}
+
+/* Divisor Vertical (Aquele tracinho entre datas e selects) */
+.border-end {
+    border-color: rgba(0,0,0,0.1) !important;
+}
+body.dark-mode .border-end {
+    border-color: rgba(255,255,255,0.1) !important;
+}
+
+/* ==========================================================================
+   [ 18 ] CARROSSEL DE ÚLTIMOS ASSISTIDOS (REVISADO)
+   ========================================================================== */
+
+/* Container com Scrollbar Estilizada */
+#ultimos-assistidos-container {
+    padding-bottom: 10px; /* Espaço para a sombra não cortar */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--cor-acento-principal) rgba(0,0,0,0.1);
+}
+
+/* Scrollbar para Chrome/Edge/Safari */
+#ultimos-assistidos-container::-webkit-scrollbar {
+    height: 6px;
+}
+#ultimos-assistidos-container::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+#ultimos-assistidos-container::-webkit-scrollbar-thumb {
+    background-color: var(--cor-acento-principal);
+    border-radius: 4px;
+}
+
+/* CARD DO FILME (MINI) */
+.mini-movie-card {
+    width: 110px; /* Um pouco mais largo para caber o título */
+    position: relative;
+    cursor: pointer;
+    /* Inicia invisível para a animação funcionar */
+    opacity: 0; 
+    animation: fadeInUp 0.4s ease-out forwards;
+}
+
+/* Onde a capa fica */
+.mini-poster-wrapper {
+    width: 100%;
+    aspect-ratio: 2/3;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Efeito Hover (Mouse em cima) */
+.mini-movie-card:hover .mini-poster-wrapper {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+    border: 1px solid var(--cor-acento-principal);
+}
+
+/* Overlay da Data */
+.mini-date-badge {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 4px 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(2px);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Animação de Entrada */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+
+/* ==========================================================================
+   PERFORMANCE PATCH (Correção de Lag mantendo a estética)
+   ========================================================================== */
+
+/* 1. Otimização de Renderização (O navegador ignora o que está fora da tela) */
+/* Isso é CRUCIAL para listas longas. O navegador não "pinta" os cards lá de baixo até você rolar até eles. */
+.movie-card, 
+tr[data-id] {
+    content-visibility: auto; 
+    contain-intrinsic-size: 350px; /* Tamanho estimado do card para o scroll não pular */
+}
+
+/* 2. Aceleração de Hardware (Força o uso da Placa de Vídeo) */
+/* Aplica nos elementos que usam blur/vidro ou scroll pesado */
+.glass-card, 
+.navbar, 
+.suggestion-swal-popup,
+.movies-grid, 
+.table-responsive {
+    transform: translateZ(0); /* Hack para ativar a GPU */
+    will-change: transform, scroll-position; /* Avisa o navegador que isso vai mexer */
+}
+
+/* 3. Otimizar as imagens dentro dos cards para não piscar */
+.movie-card img, .poster-thumb {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* 4. Suavizar apenas o necessário (Evita recálculos globais) */
+/* Se houver 'transition: all' em algum lugar, troque por propriedades específicas se possível */
+
+/* style.css - Adicione ao final */
+
+/* Animação de carregamento (Skeleton Screen) */
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.3; }
+    100% { opacity: 0.6; }
+}
+
+.skeleton-card {
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Garante rolagem suave acelerada por Hardware */
+#ultimos-assistidos-container {
+    transform: translateZ(0); /* Ativa a GPU */
+    will-change: scroll-position;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Rolagem nativa no iOS */
+}
+
+
+
+/* style.css - Adicione ou substitua no final */
+
+/* Otimização: Remove sombras pesadas dos cards pequenos do carrossel */
+.mini-poster-wrapper {
+    /* Removemos o box-shadow padrão pesado */
+    box-shadow: none !important; 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: #222; /* Fundo enquanto carrega */
+}
+
+/* Só coloca sombra quando passar o mouse (Hover) */
+.mini-movie-card:hover .mini-poster-wrapper {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+    border-color: var(--cor-acento-principal);
+}
+
+/* Otimização: Força o navegador a reservar espaço para a imagem antes dela carregar 
+   Isso evita que a página fique "piscando" ou mudando de tamanho (Layout Shift) */
+.mini-poster-wrapper img {
+    aspect-ratio: 2/3;
+    width: 100%;
+    height: auto;
+    display: block;
 }
