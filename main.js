@@ -219,8 +219,44 @@ function verificarConquistas() {
 }
 
 // --- EVENTOS ---
-function setupAppListeners() {
+
+    function setupAppListeners() {
     document.getElementById('nav-sugerir-btn')?.addEventListener('click', (e)=>{e.preventDefault();sugerirFilmeAleatorio()});
+    
+    // LÓGICA DO BOTÃO GRÁFICOS ---
+    document.getElementById('nav-graficos-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = document.getElementById('graficos-section');
+        
+        // Se estiver escondido, mostra. Se estiver visível, esconde.
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            
+            // Recarrega os gráficos para garantir que apareçam no tamanho certo
+            const listaParaGraficos = filmesFiltrados.filter(f => f.assistido);
+            if(listaParaGraficos.length > 0) UI.renderCharts(listaParaGraficos);
+            
+            // Rola a tela suavemente até a seção
+            section.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            section.style.display = 'none';
+        }
+    });
+    
+    // --- LÓGICA DO BOTÃO PERFIL ---
+    document.getElementById('nav-perfil-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = document.getElementById('perfil-section');
+        
+        // Se estiver escondido, mostra. Se estiver visível, esconde.
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            section.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            section.style.display = 'none';
+        }
+    });
+
     document.getElementById('limpar-filtros')?.addEventListener('click', resetarFiltros);
     
     document.querySelectorAll('#filtros-container input, #filtros-container select').forEach(el => {
@@ -245,8 +281,25 @@ function setupAppListeners() {
         refreshUI();
     });
 
-    document.getElementById('view-btn-table')?.addEventListener('click', ()=>{currentView='table'; refreshUI();});
-    document.getElementById('view-btn-grid')?.addEventListener('click', ()=>{currentView='grid'; refreshUI();});
+    // --- CONTROLE DE VISUALIZAÇÃO (TABELA vs CARDS) ---
+    const btnTable = document.getElementById('view-btn-table');
+    const btnGrid = document.getElementById('view-btn-grid');
+
+    btnTable?.addEventListener('click', () => {
+        currentView = 'table';
+        // Troca visual dos botões: Adiciona cor no Tabela, tira do Grade
+        btnTable.classList.add('active');
+        btnGrid.classList.remove('active');
+        refreshUI();
+    });
+
+    btnGrid?.addEventListener('click', () => {
+        currentView = 'grid';
+        // Troca visual dos botões: Adiciona cor no Grade, tira do Tabela
+        btnGrid.classList.add('active');
+        btnTable.classList.remove('active');
+        refreshUI();
+    });
 
     // Cliques na lista
     document.addEventListener('click', async (e) => {

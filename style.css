@@ -1,999 +1,144 @@
 /* ==========================================================================
-   [ 1 ] CONFIGURAÇÕES GLOBAIS E VARIÁVEIS
+   MEUS FILMES - FOLHA DE ESTILOS (MASTER CLASS)
+   ========================================================================== 
+   ARQUIVO: style.css
+   OBJETIVO: Controlar 100% da aparência visual do projeto.
+   
+   ESTRUTURA DA AULA:
+   1.  :root (Variáveis) -> O "Painel de Controle" das cores.
+   2.  Base & Navbar     -> Configurações globais e menu superior.
+   3.  Componentes       -> Botões, Caixas de Texto, Tags.
+   4.  Cards & Grid      -> O visual estilo "Netflix".
+   5.  Tabelas           -> A lista detalhada.
+   6.  Dark Mode         -> Regras de inversão de cores.
+   7.  Responsividade    -> CORREÇÃO DO BUG MOBILE INCLUÍDA AQUI.
    ========================================================================== */
+
+/* Importa a fonte 'Inter' do Google (Pesos: 400=Normal, 600=Semi-Negrito, 700=Negrito) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-:root {
- --cor-fundo: #f4f7f6;
- --cor-texto: #1a1a1a;
- --cor-card: #ffffff;
- --cor-borda: #dddddd;
- --cor-texto-secundario: #555555;
- --cor-acento-principal: #64748b;
- --cor-acento-secundario: #94a3b8;
- --cor-fundo-dark: #111827;
- --cor-fundo-dark-gradiente: linear-gradient(180deg, #1f2937, #111827);
- --cor-texto-dark: #e2e8f0;
- --cor-card-dark: rgba(31, 41, 55, 0.5);
- --cor-borda-dark: rgba(255, 255, 255, 0.1);
- --cor-texto-secundario-dark: #94a3b8; /* Cor original, pode ser usada onde o contraste é bom */
- --cor-texto-secundario-dark-claro: #cbd5e1; /* Cinza mais claro para melhor contraste */
-}
-body {
- font-family: 'Inter', sans-serif;
- background-color: var(--cor-fundo);
- color: var(--cor-texto);
- padding-top: 70px;
- scroll-behavior: smooth;
- transition: background-color 0.3s, color 0.3s;
-}
+
 /* ==========================================================================
-   [ 2 ] LAYOUT
+   [ 1 ] VARIÁVEIS GLOBAIS (:root)
+   ========================================================================== 
+   Pense nisso como "constantes" de programação. Se mudar a cor aqui,
+   ela muda automaticamente em todos os botões e bordas do site.
+*/
+:root {
+    /* Cores do Modo Claro (Padrão) */
+    --cor-fundo: #f4f7f6;
+    --cor-texto: #1a1a1a;
+    --cor-card: #ffffff;
+    --cor-borda: #dddddd;
+    --cor-texto-secundario: #555555;
+    
+    /* Cores da Marca (Identidade Visual) */
+    --cor-acento-principal: #64748b;   /* Azul Slate (Usado na Navbar e Botões) */
+    --cor-acento-secundario: #94a3b8;  /* Tom mais claro para degradês */
+    
+    /* Variáveis do Modo Escuro (Dark Mode) */
+    --cor-fundo-dark: #111827;
+    --cor-fundo-dark-gradiente: linear-gradient(180deg, #1f2937, #111827);
+    --cor-texto-dark: #e2e8f0;
+    --cor-card-dark: rgba(31, 41, 55, 0.5);
+    --cor-borda-dark: rgba(255, 255, 255, 0.1);
+    --cor-texto-secundario-dark: #94a3b8;
+    --cor-texto-secundario-dark-claro: #cbd5e1;
+}
+
+/* ==========================================================================
+   [ 2 ] CONFIGURAÇÕES GERAIS (BODY)
+   ========================================================================== */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    
+    /* IMPORTANTE: A barra de navegação é "fixed-top" (flutua). 
+       Precisamos desse padding para o conteúdo não ficar escondido atrás dela. */
+    padding-top: 70px;
+    
+    scroll-behavior: smooth; /* Rolagem suave ao clicar em links */
+    transition: background-color 0.3s, color 0.3s; /* Animação suave na troca de tema */
+}
+
+/* Ajuste fino para links internos (#secao) pararem na posição certa */
+section[id] {
+    scroll-margin-top: 80px;
+}
+
+/* --- ATIVAÇÃO DO DARK MODE --- */
+body.dark-mode {
+    background-color: var(--cor-fundo-dark);
+    background-image: var(--cor-fundo-dark-gradiente);
+    color: var(--cor-texto-dark);
+    background-attachment: fixed; /* O fundo fica parado enquanto o texto rola (Efeito Premium) */
+}
+
+/* ==========================================================================
+   [ 3 ] BARRA DE NAVEGAÇÃO (NAVBAR)
    ========================================================================== */
 .navbar {
- background-color: var(--cor-acento-principal) !important;
+    background-color: var(--cor-acento-principal) !important;
+    
+    /* TRUQUE DE PERFORMANCE: Ativa a Placa de Vídeo (GPU) para desenhar a barra.
+       Isso evita que ela "pisque" ou trave ao rolar a página rápido. */
+    transform: translateZ(0);
+    will-change: transform;
 }
+
 .navbar .navbar-brand,
 .navbar .nav-link {
- color: #ffffff !important;
-}
-section[id] {
- scroll-margin-top: 80px;
-}
-/* ==========================================================================
-   [ 3 ] COMPONENTES
-   ========================================================================== */
-.card {
- background-color: var(--cor-card);
- border: 1px solid var(--cor-borda);
- border-radius: 1rem;
- box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
- transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
-}
-.card-title {
- color: var(--cor-texto-secundario);
- font-weight: 600;
-}
-.card-title i {
- color: var(--cor-acento-principal);
- margin-right: 0.25rem;
-}
-.btn-gradient {
- background: linear-gradient(90deg, var(--cor-acento-principal), var(--cor-acento-secundario));
- border: none;
- color: white;
- font-weight: 600;
- padding: 0.75rem 1.5rem;
- border-radius: 0.75rem;
- transition: all 0.3s ease;
- box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
-}
-.btn-gradient:hover {
- transform: translateY(-2px);
- box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6);
- filter: brightness(1.1);
-}
-.form-label {
- color: var(--cor-texto-secundario);
- font-weight: 500;
-}
-.form-control,
-.form-select {
- background-color: #f8f9fa;
- border: 1px solid #ced4da;
- color: var(--cor-texto);
-}
-.tag-container {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.375rem 0.75rem;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    background-color: #f8f9fa;
-    cursor: text;
-}
-.tag-container input {
-    flex-grow: 1;
-    border: none;
-    outline: none;
-    background-color: transparent;
-    padding: 0.25rem 0;
-    min-width: 150px;
-}
-.tag-pill {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--cor-acento-principal);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-.tag-remove-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.1rem;
-    line-height: 1;
-    margin-left: 0.5rem;
-    cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-.tag-remove-btn:hover {
-    opacity: 1;
-}
-.tabela-filmes {
- vertical-align: middle;
- white-space: nowrap;
- font-size: 0.9rem;
-}
-.tabela-filmes .col-titulo,
-.tabela-filmes .col-direcao,
-.tabela-filmes .col-atores,
-.tabela-filmes .col-genero {
- white-space: normal;
-}
-.tabela-filmes .col-num { width: 50px; }
-.tabela-filmes .col-titulo { min-width: 250px; }
-.tabela-filmes .col-nota { width: 80px; }
-.tabela-filmes .col-ano { width: 80px; }
-.tabela-filmes .col-direcao { min-width: 200px; }
-.tabela-filmes .col-atores { min-width: 300px; }
-.tabela-filmes .col-genero { min-width: 200px; }
-.tabela-filmes .col-assistido { width: 100px; }
-.tabela-filmes .col-data { width: 140px; }
-.tabela-filmes .col-origem { width: 130px; }
-.tabela-filmes .col-acoes { width: 150px; text-align: right; }
-.tabela-filmes .action-buttons { display: flex; gap: 0.5rem; justify-content: flex-end; }
-.tabela-filmes th.sortable { cursor: pointer; user-select: none; }
-
-/* --- ATUALIZAÇÃO DRAG TO SCROLL VERTICAL --- */
-.table-responsive {
-    /* Altura máxima para ativar o scroll vertical */
-   /* max-height: 600px;*/
-    
-    /* Habilita scroll em ambos os eixos */
-    /* overflow-y: auto; */
-    overflow-x: auto;
-    
-    /* Estética */
-    cursor: grab;
-    user-select: none;
-    padding-bottom: 1rem; /* Espaço extra para o menu dropdown não cortar */
+    color: #ffffff !important; /* Força texto branco para contraste */
 }
 
-.table-responsive.active { 
-    cursor: grabbing; 
-    cursor: -webkit-grabbing; 
-}
-
-.social-icon i { font-size: 1.4rem; transition: color 0.2s ease-in-out, transform 0.2s ease-in-out; }
-.social-icon:hover i { color: var(--cor-texto-dark); transform: scale(1.1); }
-.nav-tabs { border-bottom: none; }
-.nav-link {
- background-color: transparent;
- border: 1px solid transparent;
- border-radius: .5rem;
- color: var(--cor-texto-secundario);
- font-weight: 600;
- margin: 0 .25rem;
- padding: .5rem 1rem;
- transition: all .3s ease;
-}
-.nav-link:not(.active):hover {
- color: var(--cor-texto);
- background-color: rgba(0,0,0,.05);
-}
-.nav-link.active {
- background-color: var(--cor-acento-principal);
- border-color: var(--cor-acento-principal);
- box-shadow: 0 0 15px rgba(100,116,139,.4);
- color: #ffffff;
-}
-.tab-content { padding-top: 1.5rem; }
-/* ==========================================================================
-   [ 4 ] SEÇÕES DA PÁGINA
-   ========================================================================== */
-.stat-card { background-color: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.1); padding: .75rem; border-radius: .75rem; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-.stat-card-title { font-size: .7rem; font-weight: 600; text-transform: uppercase; color: var(--cor-texto-secundario-dark); margin-bottom: .25rem; }
-.stat-card-value { font-size: 1.75rem; font-weight: 700; color: #fff; line-height: 1.2; }
-.stat-card-value-text { font-size: 1rem; font-weight: 600; color: #fff; line-height: 1.3; }
-.ranking-count { background-color: #333; color: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; } 
-.list-group-item { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; padding: .5rem .2rem; background-color: transparent; border-color: #eee; color: var(--cor-texto); } 
-.list-group-item span { font-weight: 600; background-color: var(--cor-acento-principal); color: #fff; padding: .1rem .4rem; border-radius: 5px; font-size: .8rem; } 
-.ranking-title { color: var(--cor-acento-principal); font-weight: 600; margin-bottom: 1rem; text-align: center; } 
-canvas { max-height: 350px; }
-/* ==========================================================================
-   [ 5 ] MODIFICADORES DE TEMA (AJUSTES DE CONTRASTE ADICIONADOS AQUI)
-   ========================================================================== */
-body:not(.dark-mode) .table.table-dark {
- --bs-table-bg: #ffffff;
- --bs-table-color: var(--cor-texto);
- --bs-table-border-color: #dee2e6;
- --bs-table-striped-bg: #f8f9fa;
- --bs-table-hover-bg: #f1f7ff;
-}
-body:not(.dark-mode) .tabela-filmes {
- border: 1px solid #dee2e6;
- border-radius: 0.5rem;
- overflow: hidden;
-}
-body:not(.dark-mode) .tabela-filmes thead {
- background-color: #f1f3f5;
-}
-body:not(.dark-mode) .tabela-filmes td {
- color: #495057;
-}
-body:not(.dark-mode) .tabela-filmes .btn-info { background-color: #0dcaf0; border-color: #0dcaf0; color: white; }
-body:not(.dark-mode) .tabela-filmes .btn-danger { background-color: #dc3545; border-color: #dc3545; color: white; }
-body:not(.dark-mode) .tabela-filmes th.sortable:hover { background-color: rgba(0, 0, 0, 0.05); }
-
-/* --- DARK MODE --- */
-body.dark-mode {
- background-color: var(--cor-fundo-dark);
- background-image: var(--cor-fundo-dark-gradiente);
- color: var(--cor-texto-dark);
- background-attachment: fixed;
-}
+/* Navbar no Modo Escuro (Efeito Vidro) */
 body.dark-mode .navbar {
- background-color: rgba(17, 24, 39, 0.6) !important;
- border-bottom: 1px solid var(--cor-borda-dark);
- backdrop-filter: blur(10px);
-}
-body.dark-mode .card {
-    /* Usamos uma cor mais sólida e opaca para não precisar do blur */
-    background-color: #1f2937; /* Cor sólida de fundo (Dark Gray) */
-    background-color: rgba(31, 41, 55, 0.95); /* Ou levemente transparente sem blur */
-    border: 1px solid var(--cor-borda-dark);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra mais leve */
-    /* backdrop-filter: none; */ /* Garante que o blur está desligado */
+    background-color: rgba(17, 24, 39, 0.6) !important;
+    border-bottom: 1px solid var(--cor-borda-dark);
+    backdrop-filter: blur(10px); /* Desfoque atrás da barra */
+    transform: translateZ(0);
 }
 
-/* Título principal do card (Meu Perfil, Login, Cadastro) */
-body.dark-mode .card-title,
-/* Títulos "Minhas Estatísticas", "Minhas Conquistas" */
-body.dark-mode h4,
-/* Nome do usuário */
-body.dark-mode #perfil-nome {
-  color: var(--cor-texto-dark); 
-  opacity: 0.9; 
-}
-
-/* Labels de formulário */
-body.dark-mode .form-label {
- color: var(--cor-texto-secundario-dark-claro); 
-}
-
-/* Inputs, Selects, Tag Container */
-body.dark-mode .form-control,
-body.dark-mode .form-select,
-body.dark-mode .tag-container {
- background-color: rgba(17, 24, 39, 0.8);
- border-color: var(--cor-borda-dark);
- color: var(--cor-texto-dark);
-}
-body.dark-mode .tag-container input {
-    color: var(--cor-texto-dark);
-}
-body.dark-mode .form-control::placeholder {
- color: var(--cor-texto-secundario-dark);
- opacity: 0.7;
-}
-body.dark-mode .form-select {
- background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e2e8f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-}
-body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
- filter: invert(1);
-}
-body.dark-mode .tabela-filmes th.sortable:hover {
- background-color: rgba(255, 255, 255, 0.05);
-}
-body.dark-mode .list-group-item {
- color: var(--cor-texto-dark);
- border-color: rgba(255, 255, 255, 0.1);
-}
-body.dark-mode .nav-link {
- color: var(--cor-texto-dark);
-}
-body.dark-mode .nav-link:not(.active):hover { color: var(--cor-texto-dark); background-color: rgba(255,255,255,0.05); }
-
-/* Textos secundários (Nickname, Membro desde, Texto geral muted) */
-body.dark-mode .text-muted,
-body.dark-mode #perfil-nickname,
-body.dark-mode #perfil-membro-desde {
-  color: var(--cor-texto-secundario-dark-claro) !important; 
-  opacity: 0.8;
-}
-
-body.dark-mode .nav-link.active {
- background-color: var(--cor-fundo-dark);
- border-color: var(--cor-acento-principal);
- box-shadow: 0 0 15px rgba(100,116,139,.4);
- color: var(--cor-texto-dark);
-}
-body.dark-mode input[type="date"].form-control,
-body.dark-mode .form-select {
- color-scheme: dark;
-}
-
-/* Títulos dentro dos cards menores de estatística */
-body.dark-mode .stat-card-title {
-  color: var(--cor-texto-secundario-dark-claro); 
-  opacity: 0.9;
-}
-
-/* Ícone grande de usuário */
-body.dark-mode .fa-user-circle.fa-8x {
-    opacity: 0.3; 
-    color: var(--cor-texto-secundario-dark); 
-}
-
-/* ==========================================================================
-   [ 6 ] ESTILOS ESPECÍFICOS PARA SUGESTÃO DE FILME (SWEETALERT2)
-   ========================================================================== */
-.suggestion-swal-popup {
-    background-color: var(--cor-card-dark) !important;
-    border: 1px solid var(--cor-borda-dark) !important;
-    backdrop-filter: blur(12px) !important;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
-    color: var(--cor-texto-dark) !important;
-    border-radius: 1rem !important;
-}
-.suggestion-swal-popup .swal2-title {
-    color: var(--cor-texto-dark) !important;
-    font-size: 1.8rem !important;
-    margin-bottom: 1.5rem !important;
-}
-.suggestion-swal-popup .swal2-icon {
-    border-color: var(--cor-acento-principal) !important;
-    color: var(--cor-acento-principal) !important;
-}
-.suggestion-swal-popup .swal2-actions {
-    margin-top: 2rem;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-.suggestion-confirm-btn {
-    background: linear-gradient(90deg, #64748b, #94a3b8) !important;
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 0.75rem !important;
-    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
-    padding: 0.75rem 1.5rem !important;
-    order: 1;
-    margin: 0.5rem !important;
-}
-.suggestion-confirm-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6) !important;
-    filter: brightness(1.1) !important;
-}
-.suggestion-deny-btn {
-    background-color: #dc3545 !important;
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 0.75rem !important;
-    padding: 0.75rem 1.5rem !important;
-    order: 2;
-    margin: 0.5rem !important;
-}
-.suggestion-deny-btn:hover {
-    filter: brightness(1.1);
-}
-.suggestion-cancel-btn {
-    background-color: #6c757d !important;
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 0.75rem !important;
-    padding: 0.75rem 1.5rem !important;
-    order: 3;
-    margin: 0.5rem !important;
-}
-.suggestion-cancel-btn:hover {
-    filter: brightness(1.1);
-}
-/* ==========================================================================
-   [ 7 ] ESTILOS ADICIONAIS SWEETALERT (NOVO)
-   ========================================================================== */
-.suggestion-swal-popup .swal2-icon-content {
-  font-size: 3.5rem;
-  line-height: 1;
-}
-.suggestion-swal-popup .swal2-icon.swal2-html-container {
-  border-color: var(--cor-acento-principal) !important;
-  color: var(--cor-acento-principal) !important;
-}
-.suggestion-layout {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    text-align: left;
-    align-items: center;
-    padding: 1rem;
-}
-.suggestion-main-info {
-    flex: 2;
-    min-width: 200px;
-}
-.suggestion-side-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    background-color: rgba(0, 0, 0, 0.2);
-    padding: 1rem;
-    border-radius: 0.75rem;
-}
-.suggestion-layout .suggestion-title {
-    font-size: 2rem;
-    text-align: left;
-    margin-bottom: 0.75rem;
-}
-.suggestion-layout .suggestion-details p {
-    justify-content: flex-start;
-    margin-bottom: 0.25rem;
-}
-.suggestion-layout .suggestion-note {
-    flex-direction: column;
-    gap: 0.5rem;
-    font-size: 1.1rem;
-    color: var(--cor-texto-secundario-dark);
-    display: flex;
-    align-items: center;
-}
-.suggestion-layout .suggestion-note .fas.fa-star {
-    margin-right: 0;
-    color: #FFD700;
-    font-size: 1.3em;
-}
-.suggestion-layout .suggestion-note span {
-    font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1;
-    color: #fff;
-}
-.suggestion-layout .suggestion-genres {
-    margin-top: 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem;
-}
-/* ==========================================================================
-   [ 8 ] VALIDADOR DE NICKNAME
-   ========================================================================== */
-.nickname-validator {
- position: absolute;
- right: 1rem;
- top: 70%;
- transform: translateY(-50%);
- font-size: 1.25rem;
-}
-input#register-nickname.is-invalid {
- background-image: none !important;
- padding-right: calc(1.5em + .75rem) !important;
-}
-input#register-nickname.is-valid {
- background-image: none !important;
- padding-right: calc(1.5em + .75rem) !important;
-}
-
-/* ==========================================================================
-   [ 9 ] SEÇÃO PERFIL E CONQUISTAS (AJUSTES DE CONTRASTE ADICIONADOS AQUI)
-   ========================================================================== */
-
-/* Mensagem de Boas-vindas na Navbar */
-#welcome-message {
-    color: var(--cor-texto-dark);
-    font-weight: 500;
-    opacity: 0.9;
-}
-body:not(.dark-mode) #welcome-message {
-     color: #ffffff; 
-}
-
-/* Container das Conquistas */
-.conquistas-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: flex-start; 
-}
-
-body:not(.dark-mode) .conquistas-container {
-    justify-content: center; 
-}
-
-/* Selo de Conquista Individual */
-.conquista-selo {
-    width: 100px;
-    height: 100px;
-    padding: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    border: 2px solid var(--cor-borda-dark);
-    border-radius: 50%; /* Círculo */
-    background-color: rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-}
-
-.conquista-selo i {
-    font-size: 2.5rem;
-    line-height: 1;
-}
-
-/* Texto dentro dos selos de conquista */
-.conquista-selo span {
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-top: 0.5rem;
-    line-height: 1.2;
-    color: var(--cor-texto-dark); /* FORÇAR cor branca no dark mode */
-}
-
-/* Estado Bloqueado (Padrão) */
-.conquista-selo {
-    opacity: 0.5; /* Aumentar um pouco a opacidade geral do bloqueado */
-    filter: grayscale(80%); /* Reduzir um pouco o grayscale */
-}
-body.dark-mode .conquista-selo i {
-    color: #64748b; 
-}
-/* Garantir que o texto do selo bloqueado ainda seja legível */
-body.dark-mode .conquista-selo span {
-     color: var(--cor-texto-secundario-dark-claro); 
-     opacity: 0.9;
-}
-
-
-/* Estado Desbloqueado */
-.conquista-selo.unlocked {
-    opacity: 1;
-    filter: grayscale(0%);
-    border-color: #f97316; /* Cor de destaque (laranja) */
-    box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
-}
-.conquista-selo.unlocked i {
-    color: #f97316;
-}
-/* Garantir cor branca no texto do selo desbloqueado */
-body.dark-mode .conquista-selo.unlocked span {
-    color: var(--cor-texto-dark); /* Branco */
-    opacity: 1;
-}
-
-/* Efeito hover para mostrar o 'title' */
-.conquista-selo:hover {
-    transform: scale(1.1);
-    cursor: help;
-}
-
-/* Ajustes no modo claro para manter consistência */
-body:not(.dark-mode) .conquista-selo {
-    border-color: #ddd;
-    background-color: #f8f9fa;
-    opacity: 0.6; /* Deixar bloqueado mais apagado */
-    filter: grayscale(100%);
-}
-body:not(.dark-mode) .conquista-selo span {
-    color: var(--cor-texto-secundario); 
-}
-body:not(.dark-mode) .conquista-selo.unlocked span {
-    color: var(--cor-texto); 
-}
-body:not(.dark-mode) .conquista-selo i {
-    color: #adb5bd; 
-}
-body:not(.dark-mode) .conquista-selo.unlocked {
-     opacity: 1;
-     filter: grayscale(0%);
-     border-color: #f97316;
-}
-body:not(.dark-mode) .conquista-selo.unlocked i {
-    color: #f97316; /* Laranja para desbloqueado */
-}
-
-/* ==========================================================================
-   [ 10 ] ESTILOS PARA RANKING COM BARRAS (NOVO)
-   ========================================================================== */
-
-.ranking-bars-container {
-    font-size: 0.85rem; 
-}
-
-.ranking-bar-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem; 
-}
-
-.ranking-bar-label {
-    flex-basis: 120px; 
-    flex-shrink: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; 
-    text-align: left;
-    color: var(--cor-texto-secundario-dark-claro); 
-}
-
-body:not(.dark-mode) .ranking-bar-label {
+/* Links do Menu */
+.nav-link {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: .5rem;
     color: var(--cor-texto-secundario);
-}
-
-
-.ranking-bar-container {
-    flex-grow: 1; 
-    background-color: rgba(128, 128, 128, 0.15); 
-    border-radius: 3px;
-    height: 10px; 
-    overflow: hidden; 
-}
-
-body:not(.dark-mode) .ranking-bar-container {
-     background-color: #e9ecef; 
-}
-
-.ranking-bar {
-    height: 100%;
-    background-color: var(--cor-acento-principal); 
-    border-radius: 3px;
-    transition: width 0.3s ease-out; 
-}
-
-body:not(.dark-mode) .ranking-bar {
-     background-color: #64748b; 
-}
-
-
-.ranking-bar-count {
     font-weight: 600;
-    min-width: 25px; 
-    text-align: right;
-    color: var(--cor-texto-dark);
+    margin: 0 .25rem;
+    padding: .5rem 1rem;
+    transition: all .3s ease;
 }
 
-body:not(.dark-mode) .ranking-bar-count {
+.nav-link:not(.active):hover {
     color: var(--cor-texto);
+    background-color: rgba(0,0,0,.05);
 }
 
-/* Ajuste nos títulos do ranking para garantir alinhamento à esquerda */
-.ranking-title {
-    text-align: left !important; 
-    color: var(--cor-texto-secundario-dark-claro); 
-    font-size: 0.9rem; 
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-}
-
-body:not(.dark-mode) .ranking-title {
-     color: var(--cor-texto-secundario);
-}
-
-/* ==========================================================================
-   [ 11 ] CORREÇÃO DE CONTRASTE - LOGIN/CADASTRO (NOVO)
-   ========================================================================== */
-
-/* Define a cor do texto ('Não tem conta?' / 'Já tem conta?') */
-body.dark-mode #login-card p,
-body.dark-mode #register-card p {
-    color: var(--cor-texto-secundario-dark-claro); 
-    opacity: 0.9;
-}
-
-/* Define a cor dos links ('Cadastre-se' / 'Faça o login') */
-body.dark-mode #login-card p a,
-body.dark-mode #register-card p a {
-    color: var(--cor-texto-dark); 
-    opacity: 1; 
-    text-decoration: underline; 
-}
-
-/* Opcional: Efeito hover para os links */
-body.dark-mode #login-card p a:hover,
-body.dark-mode #register-card p a:hover {
-    color: var(--cor-texto-secundario-dark-claro); 
-}
-
-/* ==========================================================================
-   [ 12 ] ESTILOS DA CAPA DO FILME (NOVO)
-   ========================================================================== */
-
-.poster-preview-container {
-    position: relative;
-    width: 100%;
-    max-width: 200px;
-    margin: 0 auto;
-    aspect-ratio: 2 / 3; 
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 0.5rem;
-    overflow: hidden;
-    border: 2px dashed var(--cor-borda);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.poster-preview-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.poster-placeholder {
-    text-align: center;
-    padding: 1rem;
-}
-
-/* Overlay de Loading na Capa */
-.api-loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    backdrop-filter: blur(2px);
-}
-
-/* Ajustes para Dark Mode */
-body.dark-mode .poster-preview-container {
-    background-color: rgba(255, 255, 255, 0.05);
-    border-color: var(--cor-borda-dark);
-}
-
-body.dark-mode .poster-placeholder i,
-body.dark-mode .poster-placeholder p {
-    color: var(--cor-texto-secundario-dark);
-}
-
-/* Miniatura na Tabela */
-.poster-thumb {
-    width: 40px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    background-color: #ccc; /* Fallback */
-}
-
-/* ==========================================================================
-   [ 13 ] GRID DE FILMES (NETFLIX STYLE) - NOVO
-   ========================================================================== */
-
-.movies-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 1.5rem;
-    padding: 1rem 0;
-}
-
-.movie-card {
-    position: relative;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    aspect-ratio: 2 / 3;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-    background-color: #2b3035;
-}
-
-.movie-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    z-index: 10;
-}
-
-.movie-poster-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Informações que aparecem sobre a capa */
-.movie-info-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
-    padding: 1rem 0.5rem 0.5rem;
-    color: white;
-    opacity: 1; /* Sempre visível ou opacity: 0 para hover only */
-    transition: opacity 0.3s ease;
-}
-
-.movie-card-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 0.25rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.movie-card-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    color: #ddd;
-}
-
-.movie-card-rating i {
-    color: #FFD700;
-    margin-right: 2px;
-}
-
-/* Badge de Assistido na Grid */
-.movie-watched-badge {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: rgba(16, 185, 129, 0.9); /* Verde */
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-/* ==========================================================================
-   [ 14 ] MICRO-INTERAÇÕES TABELA (NOVO)
-   ========================================================================== */
-
-/* Zoom na capa da tabela */
-.poster-thumb {
-    transition: transform 0.2s ease;
-    cursor: zoom-in;
-}
-.poster-thumb:hover {
-    transform: scale(2);
-    z-index: 100;
-    position: relative;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-}
-
-/* Tags clicáveis na tabela */
-.clickable-tag {
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
-}
-.clickable-tag:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
-    text-decoration: underline;
-}
-
-/* Botões de View (Tabela/Grade) */
-#view-btn-table.active, #view-btn-grid.active {
+/* Link Ativo (Botão da página atual) */
+.nav-link.active {
     background-color: var(--cor-acento-principal);
     border-color: var(--cor-acento-principal);
-    color: white;
+    box-shadow: 0 0 15px rgba(100,116,139,.4); /* Brilho azul */
+    color: #ffffff;
 }
 
-/* Ajuste no accordion transparente */
-.accordion-button:not(.collapsed) {
-    background-color: rgba(255,255,255,0.1);
-    color: var(--cor-texto);
-}
-body.dark-mode .accordion-button:not(.collapsed) {
-    color: white;
-}
-
-/* ==========================================================================
-   [ 15 ] AJUSTES FINAIS E INTERAÇÕES (NOVO)
-   ========================================================================== */
-
-/* Garante que os botões de ação na Grade apareçam apenas no Hover */
-.movie-card .opacity-0 {
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+/* Ajustes de cores dos links no Dark Mode */
+body.dark-mode .nav-link { color: var(--cor-texto-dark); }
+body.dark-mode .nav-link:not(.active):hover { color: var(--cor-texto-dark); background-color: rgba(255,255,255,0.05); }
+body.dark-mode .nav-link.active {
+    background-color: var(--cor-fundo-dark);
+    border-color: var(--cor-acento-principal);
+    box-shadow: 0 0 15px rgba(100,116,139,.4);
+    color: var(--cor-texto-dark);
 }
 
-.movie-card:hover .opacity-0 {
-    opacity: 1 !important;
-}
+/* Ícones Sociais */
+.social-icon i { font-size: 1.4rem; transition: color 0.2s ease-in-out, transform 0.2s ease-in-out; }
+.social-icon:hover i { color: var(--cor-texto-dark); transform: scale(1.1); }
 
-/* Ajuste para garantir que o overlay cubra bem o card */
-.movie-card .movie-info-overlay {
-    z-index: 20; /* Fica acima da imagem */
-}
-
-.movie-card .position-absolute.opacity-0 {
-    z-index: 30; /* Botões ficam acima de tudo */
-    background: rgba(0,0,0,0.6); /* Fundo escuro para destacar botões */
-    backdrop-filter: blur(2px); /* Leve desfoque no fundo */
-}
-
-/* ==========================================================================
-   [ 16 ] AJUSTES TABELA EXPANSÍVEL E DROPDOWN (NOVO)
-   ========================================================================== */
-
-/* Permite que o Dropdown "vaze" para fora da tabela sem ser cortado */
-.table-responsive {
-    overflow: visible !important; 
-}
-
-/* Em telas pequenas, precisamos do scroll horizontal, mas com espaço embaixo pro menu */
-@media (max-width: 992px) {
-    .table-responsive {
-        overflow-x: auto !important;
-        padding-bottom: 150px; /* Espaço extra para o menu não cortar */
-    }
-}
-
-/* Remove borda superior da linha de detalhes para parecer continuação */
-.linha-detalhes td {
-    border-top: none !important;
-}
-
-/* Animação da setinha de expansão */
-.btn-detalhes i {
-    transition: transform 0.3s ease;
-}
-
-/* Ajuste visual do botão de menu (três pontos) */
-.dropdown-toggle::after {
-    display: none; /* Remove a setinha padrão do Bootstrap no dropdown */
-}
-
-.dropdown-item {
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.dropdown-item:hover {
-    background-color: var(--cor-acento-principal);
-    color: white;
-}
-
-.dropdown-menu-dark {
-    border: 1px solid var(--cor-borda-dark);
-    background-color: #1f2937; /* Combina com o Dark Mode */
-}
-
-/* style.css - Adicione ao final */
-
-/* Esconde botões de ação e formulários no modo leitura */
-body.read-only .col-acoes, 
-body.read-only #cadastro-section,
-body.read-only #logout-container,
-body.read-only .btn-edit,
-body.read-only .btn-delete,
-body.read-only .movie-card .position-absolute, /* Botões da grid */
-body.read-only #perfil-trocar-senha-btn,
-body.read-only #import-btn,
-body.read-only #import-file-input + button, /* Botões de import/export se quiser esconder */
-body.read-only .import-export-buttons {
-    display: none !important;
-}
-
-/* Ajusta largura da tabela já que a coluna ações sumiu */
-body.read-only .col-assistido {
-    padding-right: 20px;
-}
-
-/* Banner de aviso */
+/* Banner Visitante (Fixo no rodapé) */
 #visitor-banner {
     background-color: var(--cor-acento-principal);
     color: white;
@@ -1006,284 +151,692 @@ body.read-only .col-assistido {
     z-index: 1050;
     display: none;
 }
-/* ==========================================================================
-   PERFORMANCE PATCH (Correção de Lag)
-   ========================================================================== */
-
-/* 1. Otimização de Renderização (O navegador ignora o que está fora da tela) */
-.movie-card, 
-tr[data-id] {
-    content-visibility: auto; 
-    contain-intrinsic-size: 350px; /* Tamanho estimado do card */
-}
-
-/* 2. Aceleração de Hardware (Força o uso da Placa de Vídeo) */
-.movies-grid, .table-responsive {
-    transform: translateZ(0);
-    will-change: scroll-position;
-}
-
-/* 3. Remover o efeito de "Vidro" pesado apenas dos CARDS (Mantém no fundo) */
-/* O fundo dos cards será uma cor sólida semi-transparente, sem o cálculo de blur */
-.movie-card {
-    backdrop-filter: none !important; 
-    background: rgba(30, 30, 40, 0.95) !important; /* Cor escura sólida levemente transparente */
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3); /* Sombra mais simples */
-}
-
-/* 4. Otimizar as imagens dentro dos cards */
-.movie-card img, .poster-thumb {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-}
-/* =========================================
-   CELULAR (MOBILE)
-   ========================================= */
-@media (max-width: 991px) {
-    /* Aumenta o espaço no topo para o conteúdo não ficar atrás do menu */
-    body {
-        padding-top: 130px; 
-    }
-
-    /* Ajusta os cards para não ficarem colados na borda */
-    .container {
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-
-    /* Esconde os ícones sociais (GitHub/LinkedIn) no celular para ganhar espaço */
-    .navbar-nav.mx-auto {
-        display: none;
-    }
-    
-    /* Ajusta tamanho da fonte do título no celular */
-    .navbar-brand {
-        font-size: 1.2rem;
-    }
-}
 
 /* ==========================================================================
-   [ 17 ] FILTROS (VERSÃO FINAL CLEAN)
+   [ 4 ] COMPONENTES BÁSICOS (Botões, Inputs)
    ========================================================================== */
+/* Botão Principal com Degradê */
+.btn-gradient {
+    background: linear-gradient(90deg, var(--cor-acento-principal), var(--cor-acento-secundario));
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+}
+.btn-gradient:hover {
+    transform: translateY(-2px); /* Sobe levemente */
+    box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6); /* Sombra aumenta */
+    filter: brightness(1.1);
+}
 
-/* Container de Filtros */
+/* Formulários */
+.form-label { color: var(--cor-texto-secundario); font-weight: 500; }
+.form-control, .form-select {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    color: var(--cor-texto);
+}
+
+/* Formulários no Dark Mode */
+body.dark-mode .form-label { color: var(--cor-texto-secundario-dark-claro); }
+body.dark-mode .form-control, 
+body.dark-mode .form-select, 
+body.dark-mode .tag-container {
+    background-color: rgba(17, 24, 39, 0.8);
+    border-color: var(--cor-borda-dark);
+    color: var(--cor-texto-dark);
+}
+body.dark-mode .form-control::placeholder { color: var(--cor-texto-secundario-dark); opacity: 0.7; }
+
+/* Ícone do Select e Date no Dark Mode */
+body.dark-mode .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e2e8f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+body.dark-mode input[type="date"].form-control, body.dark-mode .form-select { color-scheme: dark; }
+
+/* Tag Container (Gêneros) */
+.tag-container {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #ced4da; border-radius: 0.375rem;
+    background-color: #f8f9fa; cursor: text;
+}
+.tag-container input {
+    flex-grow: 1; border: none; outline: none; background-color: transparent;
+    padding: 0.25rem 0; min-width: 150px;
+}
+body.dark-mode .tag-container input { color: var(--cor-texto-dark); }
+
+.tag-pill {
+    display: inline-flex; align-items: center;
+    background-color: var(--cor-acento-principal);
+    color: white;
+    padding: 0.25rem 0.75rem; border-radius: 1rem;
+    font-size: 0.875rem; font-weight: 500;
+}
+.tag-remove-btn {
+    background: none; border: none; color: white;
+    font-size: 1.1rem; line-height: 1; margin-left: 0.5rem;
+    cursor: pointer; opacity: 0.7; transition: opacity 0.2s;
+}
+.tag-remove-btn:hover { opacity: 1; }
+
+/* Validação Nickname */
+.nickname-validator {
+    position: absolute; right: 1rem; top: 70%; transform: translateY(-50%); font-size: 1.25rem;
+}
+input#register-nickname.is-invalid, input#register-nickname.is-valid {
+    background-image: none !important; padding-right: calc(1.5em + .75rem) !important;
+}
+
+/* Filtros Compactos */
 .filter-compact {
     background-color: rgba(0, 0, 0, 0.02);
-    /* Borda sutil apenas ao redor do box inteiro */
-    border: 1px solid rgba(0,0,0,0.1); 
+    border: 1px solid rgba(0,0,0,0.1);
 }
-
 body.dark-mode .filter-compact {
     background-color: rgba(255, 255, 255, 0.02);
-    /* Borda muito sutil e transparente para não brilhar no escuro */
-    border-color: rgba(255, 255, 255, 0.08) !important; 
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
-
-/* Inputs e Selects */
-.filter-compact .form-control,
-.filter-compact .form-select,
-.filter-compact .input-group-text {
-    font-size: 0.9rem;
-    border-color: rgba(0,0,0,0.15);
+.filter-compact .form-control, .filter-compact .form-select, .filter-compact .input-group-text {
+    font-size: 0.9rem; border-color: rgba(0,0,0,0.15);
 }
-
-body.dark-mode .filter-compact .form-control,
-body.dark-mode .filter-compact .form-select,
-body.dark-mode .filter-compact .input-group-text {
-    border-color: rgba(255, 255, 255, 0.1); /* Borda escura suave */
+body.dark-mode .filter-compact .form-control, body.dark-mode .filter-compact .form-select, body.dark-mode .filter-compact .input-group-text {
+    border-color: rgba(255, 255, 255, 0.1);
     background-color: rgba(17, 24, 39, 0.6);
     color: var(--cor-texto-dark);
 }
+.filter-compact .input-group-text { background-color: white; }
+body.dark-mode .filter-compact .input-group-text { background-color: rgba(17, 24, 39, 0.6); }
 
-/* Ícone de busca */
-.filter-compact .input-group-text {
-    background-color: white;
-}
-body.dark-mode .filter-compact .input-group-text {
-    background-color: rgba(17, 24, 39, 0.6);
-}
+/* Utilitários */
+.border-end { border-color: rgba(0,0,0,0.1) !important; }
+body.dark-mode .border-end { border-color: rgba(255,255,255,0.1) !important; }
 
-/* Botão Sugerir */
-#sugerir-filme-btn {
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: transform 0.2s;
-}
-#sugerir-filme-btn:hover {
-    transform: translateY(-2px);
-}
-
-/* Botão Limpar */
-#limpar-filtros {
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-#limpar-filtros:hover {
-    opacity: 1;
-    color: #dc3545 !important;
-}
-
-/* Divisor Vertical (Aquele tracinho entre datas e selects) */
-.border-end {
-    border-color: rgba(0,0,0,0.1) !important;
-}
-body.dark-mode .border-end {
-    border-color: rgba(255,255,255,0.1) !important;
-}
+#sugerir-filme-btn { font-weight: 600; letter-spacing: 0.5px; transition: transform 0.2s; }
+#sugerir-filme-btn:hover { transform: translateY(-2px); }
+#limpar-filtros { opacity: 0.7; transition: opacity 0.2s; }
+#limpar-filtros:hover { opacity: 1; color: #dc3545 !important; }
 
 /* ==========================================================================
-   [ 18 ] CARROSSEL DE ÚLTIMOS ASSISTIDOS (REVISADO)
+   [ 5 ] CARDS E GRID (ESTILO NETFLIX)
    ========================================================================== */
+.card {
+    background-color: var(--cor-card);
+    border: 1px solid var(--cor-borda);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.card-title { color: var(--cor-texto-secundario); font-weight: 600; }
+.card-title i { color: var(--cor-acento-principal); margin-right: 0.25rem; }
 
-/* Container com Scrollbar Estilizada */
-#ultimos-assistidos-container {
-    padding-bottom: 10px; /* Espaço para a sombra não cortar */
-    scrollbar-width: thin; /* Firefox */
-    scrollbar-color: var(--cor-acento-principal) rgba(0,0,0,0.1);
+body.dark-mode .card {
+    background-color: #1f2937;
+    background-color: rgba(31, 41, 55, 0.95);
+    border: 1px solid var(--cor-borda-dark);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+body.dark-mode .card-title, 
+body.dark-mode h4, 
+body.dark-mode #perfil-nome { 
+    color: var(--cor-texto-dark); opacity: 0.9; 
 }
 
-/* Scrollbar para Chrome/Edge/Safari */
-#ultimos-assistidos-container::-webkit-scrollbar {
-    height: 6px;
-}
-#ultimos-assistidos-container::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.1);
-    border-radius: 4px;
-}
-#ultimos-assistidos-container::-webkit-scrollbar-thumb {
-    background-color: var(--cor-acento-principal);
-    border-radius: 4px;
+.glass-card {
+    transform: translateZ(0); 
+    will-change: transform;
 }
 
-/* CARD DO FILME (MINI) */
-.mini-movie-card {
-    width: 110px; /* Um pouco mais largo para caber o título */
+/* Grid de Filmes */
+.movies-grid {
+    display: grid;
+    /* Grid Automático: Cria colunas de no mínimo 160px */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+    transform: translateZ(0);
+    will-change: scroll-position;
+}
+
+.movie-card {
     position: relative;
-    cursor: pointer;
-    /* Inicia invisível para a animação funcionar */
-    opacity: 0; 
-    animation: fadeInUp 0.4s ease-out forwards;
-}
-
-/* Onde a capa fica */
-.mini-poster-wrapper {
-    width: 100%;
-    aspect-ratio: 2/3;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     overflow: hidden;
-    position: relative;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    aspect-ratio: 2 / 3;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    background-color: #2b3035;
+    /* Otimização de Performance */
+    backdrop-filter: none !important;
+    background: rgba(30, 30, 40, 0.95) !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    content-visibility: auto;
+    contain-intrinsic-size: 350px;
 }
 
-/* Efeito Hover (Mouse em cima) */
-.mini-movie-card:hover .mini-poster-wrapper {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0,0,0,0.5);
-    border: 1px solid var(--cor-acento-principal);
+.movie-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    z-index: 10;
 }
 
-/* Overlay da Data */
-.mini-date-badge {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 4px 0;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(2px);
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-align: center;
-    border-top: 1px solid rgba(255,255,255,0.1);
-}
-
-/* Animação de Entrada */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-
-
-/* ==========================================================================
-   PERFORMANCE PATCH (Correção de Lag mantendo a estética)
-   ========================================================================== */
-
-/* 1. Otimização de Renderização (O navegador ignora o que está fora da tela) */
-/* Isso é CRUCIAL para listas longas. O navegador não "pinta" os cards lá de baixo até você rolar até eles. */
-.movie-card, 
-tr[data-id] {
-    content-visibility: auto; 
-    contain-intrinsic-size: 350px; /* Tamanho estimado do card para o scroll não pular */
-}
-
-/* 2. Aceleração de Hardware (Força o uso da Placa de Vídeo) */
-/* Aplica nos elementos que usam blur/vidro ou scroll pesado */
-.glass-card, 
-.navbar, 
-.suggestion-swal-popup,
-.movies-grid, 
-.table-responsive {
-    transform: translateZ(0); /* Hack para ativar a GPU */
-    will-change: transform, scroll-position; /* Avisa o navegador que isso vai mexer */
-}
-
-/* 3. Otimizar as imagens dentro dos cards para não piscar */
-.movie-card img, .poster-thumb {
+.movie-card img {
+    width: 100%; height: 100%; object-fit: cover;
     transform: translateZ(0);
     backface-visibility: hidden;
 }
 
-/* 4. Suavizar apenas o necessário (Evita recálculos globais) */
-/* Se houver 'transition: all' em algum lugar, troque por propriedades específicas se possível */
+/* Overlay de Informação */
+.movie-info-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
+    padding: 1rem 0.5rem 0.5rem;
+    color: white;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    z-index: 20;
+}
+.movie-card-title {
+    font-size: 0.9rem; font-weight: 600; line-height: 1.2; margin-bottom: 0.25rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.movie-card-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: #ddd; }
+.movie-card-rating i { color: #FFD700; margin-right: 2px; }
 
-/* style.css - Adicione ao final */
+/* Hover Actions */
+.movie-card .opacity-0 {
+    opacity: 0; transition: opacity 0.3s ease-in-out;
+    z-index: 30;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(2px);
+}
+.movie-card:hover .opacity-0 { opacity: 1 !important; }
 
-/* Animação de carregamento (Skeleton Screen) */
-@keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 0.3; }
-    100% { opacity: 0.6; }
+/* Badge Assistido */
+.movie-watched-badge {
+    position: absolute; top: 5px; right: 5px;
+    background-color: rgba(16, 185, 129, 0.9); color: white;
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-.skeleton-card {
-    flex-shrink: 0;
-    border: 1px solid rgba(255,255,255,0.05);
-}
-
-/* Garante rolagem suave acelerada por Hardware */
-#ultimos-assistidos-container {
-    transform: translateZ(0); /* Ativa a GPU */
+/* ==========================================================================
+   [ 6 ] TABELAS (VISÃO EM LISTA)
+   ========================================================================== */
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overflow: visible !important;
+    cursor: grab; user-select: none;
+    padding-bottom: 1rem;
+    transform: translateZ(0);
     will-change: scroll-position;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch; /* Rolagem nativa no iOS */
+}
+.table-responsive.active { cursor: grabbing; cursor: -webkit-grabbing; }
+
+.tabela-filmes {
+    vertical-align: middle; white-space: nowrap; font-size: 0.9rem;
+}
+.tabela-filmes .col-titulo, .tabela-filmes .col-direcao, .tabela-filmes .col-atores, .tabela-filmes .col-genero { white-space: normal; }
+.tabela-filmes .col-num { width: 50px; }
+.tabela-filmes .col-titulo { min-width: 250px; font-weight: 600; }
+.tabela-filmes .col-nota, .tabela-filmes .col-ano { width: 80px; }
+.tabela-filmes .col-direcao, .tabela-filmes .col-genero { min-width: 200px; }
+.tabela-filmes .col-atores { min-width: 300px; }
+.tabela-filmes .col-assistido { width: 100px; text-align: center; }
+.tabela-filmes .col-acoes { width: 150px; text-align: right; }
+.tabela-filmes th.sortable { cursor: pointer; user-select: none; }
+
+/* Otimização de renderização */
+tr[data-id] {
+    content-visibility: auto; 
+    contain-intrinsic-size: 60px;
 }
 
+/* Override para Bootstrap Table no Modo Claro */
+body:not(.dark-mode) .table.table-dark {
+    --bs-table-bg: #ffffff;
+    --bs-table-color: var(--cor-texto);
+    --bs-table-border-color: #dee2e6;
+    --bs-table-striped-bg: #f8f9fa;
+    --bs-table-hover-bg: #f1f7ff;
+}
+body:not(.dark-mode) .tabela-filmes { border: 1px solid #dee2e6; border-radius: 0.5rem; overflow: hidden; }
+body:not(.dark-mode) .tabela-filmes thead { background-color: #f1f3f5; }
+body:not(.dark-mode) .tabela-filmes td { color: #495057; }
+body:not(.dark-mode) .tabela-filmes .btn-info { background-color: #0dcaf0; border-color: #0dcaf0; color: white; }
+body:not(.dark-mode) .tabela-filmes .btn-danger { background-color: #dc3545; border-color: #dc3545; color: white; }
+body:not(.dark-mode) .tabela-filmes th.sortable:hover { background-color: rgba(0, 0, 0, 0.05); }
 
+/* Hover Tabela Dark */
+body.dark-mode .tabela-filmes th.sortable:hover { background-color: rgba(255, 255, 255, 0.05); }
 
-/* style.css - Adicione ou substitua no final */
+/* Detalhes e Dropdown */
+.linha-detalhes td { border-top: none !important; }
+.btn-detalhes i { transition: transform 0.3s ease; }
+.dropdown-toggle::after { display: none; }
+.dropdown-item { cursor: pointer; font-size: 0.9rem; }
+.dropdown-item:hover { background-color: var(--cor-acento-principal); color: white; }
+.dropdown-menu-dark { border: 1px solid var(--cor-borda-dark); background-color: #1f2937; }
 
-/* Otimização: Remove sombras pesadas dos cards pequenos do carrossel */
+.poster-thumb {
+    width: 40px; height: 60px; object-fit: cover; border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); background-color: #ccc;
+    transition: transform 0.2s ease; cursor: zoom-in;
+    transform: translateZ(0);
+}
+.poster-thumb:hover {
+    transform: scale(2); z-index: 100; position: relative;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+.clickable-tag { cursor: pointer; transition: background-color 0.2s, transform 0.1s; }
+.clickable-tag:hover { filter: brightness(1.1); transform: translateY(-1px); text-decoration: underline; }
+
+.accordion-button:not(.collapsed) { background-color: rgba(255,255,255,0.1); color: var(--cor-texto); }
+body.dark-mode .accordion-button:not(.collapsed) { color: white; }
+
+#view-btn-table.active, #view-btn-grid.active {
+    background-color: var(--cor-acento-principal); border-color: var(--cor-acento-principal); color: white;
+}
+
+/* ==========================================================================
+   [ 7 ] SEÇÃO DE PERFIL E ESTATÍSTICAS
+   ========================================================================== */
+.stat-card {
+    background-color: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.1);
+    padding: .75rem; border-radius: .75rem; height: 100%;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
+.stat-card-title {
+    font-size: .7rem; font-weight: 600; text-transform: uppercase;
+    color: var(--cor-texto-secundario-dark); margin-bottom: .25rem;
+}
+.stat-card-value { font-size: 1.75rem; font-weight: 700; color: #fff; line-height: 1.2; }
+.stat-card-value-text { font-size: 1rem; font-weight: 600; color: #fff; line-height: 1.3; }
+
+body.dark-mode .stat-card-title { color: var(--cor-texto-secundario-dark-claro); opacity: 0.9; }
+body.dark-mode .fa-user-circle.fa-8x { opacity: 0.3; color: var(--cor-texto-secundario-dark); }
+
+/* Barras de Ranking */
+.ranking-bars-container { font-size: 0.85rem; }
+.ranking-bar-item { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+.ranking-bar-label {
+    flex-basis: 120px; flex-shrink: 0; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; text-align: left;
+    color: var(--cor-texto-secundario-dark-claro);
+}
+body:not(.dark-mode) .ranking-bar-label { color: var(--cor-texto-secundario); }
+
+.ranking-bar-container {
+    flex-grow: 1; background-color: rgba(128, 128, 128, 0.15); border-radius: 3px; height: 10px; overflow: hidden;
+}
+body:not(.dark-mode) .ranking-bar-container { background-color: #e9ecef; }
+
+.ranking-bar {
+    height: 100%; background-color: var(--cor-acento-principal); border-radius: 3px; transition: width 0.3s ease-out;
+}
+body:not(.dark-mode) .ranking-bar { background-color: #64748b; }
+
+.ranking-bar-count {
+    font-weight: 600; min-width: 25px; text-align: right; color: var(--cor-texto-dark);
+}
+body:not(.dark-mode) .ranking-bar-count { color: var(--cor-texto); }
+
+.ranking-title {
+    text-align: left !important; color: var(--cor-texto-secundario-dark-claro);
+    font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;
+}
+body:not(.dark-mode) .ranking-title { color: var(--cor-texto-secundario); }
+
+/* Conquistas */
+.conquistas-container { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: flex-start; }
+body:not(.dark-mode) .conquistas-container { justify-content: center; }
+
+.conquista-selo {
+    width: 100px; height: 100px; padding: 0.5rem;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; border: 2px solid var(--cor-borda-dark); border-radius: 50%;
+    background-color: rgba(0,0,0,0.2); transition: all 0.3s ease;
+    opacity: 0.5; filter: grayscale(80%);
+}
+.conquista-selo i { font-size: 2.5rem; line-height: 1; }
+.conquista-selo span {
+    font-size: 0.75rem; font-weight: 600; margin-top: 0.5rem; line-height: 1.2;
+    color: var(--cor-texto-dark);
+}
+body.dark-mode .conquista-selo i { color: #64748b; }
+body.dark-mode .conquista-selo span { color: var(--cor-texto-secundario-dark-claro); opacity: 0.9; }
+
+.conquista-selo.unlocked {
+    opacity: 1; filter: grayscale(0%);
+    border-color: #f97316; box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+}
+.conquista-selo.unlocked i { color: #f97316; }
+body.dark-mode .conquista-selo.unlocked span { color: var(--cor-texto-dark); opacity: 1; }
+.conquista-selo:hover { transform: scale(1.1); cursor: help; }
+
+body:not(.dark-mode) .conquista-selo {
+    border-color: #ddd; background-color: #f8f9fa; opacity: 0.6; filter: grayscale(100%);
+}
+body:not(.dark-mode) .conquista-selo span { color: var(--cor-texto-secundario); }
+body:not(.dark-mode) .conquista-selo i { color: #adb5bd; }
+body:not(.dark-mode) .conquista-selo.unlocked { opacity: 1; filter: grayscale(0%); border-color: #f97316; }
+body:not(.dark-mode) .conquista-selo.unlocked span { color: var(--cor-texto); }
+body:not(.dark-mode) .conquista-selo.unlocked i { color: #f97316; }
+
+#welcome-message { color: var(--cor-texto-dark); font-weight: 500; opacity: 0.9; }
+body:not(.dark-mode) #welcome-message { color: #ffffff; }
+
+/* ==========================================================================
+   [ 8 ] MODAIS E ALERTAS (SWEETALERT)
+   ========================================================================== */
+.suggestion-swal-popup {
+    background-color: var(--cor-card-dark) !important;
+    border: 1px solid var(--cor-borda-dark) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
+    color: var(--cor-texto-dark) !important;
+    border-radius: 1rem !important;
+    transform: translateZ(0); will-change: transform;
+}
+.suggestion-swal-popup .swal2-title {
+    color: var(--cor-texto-dark) !important; font-size: 1.8rem !important; margin-bottom: 1.5rem !important;
+}
+.suggestion-swal-popup .swal2-icon {
+    border-color: var(--cor-acento-principal) !important; color: var(--cor-acento-principal) !important;
+}
+.suggestion-swal-popup .swal2-actions { margin-top: 2rem; flex-wrap: wrap; justify-content: center; }
+
+.suggestion-confirm-btn {
+    background: linear-gradient(90deg, #64748b, #94a3b8) !important;
+    border: none !important; color: white !important; font-weight: 600 !important;
+    border-radius: 0.75rem !important; box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
+    padding: 0.75rem 1.5rem !important; order: 1; margin: 0.5rem !important;
+}
+.suggestion-confirm-btn:hover {
+    transform: translateY(-2px) !important; box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6) !important;
+    filter: brightness(1.1) !important;
+}
+.suggestion-deny-btn {
+    background-color: #dc3545 !important; border: none !important; color: white !important;
+    font-weight: 600 !important; border-radius: 0.75rem !important;
+    padding: 0.75rem 1.5rem !important; order: 2; margin: 0.5rem !important;
+}
+.suggestion-deny-btn:hover { filter: brightness(1.1); }
+.suggestion-cancel-btn {
+    background-color: #6c757d !important; border: none !important; color: white !important;
+    font-weight: 600 !important; border-radius: 0.75rem !important;
+    padding: 0.75rem 1.5rem !important; order: 3; margin: 0.5rem !important;
+}
+.suggestion-cancel-btn:hover { filter: brightness(1.1); }
+
+.suggestion-layout {
+    display: flex; flex-wrap: wrap; gap: 2rem; text-align: left; align-items: center; padding: 1rem;
+}
+.suggestion-main-info { flex: 2; min-width: 200px; }
+.suggestion-side-info {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    background-color: rgba(0, 0, 0, 0.2); padding: 1rem; border-radius: 0.75rem;
+}
+.suggestion-layout .suggestion-title { font-size: 2rem; text-align: left; margin-bottom: 0.75rem; }
+.suggestion-layout .suggestion-note {
+    flex-direction: column; gap: 0.5rem; font-size: 1.1rem; color: var(--cor-texto-secundario-dark);
+    display: flex; align-items: center;
+}
+.suggestion-layout .suggestion-note .fas.fa-star { margin-right: 0; color: #FFD700; font-size: 1.3em; }
+.suggestion-layout .suggestion-note span { font-size: 2.5rem; font-weight: 700; line-height: 1; color: #fff; }
+.suggestion-layout .suggestion-genres { margin-top: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+
+body.dark-mode #login-card p, body.dark-mode #register-card p { color: var(--cor-texto-secundario-dark-claro); opacity: 0.9; }
+body.dark-mode #login-card p a, body.dark-mode #register-card p a { color: var(--cor-texto-dark); opacity: 1; text-decoration: underline; }
+body.dark-mode #login-card p a:hover, body.dark-mode #register-card p a:hover { color: var(--cor-texto-secundario-dark-claro); }
+
+/* ==========================================================================
+   [ 9 ] CARROSSEL
+   ========================================================================== */
+#ultimos-assistidos-container {
+    padding-bottom: 10px;
+    scrollbar-width: thin; scrollbar-color: var(--cor-acento-principal) rgba(0,0,0,0.1);
+    transform: translateZ(0); will-change: scroll-position;
+    scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+}
+#ultimos-assistidos-container::-webkit-scrollbar { height: 6px; }
+#ultimos-assistidos-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
+#ultimos-assistidos-container::-webkit-scrollbar-thumb { background-color: var(--cor-acento-principal); border-radius: 4px; }
+
+.mini-movie-card {
+    width: 110px; position: relative; cursor: pointer;
+    opacity: 0; animation: fadeInUp 0.4s ease-out forwards;
+}
+
 .mini-poster-wrapper {
-    /* Removemos o box-shadow padrão pesado */
+    width: 100%; aspect-ratio: 2/3; border-radius: 8px; overflow: hidden;
+    position: relative; transition: transform 0.3s ease, box-shadow 0.3s ease;
     box-shadow: none !important; 
     border: 1px solid rgba(255, 255, 255, 0.1);
-    background-color: #222; /* Fundo enquanto carrega */
+    background-color: #222;
 }
 
-/* Só coloca sombra quando passar o mouse (Hover) */
+.mini-poster-wrapper img {
+    aspect-ratio: 2/3; width: 100%; height: auto; display: block;
+}
+
 .mini-movie-card:hover .mini-poster-wrapper {
+    transform: translateY(-5px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
     border-color: var(--cor-acento-principal);
 }
 
-/* Otimização: Força o navegador a reservar espaço para a imagem antes dela carregar 
-   Isso evita que a página fique "piscando" ou mudando de tamanho (Layout Shift) */
-.mini-poster-wrapper img {
-    aspect-ratio: 2/3;
-    width: 100%;
-    height: auto;
-    display: block;
+.mini-date-badge {
+    position: absolute; bottom: 0; left: 0; width: 100%; padding: 4px 0;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(2px);
+    color: #fff; font-size: 0.7rem; font-weight: 600; text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ==========================================================================
+   [ 10 ] UTILITÁRIOS E ANIMAÇÕES
+   ========================================================================== */
+.poster-preview-container {
+    position: relative; width: 100%; max-width: 200px; margin: 0 auto;
+    aspect-ratio: 2 / 3; background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem; overflow: hidden; border: 2px dashed var(--cor-borda);
+    display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;
+}
+.poster-preview-container img { width: 100%; height: 100%; object-fit: cover; }
+.poster-placeholder { text-align: center; padding: 1rem; }
+.api-loading-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center;
+    z-index: 10; backdrop-filter: blur(2px);
+}
+body.dark-mode .poster-preview-container { background-color: rgba(255, 255, 255, 0.05); border-color: var(--cor-borda-dark); }
+body.dark-mode .poster-placeholder i, body.dark-mode .poster-placeholder p { color: var(--cor-texto-secundario-dark); }
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+    0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; }
+}
+.skeleton-card {
+    flex-shrink: 0; border: 1px solid rgba(255,255,255,0.05);
+    background-color: rgba(255,255,255,0.05); border-radius: 8px;
+    animation: pulse 1.5s infinite;
+}
+
+body.read-only .col-acoes, 
+body.read-only #cadastro-section,
+body.read-only #logout-container,
+body.read-only .btn-edit,
+body.read-only .btn-delete,
+body.read-only .movie-card .position-absolute,
+body.read-only #import-btn,
+body.read-only #import-file-input + button,
+body.read-only .import-export-buttons {
+    display: none !important;
+}
+body.read-only .col-assistido { padding-right: 20px; }
+
+/* ==========================================================================
+   [ 11 ] RESPONSIVIDADE E CORREÇÃO MOBILE
+   ========================================================================== 
+   Estas regras só valem quando a tela é pequena (Celular/Tablet).
+   AQUI ESTÁ A CORREÇÃO PARA O MODAL QUE FICAVA VERTICAL.
+*/
+@media (max-width: 991px) {
+    /* Ajustes Gerais de Layout */
+    body { padding-top: 130px; }
+    .container { padding-left: 20px; padding-right: 20px; }
+    .navbar-nav.mx-auto { display: none; }
+    .navbar-brand { font-size: 1.2rem; }
+    .table-responsive { padding-bottom: 150px; }
+
+    /* --- CORREÇÃO DO MODAL DE SUGESTÃO --- */
+    /* Problema: O modal tentava alinhar imagem e texto lado a lado em tela pequena.
+       Solução: Forçamos a direção da "coluna" (um em cima do outro). */
+    
+    .suggestion-layout {
+        flex-direction: column !important; /* Força empilhamento vertical */
+        text-align: center !important;     /* Centraliza todo o texto */
+        gap: 1.5rem;
+    }
+
+    /* Centraliza a imagem da capa */
+    .suggestion-poster {
+        margin: 0 auto !important;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    /* Impede que a imagem fique enorme na tela do celular */
+    .suggestion-poster img {
+        max-width: 180px !important; 
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+
+    /* Faz a caixa de texto ocupar a largura total (Resolve o texto "C h i m e") */
+    .suggestion-main-info {
+        width: 100%;
+        text-align: center !important;
+    }
+
+    /* Título um pouco menor para não quebrar */
+    .suggestion-layout .suggestion-title {
+        text-align: center !important;
+        font-size: 1.5rem !important;
+    }
+
+    /* Centraliza os detalhes (Ano, Diretor) */
+    .suggestion-layout .suggestion-details p,
+    .suggestion-main-info p {
+        justify-content: center !important;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* Ajusta a caixa lateral (Nota e Gêneros) */
+    .suggestion-side-info {
+        width: 100%;
+        flex-direction: row; /* Coloca lado a lado no celular para economizar altura */
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* ==========================================================================
+   BOTÕES DE VISUALIZAÇÃO (LISTA / GRADE) - ESTILO DESTACADO
+   ========================================================================== */
+
+#view-btn-table, #view-btn-grid {
+    font-weight: 600;           /* Texto em negrito para leitura fácil */
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-texto-secundario);
+    transition: all 0.3s ease;  /* Animação suave */
+    background-color: transparent;
+}
+
+/* Estado ATIVO (Selecionado) - Fundo Gradiente da Marca */
+#view-btn-table.active, #view-btn-grid.active {
+    background: linear-gradient(90deg, var(--cor-acento-principal), var(--cor-acento-secundario)) !important;
+    border-color: transparent !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4); /* Glow para destacar */
+    z-index: 1; /* Garante que a sombra fique por cima */
+}
+
+/* Estado HOVER (Passar o mouse no inativo) */
+#view-btn-table:not(.active):hover, 
+#view-btn-grid:not(.active):hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--cor-acento-principal);
+    transform: translateY(-1px);
+}
+
+/* Ajustes para Dark Mode */
+body.dark-mode #view-btn-table, 
+body.dark-mode #view-btn-grid {
+    border-color: var(--cor-borda-dark);
+    color: var(--cor-texto-secundario-dark);
+}
+body.dark-mode #view-btn-table:not(.active):hover, 
+body.dark-mode #view-btn-grid:not(.active):hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+
+/* style.css */
+
+/* Correção para o link "Limpar" no modo escuro */
+body.dark-mode #limpar-filtros {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Opcional: Garante que a setinha fique branca se mudar o tema da tabela no futuro */
+body.dark-mode .btn-detalhes {
+    color: #e2e8f0 !important;
+}
+
+
+/* ==========================================================================
+   CORREÇÃO DE LEITURA (DARK MODE)
+   ========================================================================== */
+   
+/* Força o título dos filmes no carrossel a ficar claro no modo escuro */
+body.dark-mode .mini-movie-card .text-muted {
+    color: var(--cor-texto-dark) !important; /* Usa a cor #e2e8f0 definida no :root */
+    opacity: 1 !important;
+    font-weight: 500;
+}
+
+/* Opcional: Melhora o hover para destacar ainda mais */
+body.dark-mode .mini-movie-card:hover .text-muted {
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* ==========================================================================
+   CORREÇÃO DE VISIBILIDADE (DARK MODE) 
+   ========================================================================== */
+
+/* 1. Corrige o ícone e texto "Capa do Filme" na tela de cadastro */
+body.dark-mode .poster-placeholder .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important; /* Torna o cinza claro */
+}
+
+/* 2. Corrige os títulos dos filmes no carrossel (Últimos Assistidos) */
+body.dark-mode .mini-movie-card .text-muted {
+    color: var(--cor-texto-dark) !important; /* Usa a cor de texto padrão clara */
+    opacity: 1 !important;
+    font-weight: 500;
 }

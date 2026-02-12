@@ -279,10 +279,10 @@ export const UI = {
             </tr>
             <tr class="linha-detalhes"><td colspan="12" class="p-0 border-0">
                 <div class="collapse" id="detalhes-${f.id}">
-                    <div class="p-3 bg-dark bg-opacity-25 border-bottom border-secondary text-muted small">
-                        <div class="row">
-                            <div class="col-md-6 mb-2"><strong class="text-light"><i class="fas fa-globe me-2"></i>Origem:</strong> ${f.origem || '-'}</div>
-                            <div class="col-md-6 mb-2"><strong class="text-light"><i class="fas fa-calendar-day me-2"></i>Data Assistido:</strong> ${f.assistido ? UI.templates.date(f.dataAssistido) : '-'}</div>
+                    <div class="p-3 bg-dark bg-opacity-25 border-bottom border-secondary text-white-50 small">
+                    <div class="row">
+                    <div class="col-md-6 mb-2"><strong class="text-white"><i class="fas fa-globe me-2"></i>Origem:</strong> ${f.origem || '-'}</div>
+                    <div class="col-md-6 mb-2"><strong class="text-white"><i class="fas fa-calendar-day me-2"></i>Data Assistido:</strong> ${f.assistido ? UI.templates.date(f.dataAssistido) : '-'}</div>
                         </div>
                     </div>
                 </div>

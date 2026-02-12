@@ -40,11 +40,15 @@
                         <li class="nav-item app-nav" style="display: none;">
                         <a class="nav-link" href="#" id="nav-sugerir-btn"><i class="fas fa-magic me-1"></i>Sugerir Filme</a>
                         </li>
+                        <li class="nav-item app-nav" style="display: none;">
+                        <a class="nav-link" href="#" id="nav-graficos-btn"><i class="fas fa-chart-pie me-1"></i> Gráficos</a>
+                        </li>
                         <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#cadastro-section"><i class="fas fa-plus-circle me-1"></i>Cadastrar</a></li>
                         <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#estatisticas-section"><i class="fas fa-chart-bar me-1"></i> Estatísticas</a></li>
-                        <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#lista-section"><i class="fas fa-list me-1"></i> Lista</a></li>
-                        <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#perfil-section"><i class="fas fa-user-circle me-1"></i> Perfil</a></li>
-                        
+                        <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#lista-section"><i class="fas fa-list me-1"></i> Lista</a>
+                        </li>
+                        <li class="nav-item app-nav" style="display: none;"><a class="nav-link" href="#" id="nav-perfil-btn"><i class="fas fa-user-circle me-1"></i> Perfil</a>
+                        </li>
                         <li class="nav-item ms-lg-3">
                             <button id="theme-toggle" class="btn btn-outline-light btn-sm"><i class="fas fa-moon"></i></button>
                         </li>
@@ -197,7 +201,7 @@
                     </div>
         </section>
 
-        <section id="graficos-section" class="mb-5">
+        <section id="graficos-section" class="mb-5" style="display: none;">
             <div class="card glass-card">
                 <div class="card-body">
                     <h2 class="card-title mb-4"><i class="fas fa-palette me-2"></i> Análise Visual</h2>
@@ -214,7 +218,7 @@
             </div>
         </section>
 
-        <section id="perfil-section" class="mb-5">
+        <section id="perfil-section" class="mb-5" style="display: none;">
             <div class="card glass-card">
                 <div class="card-body">
                     <h2 class="card-title mb-4"><i class="fas fa-user-circle me-2"></i> Meu Perfil</h2>
@@ -241,128 +245,98 @@
             </div>
         </section>
 
-     <section id="lista-section" class="mb-5">
-   
-            <div class="card glass-card">
-                <div class="card-body">
-                    
-                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                        <h4 class="card-title mb-0"><i class="fas fa-list me-2"></i> Lista de Filmes</h4>
-                        
-                        <div class="d-flex gap-2 align-items-center">
-                            <button id="sugerir-filme-btn" class="btn btn-gradient btn-sm shadow-sm">
-                                <i class="fas fa-magic me-2"></i> Sugerir Filme
-                            </button>
+    <section id="lista-section" class="mb-5">
+    <div class="card glass-card">
+        <div class="card-body">
+            
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+                
+                <h4 class="card-title mb-0"><i class="fas fa-list me-2"></i> Lista de Filmes</h4>
+                
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary active px-4 py-2" id="view-btn-table">
+                        <i class="fas fa-table me-2"></i>Tabela
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary px-4 py-2" id="view-btn-grid">
+                        <i class="fas fa-border-all me-2"></i>Cards
+                    </button>
+                </div>
+                
+                <div class="d-flex gap-2 align-items-center">
+                    <button id="sugerir-filme-btn" class="btn btn-gradient btn-sm shadow-sm">
+                        <i class="fas fa-magic me-2"></i> Sugerir Filme
+                    </button>
 
-                            <div class="btn-group btn-group-sm">
-                                <button id="export-json-btn" class="btn btn-outline-secondary" title="Exportar JSON"><i class="fas fa-file-code"></i></button>
-                                <button id="export-csv-btn" class="btn btn-outline-secondary" title="Exportar CSV"><i class="fas fa-file-csv"></i></button>
-                            </div>
-                            <button id="import-btn" class="btn btn-outline-secondary btn-sm" title="Importar"><i class="fas fa-file-import"></i></button>
-                            <input type="file" id="import-file-input" accept=".json, .csv" style="display: none;">
-                        </div>
+                    <div class="btn-group btn-group-sm">
+                        <button id="export-json-btn" class="btn btn-outline-secondary" title="Exportar JSON"><i class="fas fa-file-code"></i></button>
+                        <button id="export-csv-btn" class="btn btn-outline-secondary" title="Exportar CSV"><i class="fas fa-file-csv"></i></button>
                     </div>
-    
-                    <div id="filtros-container" class="filter-compact p-3 mb-3 rounded-2 border">
-                        
-                        <div class="row g-2 mb-2">
-                            <div class="col-lg-4 col-12">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="filtro-busca" placeholder="Buscar título...">
-                                    <button class="btn btn-outline-secondary" type="button"><i class="fas fa-search"></i></button>
-                                </div>
-                            </div>
-                            <div class="col-lg-2 col-md-4">
-                                <input type="text" class="form-control" id="filtro-genero" placeholder="Gênero...">
-                            </div>
-                            <div class="col-lg-3 col-md-4">
-                                <input type="text" class="form-control" id="filtro-diretor" placeholder="Direção...">
-                            </div>
-                            <div class="col-lg-3 col-md-4">
-                                <input type="text" class="form-control" id="filtro-ator" placeholder="Artista...">
-                            </div>
-                        </div>
-    
-                        <div class="row g-2 align-items-center">
-                            
-                            <div class="col-lg-2 col-md-3">
-                                <div class="position-relative">
-                                    <select id="filtro-periodo-rapido" class="form-select form-select-sm">
-                                        <option value="custom">Período...</option>
-                                        <option value="30d">Últimos 30 Dias</option>
-                                        <option value="mes_atual">Mês Atual</option>
-                                        <option value="este_ano">Ano Atual(2026)</option>
-                                        <option value="todos">Todo o Período</option>
-                                    </select>
-                                    
-                                    <a href="javascript:void(0)" id="limpar-filtros" 
-                                       class="text-decoration-none text-muted small position-absolute start-0" 
-                                       style="bottom: -22px; font-size: 0.75rem;"
-                                       title="Limpar Filtros">
-                                        <i class="fas fa-times me-1"></i>Limpar
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-auto col-md-3 col-6">
-                                <input type="date" class="form-control form-control-sm" id="filtro-data-inicio" title="Data Início">
-                            </div>
-                            <div class="col-lg-auto col-md-3 col-6">
-                                <input type="date" class="form-control form-control-sm" id="filtro-data-fim" title="Data Fim">
-                            </div>
-    
-                            <div class="col-auto d-none d-lg-block border-end mx-1" style="height: 20px; border-color: rgba(255,255,255,0.1)!important;"></div>
-    
-                            <div class="col-lg col-md-3 col-4">
-                                <select id="filtro-ano" class="form-select form-select-sm"><option value="todos">Ano Lançamento</option></select>
-                            </div>
-                            <div class="col-lg col-md-3 col-4">
-                                <select id="filtro-ano-assistido" class="form-select form-select-sm"><option value="todos">Ano Assistido</option></select>
-                            </div>
-                            <div class="col-lg col-md-3 col-4">
-                                <select id="filtro-origem" class="form-select form-select-sm">
-                                    <option value="todos">Origem</option>
-                                    <option value="Nacional">Nacional</option>
-                                    <option value="Internacional">Internacional</option>
-                                </select>
-                            </div>
-                            <div class="col-lg col-md-3 col-4">
-                                <select id="filtro-assistido" class="form-select form-select-sm">
-                                    <option value="todos">Status</option>
-                                    <option value="sim">Assistido</option>
-                                    <option value="nao">Para Assistir</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div style="height: 10px;"></div>
-
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <ul class="nav nav-pills nav-fill gap-2" id="filmesTab" role="tablist">
-                            <li class="nav-item"><button class="nav-link active py-1 px-3 fs-6" id="todos-tab" data-bs-toggle="tab" data-bs-target="#todos-tab-pane" type="button">Todos</button></li>
-                            <li class="nav-item"><button class="nav-link py-1 px-3 fs-6" id="assistidos-tab" data-bs-toggle="tab" data-bs-target="#assistidos-tab-pane" type="button">Assistidos</button></li>
-                            <li class="nav-item"><button class="nav-link py-1 px-3 fs-6" id="nao-assistidos-tab" data-bs-toggle="tab" data-bs-target="#nao-assistidos-tab-pane" type="button">Não Assistidos</button></li>
-                        </ul>
-    
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-secondary active" id="view-btn-table" title="Lista"><i class="fas fa-list"></i></button>
-                            <button type="button" class="btn btn-outline-secondary" id="view-btn-grid" title="Grade"><i class="fas fa-th-large"></i></button>
-                        </div>
-                    </div>
-                    
-                    <div class="tab-content" id="filmesTabContent">
-                        <div class="tab-pane fade show active" id="todos-tab-pane"><div class="table-responsive" id="tabela-todos-container"><p class="text-center text-muted pt-3">Carregando...</p></div></div>
-                        <div class="tab-pane fade" id="assistidos-tab-pane"><div class="table-responsive" id="tabela-assistidos-container"><p class="text-center text-muted pt-3">Carregando...</p></div></div>
-                        <div class="tab-pane fade" id="nao-assistidos-tab-pane"><div class="table-responsive" id="tabela-nao-assistidos-container"><p class="text-center text-muted pt-3">Carregando...</p></div></div>
-                    </div>
+                    <button id="import-btn" class="btn btn-outline-secondary btn-sm" title="Importar"><i class="fas fa-file-import"></i></button>
+                    <input type="file" id="import-file-input" accept=".json, .csv" style="display: none;">
                 </div>
             </div>
 
-        </section>
+            <div id="filtros-container" class="filter-compact p-3 mb-3 rounded-2 border">
+                <div class="row g-2 mb-2">
+                    <div class="col-lg-4 col-12">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="filtro-busca" placeholder="Buscar título...">
+                            <button class="btn btn-outline-secondary" type="button"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4"><input type="text" class="form-control" id="filtro-genero" placeholder="Gênero..."></div>
+                    <div class="col-lg-3 col-md-4"><input type="text" class="form-control" id="filtro-diretor" placeholder="Direção..."></div>
+                    <div class="col-lg-3 col-md-4"><input type="text" class="form-control" id="filtro-ator" placeholder="Artista..."></div>
+                </div>
 
-    </main>
+                <div class="row g-2 align-items-center">
+                    <div class="col-lg-2 col-md-3">
+                        <div class="position-relative">
+                            <select id="filtro-periodo-rapido" class="form-select form-select-sm">
+                                <option value="custom">Período...</option>
+                                <option value="30d">Últimos 30 Dias</option>
+                                <option value="mes_atual">Mês Atual</option>
+                                <option value="este_ano">Ano Atual(2026)</option>
+                                <option value="todos">Todo o Período</option>
+                            </select>
+                            <a href="javascript:void(0)" id="limpar-filtros" class="text-decoration-none text-muted small position-absolute start-0" style="bottom: -22px; font-size: 0.75rem;" title="Limpar Filtros"><i class="fas fa-times me-1"></i>Limpar</a>
+                        </div>
+                    </div>
+                    <div class="col-lg-auto col-md-3 col-6"><input type="date" class="form-control form-control-sm" id="filtro-data-inicio" title="Data Início"></div>
+                    <div class="col-lg-auto col-md-3 col-6"><input type="date" class="form-control form-control-sm" id="filtro-data-fim" title="Data Fim"></div>
+                    <div class="col-auto d-none d-lg-block border-end mx-1" style="height: 20px; border-color: rgba(255,255,255,0.1)!important;"></div>
+                    <div class="col-lg col-md-3 col-4"><select id="filtro-ano" class="form-select form-select-sm"><option value="todos">Ano Lançamento</option></select></div>
+                    <div class="col-lg col-md-3 col-4"><select id="filtro-ano-assistido" class="form-select form-select-sm"><option value="todos">Ano Assistido</option></select></div>
+                    <div class="col-lg col-md-3 col-4">
+                        <select id="filtro-origem" class="form-select form-select-sm">
+                            <option value="todos">Origem</option><option value="Nacional">Nacional</option><option value="Internacional">Internacional</option>
+                        </select>
+                    </div>
+                    <div class="col-lg col-md-3 col-4">
+                        <select id="filtro-assistido" class="form-select form-select-sm">
+                            <option value="todos">Status</option><option value="sim">Assistido</option><option value="nao">Não Assistido</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="height: 10px;"></div>
+            </div>
+            
+            <div class="mb-2">
+                <ul class="nav nav-pills nav-fill gap-2" id="filmesTab" role="tablist">
+                    <li class="nav-item"><button class="nav-link active py-1 px-3 fs-6" id="todos-tab" data-bs-toggle="tab" data-bs-target="#todos-tab-pane" type="button">Todos</button></li>
+                    <li class="nav-item"><button class="nav-link py-1 px-3 fs-6" id="assistidos-tab" data-bs-toggle="tab" data-bs-target="#assistidos-tab-pane" type="button">Assistidos</button></li>
+                    <li class="nav-item"><button class="nav-link py-1 px-3 fs-6" id="nao-assistidos-tab" data-bs-toggle="tab" data-bs-target="#nao-assistidos-tab-pane" type="button">Não Assistidos</button></li>
+                </ul>
+            </div>
+            
+            <div class="tab-content" id="filmesTabContent">
+                <div class="tab-pane fade show active" id="todos-tab-pane"><div class="table-responsive" id="tabela-todos-container"><p class="text-center text-muted pt-3">Carregando...</p></div></div>
+                <div class="tab-pane fade" id="assistidos-tab-pane"><div class="table-responsive" id="tabela-assistidos-container"><p class="text-center text-muted pt-3">Carregando...</p></div></div>
+                <div class="tab-pane fade" id="nao-assistidos-tab-pane"><div class="table-responsive" id="tabela-nao-assistidos-container"><p class="text-center text-muted pt-3">Carregando...</p></div></div>
+            </div>
+        </div>
+    </div>
+</section>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
