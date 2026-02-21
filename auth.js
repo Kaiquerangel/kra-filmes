@@ -1,7 +1,3 @@
-/* ==========================================================================
-   AUTH.JS - Gerenciador de Autenticação (Login/Cadastro)
-   ========================================================================== */
-
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { auth, db } from './config.js';
@@ -11,11 +7,21 @@ import { UI } from './ui.js';
 let nicknameCheckTimer = null;
 let lastCheckedNickname = '';
 
-// --- HTML DO FORMULÁRIO (Template String) ---
+const AUTH_ERRORS = {
+    'auth/user-not-found': 'Usuário ou senha incorretos.',
+    'auth/invalid-credential': 'Usuário ou senha incorretos.',
+    'auth/wrong-password': 'Senha incorreta.',
+    'auth/too-many-requests': 'Muitas tentativas. Aguarde.',
+    'auth/invalid-email': 'E-mail inválido.',
+    'auth/email-already-in-use': 'E-mail já cadastrado.',
+    'auth/weak-password': 'Senha fraca (mín 6 caracteres).'
+};
+
+const getErrorMessage = (error) => AUTH_ERRORS[error.code] || error.message || 'Erro desconhecido.';
+
 const LOGIN_TEMPLATE = `
 <div class="row justify-content-center" style="padding-top: 5rem;">
     <div class="col-lg-5 col-md-7">
-        
         <div class="card glass-card" id="login-card">
             <div class="card-body p-4 p-md-5">
                 <h2 class="card-title mb-4 text-center">Login</h2>
@@ -72,44 +78,35 @@ const LOGIN_TEMPLATE = `
 
 export const Auth = {
     init: (onLoginSuccess, onLogoutSuccess) => {
-        
-        // 1. Injeta o HTML na página (dentro da div #auth-container do index.html)
         const container = document.getElementById('auth-container');
         if (container) container.innerHTML = LOGIN_TEMPLATE;
 
-        // 2. Configura os Listeners dos formulários
         setupAuthFormListeners();
 
-        // 3. OUVINTE DO FIREBASE (O coração da autenticação)
-        // Roda automaticamente quando a página carrega ou quando loga/desloga
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // --- LOGADO ---
                 try {
                     const profile = await AuthService.getProfile(user.uid);
                     if (profile) {
-                        UI.toggleAuthView(true, profile); // Mostra o App
-                        if (onLoginSuccess) onLoginSuccess(user); // Avisa o main.js
+                        UI.toggleAuthView(true, profile);
+                        if (onLoginSuccess) onLoginSuccess(user);
                     } else {
-                        // Logou mas não tem perfil no banco (ex: erro no cadastro anterior)
                         await handleCompleteProfile(user);
                     }
                 } catch (error) {
-                    console.error("Erro Auth:", error);
+                    console.error("Auth Error:", error);
                     UI.toast('Erro ao carregar perfil.', 'error');
                     AuthService.logout();
                 }
             } else {
-                // --- DESLOGADO ---
-                UI.toggleAuthView(false); // Mostra o Login
-                if (onLogoutSuccess) onLogoutSuccess(); // Avisa o main.js
+                UI.toggleAuthView(false);
+                if (onLogoutSuccess) onLogoutSuccess();
             }
         });
     }
 };
 
 function setupAuthFormListeners() {
-    // 1. LOGIN
     document.getElementById('login-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('login-identifier').value;
@@ -117,18 +114,11 @@ function setupAuthFormListeners() {
         
         try {
             await AuthService.login(id, pass);
-            // Sucesso: O onAuthStateChanged vai capturar e mudar a tela
         } catch (error) {
-            let msg = 'Erro desconhecido.';
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') msg = 'Usuário ou senha incorretos.';
-            else if (error.code === 'auth/wrong-password') msg = 'Senha incorreta.';
-            else if (error.code === 'auth/too-many-requests') msg = 'Muitas tentativas. Aguarde.';
-            else if (error.code === 'auth/invalid-email') msg = 'E-mail inválido.';
-            UI.alert('Atenção', msg, 'warning');
+            UI.alert('Atenção', getErrorMessage(error), 'warning');
         }
     });
 
-    // 2. CADASTRO
     document.getElementById('register-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const nome = document.getElementById('register-name').value;
@@ -136,7 +126,6 @@ function setupAuthFormListeners() {
         const email = document.getElementById('register-email').value;
         const pass = document.getElementById('register-password').value;
 
-        // Verifica nickname antes de tentar criar
         const isAvailable = await AuthService.checkNickname(nick);
         if (!isAvailable && nick !== lastCheckedNickname) {
             return UI.alert('Erro', 'Nickname já está em uso.', 'warning');
@@ -146,14 +135,10 @@ function setupAuthFormListeners() {
             await AuthService.register(nome, nick, email, pass);
             UI.toast('Bem-vindo(a)!');
         } catch (error) {
-            let msg = error.message;
-            if(error.code === 'auth/email-already-in-use') msg = 'E-mail já cadastrado.';
-            else if(error.code === 'auth/weak-password') msg = 'Senha fraca (mín 6 caracteres).';
-            UI.alert('Erro no Cadastro', msg, 'error');
+            UI.alert('Erro no Cadastro', getErrorMessage(error), 'error');
         }
     });
 
-    // 3. NAVEGAÇÃO ENTRE FORMS
     document.getElementById('show-register-link')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.getElementById('login-card').style.display = 'none';
@@ -166,88 +151,93 @@ function setupAuthFormListeners() {
         document.getElementById('register-card').style.display = 'none';
     });
 
-    // 4. LOGOUT (MODO SEGURO - DELEGAÇÃO)
-    // Usamos listener no document para garantir que funcione mesmo se o botão for recriado
     document.addEventListener('click', (e) => {
         if (e.target.closest('#logout-btn')) {
             e.preventDefault();
             AuthService.logout();
         }
         
-        // Recuperar Senha (Botão do Perfil)
         if (e.target.closest('#perfil-trocar-senha-btn')) {
             e.preventDefault();
-            const u = auth.currentUser;
-            if(u?.email) {
-                AuthService.recoverPassword(u.email)
-                    .then(() => UI.alert('E-mail Enviado', `Link enviado para ${u.email}`, 'success'))
+            const currentUser = auth.currentUser;
+            if (currentUser?.email) {
+                AuthService.recoverPassword(currentUser.email)
+                    .then(() => UI.alert('E-mail Enviado', `Link enviado para ${currentUser.email}`, 'success'))
                     .catch(err => UI.alert('Erro', err.message, 'error'));
             }
         }
     });
 
-    // 5. VALIDAÇÃO DE NICKNAME EM TEMPO REAL
     const nickInput = document.getElementById('register-nickname');
     if (nickInput) {
         nickInput.addEventListener('input', () => {
             clearTimeout(nicknameCheckTimer);
             const val = nickInput.value.trim().toLowerCase();
             
-            // Elementos visuais
             const load = document.getElementById('nickname-loading');
             const ok = document.getElementById('nickname-success');
             const err = document.getElementById('nickname-error');
             
-            // Reseta visual
-            if(load) load.style.display = 'none';
-            if(ok) ok.style.display = 'none';
-            if(err) err.style.display = 'none';
+            if (load) load.style.display = 'none';
+            if (ok) ok.style.display = 'none';
+            if (err) err.style.display = 'none';
             nickInput.classList.remove('is-valid', 'is-invalid');
 
             if (val.length < 4) { 
-                if(val.length > 0) nickInput.classList.add('is-invalid'); 
+                if (val.length > 0) nickInput.classList.add('is-invalid'); 
                 return; 
             }
             
-            // Inicia verificação com delay (debounce)
-            if(load) load.style.display = 'block';
+            if (load) load.style.display = 'block';
+            
             nicknameCheckTimer = setTimeout(async () => {
                 lastCheckedNickname = val;
                 try {
-                    const av = await AuthService.checkNickname(val);
-                    if(load) load.style.display = 'none';
+                    const isAvailable = await AuthService.checkNickname(val);
+                    if (load) load.style.display = 'none';
                     
-                    if (av) { 
-                        if(ok) ok.style.display = 'block'; 
+                    if (isAvailable) { 
+                        if (ok) ok.style.display = 'block'; 
                         nickInput.classList.add('is-valid'); 
                     } else { 
-                        if(err) err.style.display = 'block'; 
+                        if (err) err.style.display = 'block'; 
                         nickInput.classList.add('is-invalid'); 
                     }
-                } catch(e) {}
+                } catch (e) {
+                    console.error('Erro ao verificar nickname', e);
+                }
             }, 800);
         });
     }
 }
 
-// Fallback: Se logar mas não tiver dados no Firestore
 async function handleCompleteProfile(user) {
-    const { value: f } = await Swal.fire({
+    const { value: formValues } = await Swal.fire({
         title: 'Complete seu Perfil',
-        html: `<input id="swal-nome" class="swal2-input" placeholder="Nome"><input id="swal-nick" class="swal2-input" placeholder="Nickname">`,
-        focusConfirm: false, allowOutsideClick: false,
-        preConfirm: () => [document.getElementById('swal-nome').value, document.getElementById('swal-nick').value]
+        html: `
+            <input id="swal-nome" class="swal2-input" placeholder="Nome">
+            <input id="swal-nick" class="swal2-input" placeholder="Nickname">
+        `,
+        focusConfirm: false, 
+        allowOutsideClick: false,
+        preConfirm: () => [
+            document.getElementById('swal-nome').value, 
+            document.getElementById('swal-nick').value
+        ]
     });
-    if (f) {
+
+    if (formValues) {
         try {
             const { setDoc, doc } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
             await setDoc(doc(db, "users", user.uid), { 
                 uid: user.uid, 
-                nome: f[0], 
-                nickname: f[1], 
+                nome: formValues[0], 
+                nickname: formValues[1], 
                 membroDesde: serverTimestamp() 
             });
             window.location.reload();
-        } catch(e) { UI.alert('Erro', 'Falha ao salvar.', 'error'); }
+        } catch(e) { 
+            UI.alert('Erro', 'Falha ao salvar dados.', 'error'); 
+        }
     }
 }

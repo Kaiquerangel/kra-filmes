@@ -15,3 +15,4 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const OMDB_API_KEY = '5e553669';
+export const YOUTUBE_API_KEY = 'AIzaSyCa8ZBy8dIKECdHrOmazSWaGB96F_yi5cs';

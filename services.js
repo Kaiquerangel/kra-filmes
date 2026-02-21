@@ -1,52 +1,52 @@
-/* ==========================================================================
-   SERVICES.JS - Camada de Serviços (Firebase Auth, Firestore, OMDb API)
-   ========================================================================== */
-
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where, setDoc, getDoc, limit, startAfter} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-import { auth, db, OMDB_API_KEY } from './config.js';
+import { auth, db, OMDB_API_KEY, YOUTUBE_API_KEY } from './config.js';
 
 export const AuthService = {
     login: (email, pass) => signInWithEmailAndPassword(auth, email, pass),
     logout: () => signOut(auth),
     recoverPassword: (email) => sendPasswordResetEmail(auth, email),
+    
     register: async (nome, nickname, email, password) => {
-        // Verifica unicidade do nickname
         const q = query(collection(db, "users"), where("nickname", "==", nickname));
         const snapshot = await getDocs(q);
         if (!snapshot.empty) throw new Error("Nickname já está em uso.");
         
-        // Cria conta no Auth (O e-mail fica salvo seguro AQUI)
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         
-        // Cria perfil no Firestore (Dados Públicos APENAS)
         await setDoc(doc(db, "users", cred.user.uid), {
             uid: cred.user.uid,
             nome: nome,
             nickname: nickname,
-            // email: email,  <--- REMOVIDO! Não salve isso no documento público.
             membroDesde: serverTimestamp()
         });
+        
         return cred.user;
     },
+    
     checkNickname: async (nickname) => {
         const q = query(collection(db, "users"), where("nickname", "==", nickname));
         const snapshot = await getDocs(q);
         return snapshot.empty;
     },
+    
     getProfile: async (uid) => {
         const snap = await getDoc(doc(db, "users", uid));
         return snap.exists() ? snap.data() : null;
+    },
+
+    getProfileByNickname: async (nickname) => {
+        const q = query(collection(db, "users"), where("nickname", "==", nickname));
+        const snapshot = await getDocs(q);
+        return snapshot.empty ? null : snapshot.docs[0].data();
     }
 };
 
 export const MovieService = {
     getCollection: (uid) => collection(db, "users", uid, "filmes"),
 
-    getPaginated: async (uid, ultimoDocVisivel = null, tamanhoPagina = 24) => { // <--- Garanta que está 24 aqui
+    getPaginated: async (uid, ultimoDocVisivel = null, tamanhoPagina = 24) => {
         const col = collection(db, "users", uid, "filmes");
-        
-        // CORREÇÃO: Mudei de "desc" para "asc" para voltar à ordem original (antigos primeiro)
         let q = query(col, orderBy("cadastradoEm", "asc"), limit(tamanhoPagina));
 
         if (ultimoDocVisivel) {
@@ -56,15 +56,30 @@ export const MovieService = {
         return await getDocs(q);
     },
     
-    // ATUALIZADO: Aceita ano opcional para filtrar remakes
     searchOMDb: async (titulo, ano = null) => {
         let url = `https://www.omdbapi.com/?t=${encodeURIComponent(titulo)}&apikey=${OMDB_API_KEY}`;
-        if (ano) url += `&y=${ano}`; // Adiciona filtro de ano se informado
+        if (ano) url += `&y=${ano}`;
         
         const res = await fetch(url);
         const data = await res.json();
         if (data.Response === "False") throw new Error("Filme não encontrado na API.");
         return data;
+    },
+
+    getTrailer: async (titulo, ano) => {
+        if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY.includes('COLE_AQUI')) return null;
+        
+        const q = encodeURIComponent(`${titulo} ${ano || ''} trailer oficial`);
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${q}&type=video&key=${YOUTUBE_API_KEY}`;
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            return data.items?.length > 0 ? data.items[0].id.videoId : null;
+        } catch (error) {
+            console.error("Erro YouTube API:", error);
+            return null;
+        }
     },
 
     save: async (uid, filmeData, id = null) => {
@@ -73,7 +88,6 @@ export const MovieService = {
         if (id) {
             await updateDoc(doc(col, id), filmeData);
         } else {
-            // ATUALIZADO: Verifica duplicidade considerando Título E Ano
             const q = query(col, where("titulo", "==", filmeData.titulo), where("ano", "==", filmeData.ano));
             const snapshot = await getDocs(q);
             if (!snapshot.empty) throw new Error("Você já cadastrou este filme (neste ano).");
@@ -87,9 +101,7 @@ export const MovieService = {
     toggleAssistido: (uid, id, status) => {
         return updateDoc(doc(db, "users", uid, "filmes", id), {
             assistido: status, 
-            dataAssistido: status ? new Date().toISOString().slice(0,10) : null 
+            dataAssistido: status ? new Date().toISOString().slice(0, 10) : null 
         });
     }
 };
-
-// Atualização Mobile
