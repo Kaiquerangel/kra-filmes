@@ -12,16 +12,17 @@ let filmesFiltrados = [];
 let filmeEmEdicaoId = null;      
 let isReadOnly = false;
 
-let currentView = 'table';       
+let currentView = 'grid'; 
 let sortBy = 'cadastradoEm';     
 let sortDirection = 'asc';       
 let generosSelecionados = [];    
 let tagsSelecionadas = [];
 
+// PAGINAÇÃO CORRIGIDA: 40 ITENS PARA PREENCHER 5 LINHAS DE 8 COLUNAS
 let paginaAtual = 1;
-const ITENS_POR_PAGINA = 30; 
-let carregandoMais = false;      
-let observerInfinito = null;
+const ITENS_POR_PAGINA = 40;
+
+let debounceTimer = null;
 
 const GENEROS_PREDEFINIDOS = ["Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "History", "Horror", "Music", "Mystery", "Romance", "Science Fiction", "Thriller", "War", "Western"].sort();
 
@@ -40,7 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('theme-toggle')?.addEventListener('click', () => {
         const novoTema = UI.toggleTheme();
         localStorage.setItem('theme', novoTema);
-        if (filmesFiltrados.length > 0) UI.renderCharts(filmesFiltrados.filter(f => f.assistido));
+        if (filmesFiltrados.length > 0) {
+            requestAnimationFrame(() => UI.renderCharts(filmesFiltrados.filter(f => f.assistido)));
+        }
     });
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -109,29 +112,27 @@ function encerrarAplicacao() {
 function conectarBancoDeDados(uid) {
     if (unsubscribeFilmes) unsubscribeFilmes();
     
+    UI.renderSkeletons(UI.els.tabelaTodos, currentView, 16);
+    
     const q = query(collection(db, "users", uid, "filmes"));
 
     unsubscribeFilmes = onSnapshot(q, (snapshot) => {
         filmes = snapshot.docs.map(doc => {
             const data = doc.data();
-            let dataCadastro = new Date(0);
-            
-            if (data.cadastradoEm && data.cadastradoEm.toDate) {
-                dataCadastro = data.cadastradoEm.toDate();
-            }
+            let dataCadastro = (data.cadastradoEm && data.cadastradoEm.toDate) 
+                ? data.cadastradoEm.toDate() 
+                : new Date(0);
 
-            return {
-                id: doc.id,
-                ...data,
-                cadastradoEm: dataCadastro
-            };
+            return { id: doc.id, ...data, cadastradoEm: dataCadastro };
         });
 
         filmes.sort((a, b) => a.cadastradoEm - b.cadastradoEm);
 
-        atualizarFiltrosExtras();
-        verificarConquistas();
-        refreshUI();
+        requestAnimationFrame(() => {
+            atualizarFiltrosExtras();
+            verificarConquistas();
+            refreshUI(); 
+        });
         
     }, (error) => { 
         console.error(error); 
@@ -139,32 +140,39 @@ function conectarBancoDeDados(uid) {
     });
 }
 
+/**
+ * FUNÇÃO REFORMULADA: RENDERIZA O LOTE COMPLETO (40 CARDS) DE UMA VEZ
+ */
 function refreshUI() {
     filmesFiltrados = aplicarFiltros(filmes);
     filmesFiltrados = aplicarOrdenacao(filmesFiltrados);
     
-    paginaAtual = 1;
-    const lote = filmesFiltrados.slice(0, ITENS_POR_PAGINA);
+    const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+    const fim = inicio + ITENS_POR_PAGINA;
+    const loteExibicao = filmesFiltrados.slice(inicio, fim);
     
-    UI.renderContent(lote, filmes, currentView, false); 
-    ativarScrollInfinito(); 
-}
+    // Limpeza imediata para garantir que não sobram resíduos da página anterior
+    UI.els.tabelaTodos.innerHTML = '';
+    UI.els.tabelaAssistidos.innerHTML = '';
+    UI.els.tabelaNaoAssistidos.innerHTML = '';
 
-function carregarMaisFilmes() {
-    if (carregandoMais) return;
-    
-    const totalExibido = paginaAtual * ITENS_POR_PAGINA;
-    if (totalExibido >= filmesFiltrados.length) return;
-    
-    carregandoMais = true;
-    const proximoLote = filmesFiltrados.slice(totalExibido, totalExibido + ITENS_POR_PAGINA);
-    
-    if (proximoLote.length > 0) {
-        paginaAtual++;
-        UI.renderContent(proximoLote, filmes, currentView, true); 
+    // Renderiza o lote INTEIRO de uma vez
+    if (loteExibicao.length > 0) {
+        UI.renderContent(loteExibicao, filmes, currentView, false);
     }
     
-    setTimeout(() => { carregandoMais = false; }, 50);
+    atualizarControlesPaginacao();
+}
+
+function atualizarControlesPaginacao() {
+    const totalPaginas = Math.ceil(filmesFiltrados.length / ITENS_POR_PAGINA);
+    const btnAnt = document.getElementById('btn-pag-anterior');
+    const btnProx = document.getElementById('btn-pag-proximo');
+    const infoPag = document.getElementById('info-paginacao');
+
+    if (infoPag) infoPag.textContent = `Página ${paginaAtual} de ${totalPaginas || 1}`;
+    if (btnAnt) btnAnt.disabled = (paginaAtual === 1);
+    if (btnProx) btnProx.disabled = (paginaAtual >= totalPaginas || totalPaginas === 0);
 }
 
 function aplicarFiltros(lista) {
@@ -205,7 +213,7 @@ function aplicarFiltros(lista) {
 }
 
 function val(id) { 
-    return document.getElementById(id)?.value.toLowerCase() || ''; 
+    return document.getElementById(id)?.value.toLowerCase().trim() || ''; 
 }
 
 function aplicarOrdenacao(lista) {
@@ -262,7 +270,9 @@ function setupAppListeners() {
         if (section.style.display === 'none') {
             section.style.display = 'block';
             const listaParaGraficos = filmesFiltrados.filter(f => f.assistido);
-            if (listaParaGraficos.length > 0) UI.renderCharts(listaParaGraficos);
+            if (listaParaGraficos.length > 0) {
+                requestAnimationFrame(() => UI.renderCharts(listaParaGraficos));
+            }
             section.scrollIntoView({ behavior: 'smooth' });
         } else {
             section.style.display = 'none';
@@ -292,12 +302,23 @@ function setupAppListeners() {
     
     document.querySelectorAll('#filtros-container input, #filtros-container select').forEach(el => {
         if (el.id === 'filtro-periodo-rapido') return;
-        el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+        
+        const eventType = el.tagName === 'SELECT' ? 'change' : 'input';
+        
+        el.addEventListener(eventType, () => {
+             paginaAtual = 1;
+             
              if (el.id.includes('data')) { 
                  sortBy = 'dataAssistido'; 
                  sortDirection = 'desc'; 
              }
-             refreshUI();
+             
+             if (el.tagName === 'INPUT' && el.type === 'text') {
+                 clearTimeout(debounceTimer);
+                 debounceTimer = setTimeout(refreshUI, 300);
+             } else {
+                 refreshUI();
+             }
         });
     });
 
@@ -306,6 +327,7 @@ function setupAppListeners() {
         const hoje = new Date();
         let dataInicio = null;
         let dataFim = null;
+        paginaAtual = 1;
 
         if (periodo === '30d') {
             dataInicio = new Date(hoje.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -344,6 +366,24 @@ function setupAppListeners() {
         btnGrid.classList.add('active');
         btnTable.classList.remove('active');
         refreshUI();
+    });
+
+    // BOTÕES DE NAVEGAÇÃO: SALTO INSTANTÂNEO PARA FLUÍDEZ
+    document.getElementById('btn-pag-anterior')?.addEventListener('click', () => {
+        if (paginaAtual > 1) {
+            paginaAtual--;
+            document.getElementById('lista-section')?.scrollIntoView({ behavior: 'auto', block: 'start' });
+            refreshUI();
+        }
+    });
+
+    document.getElementById('btn-pag-proximo')?.addEventListener('click', () => {
+        const totalPaginas = Math.ceil(filmesFiltrados.length / ITENS_POR_PAGINA);
+        if (paginaAtual < totalPaginas) {
+            paginaAtual++;
+            document.getElementById('lista-section')?.scrollIntoView({ behavior: 'auto', block: 'start' });
+            refreshUI();
+        }
     });
 
     document.addEventListener('click', async (e) => {
@@ -424,6 +464,7 @@ function resetarFiltros() {
     document.getElementById('filtro-periodo-rapido').value = 'custom';
     sortBy = 'cadastradoEm'; 
     sortDirection = 'asc';
+    paginaAtual = 1;
     refreshUI();
 }
 
@@ -508,7 +549,7 @@ function setupFormListeners() {
             generosSelecionados = []; 
             tagsSelecionadas = [];
             filmeEmEdicaoId = null;
-            document.getElementById('cadastro-titulo').innerHTML = '<i class="fas fa-edit me-2"></i> Cadastro de Filme';
+            document.getElementById('cadastro-titulo').innerHTML = '<i class=\"fas fa-edit me-2\"></i> Cadastro de Filme';
         } catch(err) { 
             UI.alert('Erro', err.message, 'error'); 
         } finally { 
@@ -690,33 +731,4 @@ function importarArquivo(e) {
     }; 
     
     reader.readAsText(file);
-}
-
-function ativarScrollInfinito() {
-    if (observerInfinito) observerInfinito.disconnect();
-
-    let sentinela = document.getElementById('sentinela-scroll');
-    if (!sentinela) {
-        sentinela = document.createElement('div');
-        sentinela.id = 'sentinela-scroll';
-        sentinela.style.height = '20px';
-        sentinela.style.marginBottom = '20px';
-        
-        const container = document.getElementById('tabela-todos-container');
-        if (container && container.parentNode) {
-            container.parentNode.appendChild(sentinela);
-        }
-    }
-
-    observerInfinito = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-            carregarMaisFilmes();
-        }
-    }, {
-        root: null,
-        rootMargin: '200px',
-        threshold: 0.1
-    });
-
-    observerInfinito.observe(sentinela);
 }

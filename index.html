@@ -152,7 +152,7 @@
                         <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">% Nacional</span><span class="stat-card-value" id="stat-pct-nacionais">0%</span></div></div>
                         <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">% Internacional</span><span class="stat-card-value" id="stat-pct-internacionais">0%</span></div></div>
                         <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">Década Popular</span><span class="stat-card-value-text" id="stat-decada-popular">-</span></div></div>
-                        <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">Ator Frequente</span><span class="stat-card-value-text" id="stat-ator-frequente">-</span></div></div>
+                        <div class="col-lg-2 col-4"><div class="stat-card"><span class="stat-card-title">Artista Frequente</span><span class="stat-card-value-text" id="stat-ator-frequente">-</span></div></div>
                      </div>
                      <div class="row g-3 text-center mb-4">
                         <div class="col-md-6"><div class="stat-card"><span class="stat-card-title">Melhor Filme</span><span class="stat-card-value-text" id="stat-melhor-filme">-</span></div></div>
@@ -234,8 +234,8 @@
                         <h4 class="card-title mb-0"><i class="fas fa-list me-2"></i> Lista de Filmes</h4>
                         
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-secondary active px-4 py-2" id="view-btn-table"><i class="fas fa-table me-2"></i>Tabela</button>
-                            <button type="button" class="btn btn-outline-secondary px-4 py-2" id="view-btn-grid"><i class="fas fa-border-all me-2"></i>Cards</button>
+                            <button type="button" class="btn btn-outline-secondary px-4 py-2" id="view-btn-table"><i class="fas fa-table me-2"></i>Tabela</button>
+                            <button type="button" class="btn btn-outline-secondary active px-4 py-2" id="view-btn-grid"><i class="fas fa-border-all me-2"></i>Cards</button>
                         </div>
                         
                         <div class="d-flex gap-2 align-items-center">
@@ -307,6 +307,15 @@
                         <div class="tab-pane fade show active" id="todos-tab-pane"><div class="table-responsive" id="tabela-todos-container"><p class="text-center text-muted pt-3">Carregando...</p></div></div>
                         <div class="tab-pane fade" id="assistidos-tab-pane"><div class="table-responsive" id="tabela-assistidos-container"><p class="text-center text-muted pt-3">Carregando...</p></div></div>
                         <div class="tab-pane fade" id="nao-assistidos-tab-pane"><div class="table-responsive" id="tabela-nao-assistidos-container"><p class="text-center text-muted pt-3">Carregando...</p></div></div>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center gap-4 mt-5 pb-5">
+                        <button id="btn-pag-anterior" class="btn btn-outline-secondary px-4 rounded-pill shadow-sm">
+                            <i class="fas fa-chevron-left me-2"></i>Anterior
+                        </button>
+                        <span id="info-paginacao" class="fw-bold text-muted small">Página 1 de 1</span>
+                        <button id="btn-pag-proximo" class="btn btn-outline-secondary px-4 rounded-pill shadow-sm">
+                            Próximo<i class="fas fa-chevron-right ms-2"></i>
+                        </button>
                     </div>
                 </div>
             </div>

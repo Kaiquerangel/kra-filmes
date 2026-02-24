@@ -151,15 +151,38 @@ export const UI = {
         }
     },
 
+    // NOVA FUNÇÃO DE SKELETON SCREEN
+    renderSkeletons: (container, viewType = 'table', qtd = 12) => {
+        if (!container) return;
+        
+        if (viewType === 'grid') {
+            const skeletons = Array(qtd).fill(`
+                <div class="movie-card skeleton">
+                    <div class="skeleton-card-grid"></div>
+                </div>
+            `).join('');
+            container.innerHTML = `<div class="movies-grid">${skeletons}</div>`;
+        } else {
+            const rows = Array(qtd).fill(`
+                <tr>
+                    <td colspan="10" class="p-3">
+                        <div class="skeleton" style="height: 25px; width: 100%;"></div>
+                    </td>
+                </tr>
+            `).join('');
+            container.innerHTML = `<table class="table table-dark tabela-filmes"><tbody>${rows}</tbody></table>`;
+        }
+    },
+
     renderContent: (filmesVisiveis, listaCompleta, viewType = 'table', append = false) => {
         const assistidosVisiveis = filmesVisiveis.filter(f => f.assistido);
         const naoAssistidosVisiveis = filmesVisiveis.filter(f => !f.assistido);
         const renderFn = viewType === 'table' ? UI.renderTable : UI.renderGrid;
         
-        renderFn(filmesVisiveis, UI.els.tabelaTodos, append);
-        renderFn(assistidosVisiveis, UI.els.tabelaAssistidos, append);
-        renderFn(naoAssistidosVisiveis, UI.els.tabelaNaoAssistidos, append);
-
+        renderFn(filmesVisiveis, UI.els.tabelaTodos, false);
+        renderFn(assistidosVisiveis, UI.els.tabelaAssistidos, false);
+        renderFn(naoAssistidosVisiveis, UI.els.tabelaNaoAssistidos, false);
+        
         if (!append) {
             const assistidosTotal = listaCompleta.filter(f => f.assistido);
             requestAnimationFrame(() => UI.updateStats(assistidosTotal, listaCompleta.length));
@@ -347,85 +370,87 @@ export const UI = {
         if (f.tags && tagsCallback) tagsCallback(f.tags);
     },
 
+    // UPDATESTATS OTIMIZADO
     updateStats: (assistidos, total) => {
         UI.els.statTotal.textContent = assistidos.length;
-        UI.els.statMedia.textContent = assistidos.length ? (assistidos.reduce((a, f) => a + (f.nota || 0), 0) / assistidos.length).toFixed(1) : '0.0';
-        
-        const nac = assistidos.filter(f => f.origem === 'Nacional').length;
-        UI.els.statPctNac.textContent = `${Math.round((nac / (assistidos.length || 1)) * 100)}%`;
-        UI.els.statPctInt.textContent = `${Math.round(((assistidos.length - nac) / (assistidos.length || 1)) * 100)}%`;
+        UI.els.statMedia.textContent = assistidos.length 
+            ? (assistidos.reduce((a, f) => a + (f.nota || 0), 0) / assistidos.length).toFixed(1) 
+            : '0.0';
 
-        const countBy = (list, key) => {
-            const counts = {};
-            list.forEach(f => (Array.isArray(f[key]) ? f[key] : [f[key]]).forEach(i => { if(i) counts[i] = (counts[i]||0) + 1; }));
-            return Object.entries(counts).sort((a,b) => b[1] - a[1]);
+        const processarEstatisticas = () => {
+            if (!assistidos.length) {
+                const containers = ['ranking-generos-bars', 'ranking-atores-bars', 'ranking-diretores-bars', 'ranking-anos-bars', 'ranking-decadas-bars', 'ranking-anos-assistidos-bars'];
+                containers.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = '<p class="text-muted small">N/A</p>';
+                });
+                return;
+            }
+
+            const nac = assistidos.filter(f => f.origem === 'Nacional').length;
+            UI.els.statPctNac.textContent = `${Math.round((nac / assistidos.length) * 100)}%`;
+            UI.els.statPctInt.textContent = `${Math.round(((assistidos.length - nac) / assistidos.length) * 100)}%`;
+
+            const counts = { genero: {}, atores: {}, direcao: {}, decadas: {}, anos: {}, anosAssistidos: {} };
+            let melhor = assistidos[0], pior = assistidos[0];
+
+            assistidos.forEach(f => {
+                ['genero', 'atores', 'direcao'].forEach(key => {
+                    const items = Array.isArray(f[key]) ? f[key] : [f[key]];
+                    items.forEach(i => { if(i) counts[key][i] = (counts[key][i] || 0) + 1; });
+                });
+
+                if(f.ano) {
+                    const d = `Anos ${Math.floor(f.ano / 10) * 10}`;
+                    counts.decadas[d] = (counts.decadas[d] || 0) + 1;
+                    counts.anos[f.ano] = (counts.anos[f.ano] || 0) + 1;
+                }
+
+                if(f.dataAssistido) {
+                    const anoA = f.dataAssistido.substring(0, 4);
+                    counts.anosAssistidos[anoA] = (counts.anosAssistidos[anoA] || 0) + 1;
+                }
+
+                if ((f.nota || 0) > (melhor.nota || 0)) melhor = f;
+                if ((f.nota || 10) < (pior.nota || 10)) pior = f;
+            });
+
+            UI.els.statMelhor.textContent = melhor.titulo || '-';
+            UI.els.statPior.textContent = pior.titulo || '-';
+
+            const topAtores = Object.entries(counts.atores).sort((a,b) => b[1] - a[1]);
+            UI.els.statAtor.textContent = topAtores.length ? topAtores[0][0] : '-';
+            
+            const topDec = Object.entries(counts.decadas).sort((a,b) => b[1] - a[1]);
+            UI.els.statDecada.textContent = topDec.length ? topDec[0][0] : '-';
+
+            UI.renderRankings('ranking-generos-bars', Object.entries(counts.genero).sort((a,b)=>b[1]-a[1]).slice(0, 15));
+            UI.renderRankings('ranking-atores-bars', topAtores.slice(0, 15));
+            UI.renderRankings('ranking-diretores-bars', Object.entries(counts.direcao).sort((a,b)=>b[1]-a[1]).slice(0, 15));
+            UI.renderRankings('ranking-anos-bars', Object.entries(counts.anos).sort((a,b)=>b[1]-a[1]).slice(0, 15));
+            UI.renderRankings('ranking-decadas-bars', topDec.slice(0, 5));
+            UI.renderRankings('ranking-anos-assistidos-bars', Object.entries(counts.anosAssistidos).sort((a,b)=>b[1]-a[1]).slice(0, 10));
+
+            if (window.carouselTimeout) clearTimeout(window.carouselTimeout);
+            window.carouselTimeout = setTimeout(() => UI.renderCarousel(assistidos), 100);
+            
+            const sectionStats = document.getElementById('estatisticas-section');
+            if (sectionStats && sectionStats.style.display !== 'none') {
+                if (window.statsTimeout) clearTimeout(window.statsTimeout);
+                window.statsTimeout = setTimeout(() => UI.renderCharts(assistidos), 200);
+            }
         };
 
-        const topAtores = countBy(assistidos, 'atores');
-        UI.els.statAtor.textContent = topAtores.length ? topAtores[0][0] : '-';
-
-        const decadas = {}; assistidos.forEach(f => { if(f.ano) { const d = Math.floor(f.ano/10)*10; decadas[d]=(decadas[d]||0)+1; }});
-        const topDec = Object.entries(decadas).sort((a,b)=>b[1]-a[1]);
-        UI.els.statDecada.textContent = topDec.length ? `Anos ${topDec[0][0]}` : '-';
-
-        const melhor = assistidos.reduce((p, c) => (p.nota||0) > (c.nota||0) ? p : c, {});
-        UI.els.statMelhor.textContent = melhor.titulo || '-';
-        const pior = assistidos.reduce((p, c) => (p.nota||10) < (c.nota||10) ? p : c, {});
-        UI.els.statPior.textContent = pior.titulo || '-';
-
-        UI.renderRankings('ranking-generos-bars', countBy(assistidos, 'genero').slice(0, 15));
-        UI.renderRankings('ranking-atores-bars', topAtores.slice(0, 15));
-        UI.renderRankings('ranking-diretores-bars', countBy(assistidos, 'direcao').slice(0, 15));
-        
-        const anosData = Object.entries(assistidos.reduce((acc, f) => { if(f.ano) acc[f.ano]=(acc[f.ano]||0)+1; return acc; }, {})).sort((a,b)=>b[1]-a[1]).slice(0,15);
-        UI.renderRankings('ranking-anos-bars', anosData);
-
-        const decadasCount = {};
-        const anosAssistidosCount = {};
-        
-        assistidos.forEach(f => {
-            if (f.ano) {
-                const d = Math.floor(f.ano / 10) * 10;
-                const label = `Anos ${d}`;
-                decadasCount[label] = (decadasCount[label] || 0) + 1;
-            }
-            if (f.assistido && f.dataAssistido && f.dataAssistido.length >= 4) {
-                const ano = f.dataAssistido.substring(0, 4);
-                anosAssistidosCount[ano] = (anosAssistidosCount[ano] || 0) + 1;
-            }
-        });
-
-        const topDecadas = Object.entries(decadasCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        UI.renderRankings('ranking-decadas-bars', topDecadas);
-
-        const topAnosAssistidos = Object.entries(anosAssistidosCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        UI.renderRankings('ranking-anos-assistidos-bars', topAnosAssistidos);
-
-        if (window.carouselTimeout) clearTimeout(window.carouselTimeout);
-        window.carouselTimeout = setTimeout(() => {
-            (window.requestIdleCallback || window.setTimeout)(() => {
-                UI.renderCarousel(assistidos);
-            });
-        }, 800);
-        
-        const sectionStats = document.getElementById('estatisticas-section');
-        if (sectionStats) {
-            if (window.statsTimeout) clearTimeout(window.statsTimeout);
-            window.statsTimeout = setTimeout(() => {
-                (window.requestIdleCallback || window.setTimeout)(() => {
-                    if(assistidos.length > 0) UI.renderCharts(assistidos);
-                });
-            }, 2000); 
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(processarEstatisticas);
+        } else {
+            setTimeout(processarEstatisticas, 100);
         }
     },
 
     renderCarousel: (assistidos) => {
         const containerUltimos = document.getElementById('ultimos-assistidos-container');
         if (!containerUltimos) return;
-
-        if (containerUltimos.children.length === 0) {
-            containerUltimos.innerHTML = `<div class="d-flex gap-3 ps-2">${Array(5).fill('<div class="skeleton-card" style="width:110px;height:160px;background:rgba(255,255,255,0.05);border-radius:8px;animation:pulse 1.5s infinite;"></div>').join('')}</div>`;
-        }
 
         const ultimos10 = assistidos
             .filter(f => f.assistido && f.dataAssistido)
