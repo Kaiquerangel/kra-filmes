@@ -3,13 +3,36 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp
 import { auth, db, OMDB_API_KEY, YOUTUBE_API_KEY } from './config.js';
 
 export const AuthService = {
-    login: (email, pass) => signInWithEmailAndPassword(auth, email, pass),
+    
+    login: async (identifier, pass) => {
+        let email = identifier;
+        
+        if (!identifier.includes('@')) {
+            const q = query(collection(db, "users"), where("nickname", "==", identifier));
+            const snapshot = await getDocs(q);
+            
+            if (snapshot.empty) {
+                throw { code: 'auth/user-not-found', message: 'Usuário não encontrado.' };
+            }
+            
+            email = snapshot.docs[0].data().email;
+            
+            if (!email) {
+                throw { code: 'auth/invalid-email', message: 'E-mail não vinculado a este perfil.' };
+            }
+        }
+        
+        return signInWithEmailAndPassword(auth, email, pass);
+    },
+    
     logout: () => signOut(auth),
+    
     recoverPassword: (email) => sendPasswordResetEmail(auth, email),
     
     register: async (nome, nickname, email, password) => {
         const q = query(collection(db, "users"), where("nickname", "==", nickname));
         const snapshot = await getDocs(q);
+        
         if (!snapshot.empty) throw new Error("Nickname já está em uso.");
         
         const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -18,6 +41,7 @@ export const AuthService = {
             uid: cred.user.uid,
             nome: nome,
             nickname: nickname,
+            email: email, 
             membroDesde: serverTimestamp()
         });
         
@@ -57,8 +81,15 @@ export const MovieService = {
     },
     
     searchOMDb: async (titulo, ano = null) => {
-        let url = `https://www.omdbapi.com/?t=${encodeURIComponent(titulo)}&apikey=${OMDB_API_KEY}`;
-        if (ano) url += `&y=${ano}`;
+        // Detecta se é URL do IMDb e extrai o ID (tt1234567)
+        const imdbMatch = titulo.match(/tt\d{7,8}/);
+        let url;
+        if (imdbMatch) {
+            url = `https://www.omdbapi.com/?i=${imdbMatch[0]}&apikey=${OMDB_API_KEY}`;
+        } else {
+            url = `https://www.omdbapi.com/?t=${encodeURIComponent(titulo)}&apikey=${OMDB_API_KEY}`;
+            if (ano) url += `&y=${ano}`;
+        }
         
         const res = await fetch(url);
         const data = await res.json();
@@ -85,13 +116,20 @@ export const MovieService = {
     save: async (uid, filmeData, id = null) => {
         const col = collection(db, "users", uid, "filmes");
         
+        // CORREÇÃO: Validação de duplicata agora cobre edição
+        const q = query(col, where("titulo", "==", filmeData.titulo), where("ano", "==", filmeData.ano));
+        const snapshot = await getDocs(q);
+        
+        // Verifica se há duplicata, ignorando o próprio documento se estivermos a editar
+        const isDuplicate = snapshot.docs.some(doc => doc.id !== id);
+        
+        if (isDuplicate) {
+            throw new Error("Você já cadastrou este filme (neste ano).");
+        }
+
         if (id) {
             await updateDoc(doc(col, id), filmeData);
         } else {
-            const q = query(col, where("titulo", "==", filmeData.titulo), where("ano", "==", filmeData.ano));
-            const snapshot = await getDocs(q);
-            if (!snapshot.empty) throw new Error("Você já cadastrou este filme (neste ano).");
-            
             await addDoc(col, { ...filmeData, cadastradoEm: serverTimestamp() });
         }
     },

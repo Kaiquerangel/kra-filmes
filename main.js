@@ -1,52 +1,62 @@
-import { onSnapshot, query, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { onSnapshot, query, collection, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { auth, db } from './config.js';
 import { AuthService, MovieService } from './services.js';
 import { UI } from './ui.js';
 import { Auth } from './auth.js';
+
+import { Filters } from './filters.js';
+import { Achievements } from './achievements.js';
+import { FormManager } from './form.js';
+import { QRManager } from './qr-manager.js';
 
 let currentUser = null;          
 let currentUserProfile = null;   
 let unsubscribeFilmes = null;    
 let filmes = [];                 
 let filmesFiltrados = [];        
-let filmeEmEdicaoId = null;      
 let isReadOnly = false;
 
 let currentView = 'grid'; 
-let sortBy = 'cadastradoEm';     
-let sortDirection = 'asc';       
-let generosSelecionados = [];    
-let tagsSelecionadas = [];
 
-// Paginação
+// Persistência de Ordenação (LocalStorage)
+let sortBy = localStorage.getItem('mf_sortBy') || 'cadastradoEm';     
+let sortDirection = localStorage.getItem('mf_sortDir') || 'asc';       
+
 let paginaAtual = 1;
 const ITENS_POR_PAGINA = 40;
 let debounceTimer = null;
 
-const GENEROS_PREDEFINIDOS = ["Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "History", "Horror", "Music", "Mystery", "Romance", "Science Fiction", "Thriller", "War", "Western"].sort();
-
-const CONQUISTAS_DEFINICOES = [
-    { id: 'cinefilo_10', nome: 'Cinéfilo Iniciante', descricao: 'Cadastrou 10 filmes.', icone: 'fa-solid fa-film', check: (l) => l.length >= 10 },
-    { id: 'critico_10', nome: 'Crítico Exigente', descricao: 'Deu nota 10.', icone: 'fa-solid fa-star', check: (l) => l.some(f => f.nota === 10) },
-    { id: 'nacional_5', nome: 'Patriota', descricao: '5 filmes nacionais.', icone: 'fa-solid fa-flag', check: (l) => l.filter(f => f.origem === 'Nacional').length >= 5 },
-    { id: 'fa_carteirinha_3', nome: 'Fã de Carteirinha', descricao: '3 filmes do mesmo diretor.', icone: 'fa-solid fa-user-check', check: (l) => { const c = {}; l.flatMap(f => f.direcao || []).forEach(d => { if(d) c[d] = (c[d] || 0) + 1 }); return Object.values(c).some(q => q >= 3); } },
-    { id: 'maratonista_5', nome: 'Maratonista', descricao: '5 filmes no mesmo mês.', icone: 'fa-solid fa-person-running', check: (l) => { const c = {}; l.filter(f => f.assistido && f.dataAssistido).forEach(f => { try { const m = f.dataAssistido.slice(0, 7); c[m] = (c[m] || 0) + 1 } catch(e) {} }); return Object.values(c).some(q => q >= 5); } }
-];
+// Paginação independente por aba
+const paginasPorAba = { todos: 1, assistidos: 1, naoAssistidos: 1, favoritos: 1 };
+let abaAtiva = 'todos'; // 'todos' | 'assistidos' | 'naoAssistidos' | 'favoritos' 
 
 document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
-    UI.setTheme(savedTheme);
+    UI.applyTheme(savedTheme);
 
     document.getElementById('theme-toggle')?.addEventListener('click', () => {
-        const novoTema = UI.toggleTheme();
-        localStorage.setItem('theme', novoTema);
+        UI.openThemePicker();
+    });
+
+    // Evento disparado pelo picker de temas
+    document.addEventListener('set-theme', (e) => {
+        const tema = e.detail;
+        UI.applyTheme(tema);
+        localStorage.setItem('theme', tema);
+        Swal.close();
         if (filmesFiltrados.length > 0) {
-            requestAnimationFrame(() => UI.renderCharts(filmesFiltrados.filter(f => f.assistido)));
+            requestAnimationFrame(() => {
+                UI.renderCharts(filmesFiltrados.filter(f => f.assistido));
+            });
         }
     });
 
     const urlParams = new URLSearchParams(window.location.search);
     const publicUser = urlParams.get('u');
+
+    setupAppListeners();
+    setupImportExportListeners();
+    injetarElementosDinamicos(); // Injeta filtros e abas se faltarem no HTML
 
     if (publicUser) {
         isReadOnly = true;
@@ -62,310 +72,476 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         );
     }
-    setupImportExportListeners();
 });
+
+// Injeção de componentes HTML dinâmicos
+function injetarElementosDinamicos() {
+    // Filtro de Notas
+    if (!document.getElementById('filtro-nota-min')) {
+        const filterRow = document.querySelector('#filtros-container .row.g-2.mb-2');
+        if (filterRow) {
+            filterRow.insertAdjacentHTML('beforeend', `
+                <div class="col-lg-2 col-md-3">
+                    <div class="input-group input-group-sm h-100">
+                        <span class="input-group-text bg-transparent border-secondary text-warning"><i class="fas fa-star"></i></span>
+                        <input type="number" class="form-control border-secondary bg-transparent text-white" id="filtro-nota-min" placeholder="Min" min="0" max="10" step="0.1">
+                        <input type="number" class="form-control border-secondary bg-transparent text-white" id="filtro-nota-max" placeholder="Max" min="0" max="10" step="0.1">
+                    </div>
+                </div>
+            `);
+        }
+    }
+
+    // Aba Favoritos
+    if (!document.getElementById('favoritos-tab')) {
+        const tabList = document.getElementById('filmesTab');
+        if (tabList) {
+            tabList.insertAdjacentHTML('beforeend', `
+                <li class="nav-item">
+                    <button class="nav-link py-1 px-3 fs-6 text-warning" id="favoritos-tab" data-bs-toggle="tab" data-bs-target="#favoritos-tab-pane" type="button" role="tab">
+                        <i class="fas fa-star me-1"></i>Favoritos
+                    </button>
+                </li>
+            `);
+        }
+        const tabContent = document.getElementById('filmesTabContent');
+        if (tabContent) {
+            tabContent.insertAdjacentHTML('beforeend', `
+                <div class="tab-pane fade" id="favoritos-tab-pane" role="tabpanel" tabindex="0">
+                    <div class="table-responsive" id="tabela-favoritos-container">
+                        <p class="text-center text-muted pt-3">A carregar...</p>
+                    </div>
+                </div>
+            `);
+        }
+    }
+
+    // Set do Select Mobile com o LocalStorage
+    const mobileSort = document.getElementById('mobile-sort');
+    if (mobileSort) {
+        const val = `${sortBy}-${sortDirection}`;
+        if ([...mobileSort.options].some(o => o.value === val)) {
+            mobileSort.value = val;
+        }
+    }
+}
 
 async function iniciarModoPublico(nickname) {
     try {
         const profile = await AuthService.getProfileByNickname(nickname);
+        
         if (!profile) {
             UI.alert('Ops!', 'Perfil não encontrado.', 'error');
-            setTimeout(() => window.location.href = window.location.pathname, 2000);
+            setTimeout(() => { 
+                window.location.href = window.location.pathname; 
+            }, 2000);
             return;
         }
+        
         currentUserProfile = profile;
         UI.enableReadOnlyMode(profile);
-        setupAppListeners();
         conectarBancoDeDados(profile.uid);
-    } catch (error) { 
-        UI.toast("Erro ao carregar perfil público.", "error"); 
+        
+    } catch (error) {
+        console.error(error);
+        UI.toast("Erro ao carregar perfil público.", "error");
     }
 }
 
 async function iniciarAplicacao(user) {
     try {
         const profile = await AuthService.getProfile(user.uid);
+        
         if (profile) {
             currentUserProfile = profile;
-            setupAppListeners(); 
-            setupFormListeners();
             
-            const datalist = document.getElementById('generos-sugeridos');
-            if (datalist) {
-                datalist.innerHTML = GENEROS_PREDEFINIDOS.map(g => `<option value="${g}"></option>`).join('');
-            }
+            FormManager.init(
+                () => currentUser?.uid, 
+                () => filmes
+            );
             
             conectarBancoDeDados(user.uid);
         }
     } catch (error) { 
+        console.error(error); 
         UI.toast("Erro ao iniciar a aplicação.", "error"); 
     }
 }
 
 function encerrarAplicacao() {
     currentUser = null; 
-    currentUserProfile = null; 
+    currentUserProfile = null;
     filmes = []; 
     filmesFiltrados = [];
     
-    if (unsubscribeFilmes) unsubscribeFilmes();
+    if (unsubscribeFilmes) {
+        unsubscribeFilmes();
+        unsubscribeFilmes = null;
+    }
     
     const container = document.getElementById('tabela-todos-container');
-    if (container) container.innerHTML = '';
+    if (container) {
+        container.innerHTML = '';
+    }
 }
 
 function conectarBancoDeDados(uid) {
-    if (unsubscribeFilmes) unsubscribeFilmes();
+    if (unsubscribeFilmes) {
+        unsubscribeFilmes();
+        unsubscribeFilmes = null;
+    }
     
     UI.renderSkeletons(UI.els.tabelaTodos, currentView, 16);
-    const q = query(collection(db, "users", uid, "filmes"));
+    
+    const q = query(collection(db, "users", uid, "filmes"), limit(2000));
 
     unsubscribeFilmes = onSnapshot(q, (snapshot) => {
         filmes = snapshot.docs.map(doc => {
             const data = doc.data();
-            let dataCadastro = (data.cadastradoEm && data.cadastradoEm.toDate) ? data.cadastradoEm.toDate() : new Date(0);
-            return { id: doc.id, ...data, cadastradoEm: dataCadastro };
+            let dataCadastro = (data.cadastradoEm && data.cadastradoEm.toDate) 
+                ? data.cadastradoEm.toDate() 
+                : new Date(0);
+
+            return { 
+                id: doc.id, 
+                ...data, 
+                cadastradoEm: dataCadastro 
+            };
         });
-        
+
         filmes.sort((a, b) => a.cadastradoEm - b.cadastradoEm);
-        
-        requestAnimationFrame(() => { 
-            atualizarFiltrosExtras(); 
-            verificarConquistas(); 
+
+        requestAnimationFrame(() => {
+            Filters.atualizarExtras(filmes);
+            Achievements.verificar(currentUserProfile, filmes);
+            
+            // Configura o botão de QR Code no perfil
+            QRManager.setupShareButton(currentUserProfile);
+            
             refreshUI(); 
+            
+            if (UI.renderVitrines) {
+                UI.renderVitrines(filmes);
+            }
         });
+        
     }, (error) => { 
+        console.error(error); 
         UI.toast("Erro de conexão com o banco de dados.", "error"); 
     });
 }
 
-function refreshUI() {
-    filmesFiltrados = aplicarFiltros(filmes);
-    filmesFiltrados = aplicarOrdenacao(filmesFiltrados);
-    
-    const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
-    const fim = inicio + ITENS_POR_PAGINA;
-    const loteExibicao = filmesFiltrados.slice(inicio, fim);
-    
-    UI.els.tabelaTodos.innerHTML = ''; 
-    UI.els.tabelaAssistidos.innerHTML = ''; 
-    UI.els.tabelaNaoAssistidos.innerHTML = '';
-    
-    UI.renderContent(loteExibicao, filmes, currentView, false);
-    atualizarControlesPaginacao();
-}
-
-function atualizarControlesPaginacao() {
-    const totalPaginas = Math.ceil(filmesFiltrados.length / ITENS_POR_PAGINA);
-    const btnAnt = document.getElementById('btn-pag-anterior');
-    const btnProx = document.getElementById('btn-pag-proximo');
-    const infoPag = document.getElementById('info-paginacao');
-    
-    if (infoPag) infoPag.textContent = `Página ${paginaAtual} de ${totalPaginas || 1}`;
-    if (btnAnt) btnAnt.disabled = (paginaAtual === 1);
-    if (btnProx) btnProx.disabled = (paginaAtual >= totalPaginas || totalPaginas === 0);
-}
-
-function aplicarFiltros(lista) {
-    const termo = val('filtro-busca');
-    const genero = val('filtro-genero');
-    const tagFiltro = val('filtro-tag');
-    const diretor = val('filtro-diretor');
-    const ator = val('filtro-ator');
-    const ano = document.getElementById('filtro-ano')?.value || 'todos';
-    const origem = document.getElementById('filtro-origem')?.value || 'todos';
-    const status = document.getElementById('filtro-assistido')?.value || 'todos';
-    const anoAssist = document.getElementById('filtro-ano-assistido')?.value || 'todos';
-    const dtIni = document.getElementById('filtro-data-inicio')?.value;
-    const dtFim = document.getElementById('filtro-data-fim')?.value;
-
-    return lista.filter(f => {
-        if (termo && !f.titulo.toLowerCase().includes(termo)) return false;
-        if (genero && !f.genero?.some(g => g.toLowerCase().includes(genero))) return false;
-        if (tagFiltro && !f.tags?.some(t => t.toLowerCase().includes(tagFiltro))) return false;
-        if (diretor && !f.direcao?.some(d => d.toLowerCase().includes(diretor))) return false;
-        if (ator && !f.atores?.some(a => a.toLowerCase().includes(ator))) return false;
-        if (ano !== 'todos' && f.ano.toString() !== ano) return false;
-        if (origem !== 'todos' && f.origem !== origem) return false;
-        
-        if (status !== 'todos') { 
-            const isAssistido = status === 'sim'; 
-            if (f.assistido !== isAssistido) return false; 
-        }
-        
-        if (anoAssist !== 'todos') { 
-            if (!f.assistido || !f.dataAssistido || !f.dataAssistido.startsWith(anoAssist)) return false; 
-        }
-        
-        if (dtIni || dtFim) {
-            if (!f.dataAssistido) return false;
-            if (dtIni && f.dataAssistido < dtIni) return false;
-            if (dtFim && f.dataAssistido > dtFim) return false;
-        }
-        
-        return true;
-    });
-}
-
-function val(id) { 
-    return document.getElementById(id)?.value.toLowerCase().trim() || ''; 
-}
-
-function aplicarOrdenacao(lista) {
-    return lista.sort((a, b) => {
-        let valorA = a[sortBy] ?? '';
-        let valorB = b[sortBy] ?? '';
-        let comparacao = 0;
-        
-        if (valorA instanceof Date && valorB instanceof Date) {
-            comparacao = valorA - valorB;
-        } else if (typeof valorA === 'number' && typeof valorB === 'number') {
-            comparacao = valorA - valorB;
-        } else {
-            comparacao = String(valorA).localeCompare(String(valorB));
-        }
-        
-        return sortDirection === 'asc' ? comparacao : -comparacao;
-    });
-}
-
-function atualizarFiltrosExtras() {
-    const anos = [...new Set(filmes.map(f => f.ano).filter(Boolean))].sort((a, b) => b - a);
-    updateSelect('filtro-ano', anos, 'Ano Lanç.');
-    
-    const anosAssistidos = [...new Set(filmes.filter(f => f.assistido && f.dataAssistido).map(f => f.dataAssistido.slice(0, 4)))].sort((a, b) => b - a);
-    updateSelect('filtro-ano-assistido', anosAssistidos, 'Ano Assist.');
-}
-
-function updateSelect(id, values, defaultText) {
-    const selectEl = document.getElementById(id);
-    if (!selectEl) return;
-    
-    const valorAtual = selectEl.value;
-    selectEl.innerHTML = `<option value="todos">${defaultText}</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
-    
-    if (values.includes(Number(valorAtual)) || values.includes(valorAtual)) {
-        selectEl.value = valorAtual;
+function getLista(aba) {
+    switch(aba) {
+        case 'assistidos':    return filmesFiltrados.filter(f => f.assistido);
+        case 'naoAssistidos': return filmesFiltrados.filter(f => !f.assistido);
+        case 'favoritos':     return filmesFiltrados.filter(f => (f.nota || 0) >= 8);
+        default:              return filmesFiltrados;
     }
 }
 
-function verificarConquistas() {
-    if (!currentUserProfile) return;
-    const stats = CONQUISTAS_DEFINICOES.map(def => ({ ...def, unlocked: def.check(filmes) }));
-    UI.renderAchievements(stats); 
-    UI.renderProfile(currentUserProfile, filmes);
+function refreshUI() {
+    filmesFiltrados = Filters.aplicar(filmes);
+    filmesFiltrados = Filters.ordenar(filmesFiltrados, sortBy, sortDirection);
+
+    // Reseta páginas de todas as abas ao aplicar filtro
+    Object.keys(paginasPorAba).forEach(k => paginasPorAba[k] = 1);
+
+    renderAba(abaAtiva);
+    atualizarIndicadoresVisuais();
+}
+
+function renderAba(aba) {
+    abaAtiva = aba;
+    const lista = getLista(aba);
+    const pagina = paginasPorAba[aba];
+    const inicio = (pagina - 1) * ITENS_POR_PAGINA;
+    const fim    = inicio + ITENS_POR_PAGINA;
+
+    // Limpa apenas o container da aba ativa
+    const containerMap = {
+        todos:        UI.els.tabelaTodos,
+        assistidos:   UI.els.tabelaAssistidos,
+        naoAssistidos:UI.els.tabelaNaoAssistidos,
+        favoritos:    document.getElementById('tabela-favoritos-container')
+    };
+
+    const container = containerMap[aba];
+    if (container) container.innerHTML = '';
+
+    const lote = lista.slice(inicio, fim);
+
+    // Renderiza só a aba ativa (mais rápido, sem renderizar todas de uma vez)
+    const renderFn = currentView === 'table' ? UI.renderTable : UI.renderGrid;
+    if (container) renderFn(lote, container, false, filmes.length, inicio);
+
+    // Stats sempre da lista completa filtrada
+    if (aba === 'todos' || !document.querySelector('#estatisticas-section')) {
+        const assistidosTotal = filmesFiltrados.filter(f => f.assistido);
+        requestAnimationFrame(() => UI.updateStats(assistidosTotal, filmesFiltrados.length, filmesFiltrados));
+    }
+
+    atualizarControlesPaginacao(lista, pagina);
+    atualizarContadorAba(lista, aba);
+}
+
+// Contador de Resultados e Badge de Filtros
+function atualizarContadorAba(lista, aba) {
+    const countEl = document.getElementById('info-paginacao-total');
+    if (!countEl) return;
+    if (filmes.length === 0) { countEl.textContent = '...'; return; }
+    const qtd = lista.length;
+    const total = filmes.length;
+    if (qtd === total) {
+        countEl.innerHTML = `<strong class="text-white">${qtd}</strong>`;
+    } else {
+        countEl.innerHTML = `<strong class="text-white">${qtd}</strong> de ${total}`;
+    }
+}
+
+function atualizarIndicadoresVisuais() {
+    const isFiltered = filmesFiltrados.length !== filmes.length;
+    const limparBtn = document.getElementById('limpar-filtros');
+    
+    if (limparBtn) {
+        if (isFiltered) {
+            limparBtn.innerHTML = '<i class="fas fa-times me-1"></i>Limpar <span class="badge bg-danger ms-1 rounded-circle" style="font-size:0.6rem; padding: 0.25em 0.4em;">!</span>';
+            limparBtn.classList.add('text-danger', 'fw-bold');
+        } else {
+            limparBtn.innerHTML = '<i class="fas fa-times me-1"></i>Limpar';
+            limparBtn.classList.remove('text-danger', 'fw-bold');
+        }
+    }
+    // Contador é atualizado por atualizarContadorAba ao renderizar a aba
+}
+
+function atualizarControlesPaginacao(lista, pagAtual) {
+    lista    = lista    || getLista(abaAtiva);
+    pagAtual = pagAtual || paginasPorAba[abaAtiva];
+
+    const totalPaginas = Math.ceil(lista.length / ITENS_POR_PAGINA) || 1;
+    const btnAnt   = document.getElementById('btn-pag-anterior');
+    const btnProx  = document.getElementById('btn-pag-proximo');
+    const paginasEl = document.getElementById('paginas-numeradas');
+    const wrapper  = document.querySelector('.paginacao-wrapper');
+
+    // Esconde paginação se couber numa página só
+    if (wrapper) wrapper.style.display = totalPaginas <= 1 ? 'none' : 'flex';
+
+    if (btnAnt) btnAnt.disabled = (pagAtual === 1);
+    if (btnProx) btnProx.disabled = (pagAtual >= totalPaginas);
+
+    if (!paginasEl) return;
+
+    const MAX_VISIBLE = 7;
+    let paginas = [];
+
+    if (totalPaginas <= MAX_VISIBLE) {
+        paginas = Array.from({ length: totalPaginas }, (_, i) => i + 1);
+    } else {
+        paginas.push(1);
+        if (pagAtual > 3) paginas.push('...');
+        const start = Math.max(2, pagAtual - 1);
+        const end   = Math.min(totalPaginas - 1, pagAtual + 1);
+        for (let p = start; p <= end; p++) paginas.push(p);
+        if (pagAtual < totalPaginas - 2) paginas.push('...');
+        paginas.push(totalPaginas);
+    }
+
+    paginasEl.innerHTML = paginas.map(p => {
+        if (p === '...') return `<span class="pag-ellipsis">…</span>`;
+        const isActive = p === pagAtual;
+        return `<button class="btn-pag-numero ${isActive ? 'active' : ''}" data-pag="${p}" aria-label="Página ${p}" ${isActive ? 'aria-current="page"' : ''}>${p}</button>`;
+    }).join('');
+
+    // Listeners nos botões de página
+    paginasEl.querySelectorAll('.btn-pag-numero').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const p = parseInt(btn.dataset.pag);
+            if (p !== paginasPorAba[abaAtiva]) {
+                paginasPorAba[abaAtiva] = p;
+                document.getElementById('lista-section')?.scrollIntoView({ behavior: 'auto', block: 'start' });
+                renderAba(abaAtiva);
+            }
+        });
+    });
+}
+
+function toggleSectionSmooth(section) {
+    if (!section) return;
+    
+    if (section.style.display === 'none' || !section.style.display) {
+        section.style.display = 'block';
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(15px)';
+        section.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+        
+        requestAnimationFrame(() => {
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        });
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(15px)';
+        section.style.transition = 'opacity 0.3s ease-in, transform 0.3s ease-in';
+        
+        setTimeout(() => { 
+            section.style.display = 'none'; 
+        }, 300);
+    }
 }
 
 function setupAppListeners() {
-    // --- SMART HEADER LÓGICA ---
     let lastScrollY = window.scrollY;
+    let ticking = false;
     const navbar = document.querySelector('.navbar');
+    const btnTopo = document.getElementById('btn-voltar-topo');
     
     window.addEventListener('scroll', () => {
-        if (window.scrollY > lastScrollY && window.scrollY > 80) {
-            navbar?.classList.add('navbar--hidden');
-        } else {
-            navbar?.classList.remove('navbar--hidden');
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                const currentScrollY = window.scrollY;
+                if (currentScrollY > lastScrollY && currentScrollY > 80) {
+                    navbar?.classList.add('navbar--hidden');
+                } else {
+                    navbar?.classList.remove('navbar--hidden');
+                }
+                lastScrollY = currentScrollY;
+
+                if (currentScrollY > 400) {
+                    btnTopo?.classList.add('show');
+                } else {
+                    btnTopo?.classList.remove('show');
+                }
+                ticking = false;
+            });
+            ticking = true;
         }
-        lastScrollY = window.scrollY;
     }, { passive: true });
 
-    // --- VOLTAR AO TOPO ---
-    const btnTopo = document.getElementById('btn-voltar-topo');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 400) {
-            btnTopo?.classList.add('show');
-        } else {
-            btnTopo?.classList.remove('show');
+    btnTopo?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // Poster hover preview na tabela
+    document.addEventListener('mouseover', (e) => {
+        const cell = e.target.closest('.poster-hover-cell');
+        if (cell && cell.dataset.poster) {
+            cell.style.setProperty('--poster-url', `url('${cell.dataset.poster}')`);
         }
     });
-    
-    btnTopo?.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
 
-    // --- NAVEGAÇÃO E GRÁFICOS ---
+    const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                document.querySelectorAll('.app-nav a').forEach(a => a.classList.remove('text-info', 'fw-bold'));
+                
+                let targetLink = null;
+                if (entry.target.id === 'cadastro-section') targetLink = document.getElementById('nav-cadastrar-btn');
+                else if (entry.target.id === 'graficos-section') targetLink = document.getElementById('nav-graficos-btn');
+                else if (entry.target.id === 'perfil-section') targetLink = document.getElementById('nav-perfil-btn');
+                else targetLink = document.querySelector(`.app-nav a[href="#${entry.target.id}"]`);
+                
+                if (targetLink) targetLink.classList.add('text-info', 'fw-bold');
+            }
+        });
+    }, { root: null, rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+
+    document.querySelectorAll('section').forEach(sec => sectionObserver.observe(sec));
+
     document.getElementById('nav-sugerir-btn')?.addEventListener('click', (e) => { 
         e.preventDefault(); 
         sugerirFilmeAleatorio(); 
+    });
+
+    // Botão "Sugerir Filme" no corpo da página (além do da navbar)
+    document.getElementById('sugerir-filme-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        sugerirFilmeAleatorio();
+    });
+
+    document.getElementById('nav-cadastrar-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleSectionSmooth(document.getElementById('cadastro-section'));
     });
     
     document.getElementById('nav-graficos-btn')?.addEventListener('click', (e) => {
         e.preventDefault();
         const section = document.getElementById('graficos-section');
+        toggleSectionSmooth(section);
         
-        if (section.style.display === 'none') {
-            section.style.display = 'block';
-            const listaParaGraficos = filmesFiltrados.filter(f => f.assistido);
-            
-            section.style.opacity = '0.5';
+        if (section.style.display !== 'none') {
             setTimeout(() => {
-                if (listaParaGraficos.length > 0) {
-                    UI.renderCharts(listaParaGraficos);
-                }
-                section.style.opacity = '1';
-                section.scrollIntoView({ behavior: 'smooth' });
-            }, 50);
-        } else { 
-            section.style.display = 'none'; 
+                const listaParaGraficos = filmesFiltrados.filter(f => f.assistido);
+                if (listaParaGraficos.length > 0) UI.renderCharts(listaParaGraficos);
+            }, 300);
         }
     });
     
     document.getElementById('nav-perfil-btn')?.addEventListener('click', (e) => {
         e.preventDefault(); 
-        const section = document.getElementById('perfil-section');
-        
-        if (section.style.display === 'none') { 
-            section.style.display = 'block'; 
-            section.scrollIntoView({ behavior: 'smooth' }); 
-        } else { 
-            section.style.display = 'none'; 
-        }
+        toggleSectionSmooth(document.getElementById('perfil-section'));
     });
 
     document.getElementById('btn-compartilhar-perfil')?.addEventListener('click', () => {
         const url = `${window.location.origin}${window.location.pathname}?u=${currentUserProfile.nickname}`;
-        navigator.clipboard.writeText(url).then(() => {
-            UI.toast('Link copiado para a área de transferência!');
-        });
+        navigator.clipboard.writeText(url).then(() => UI.toast('Link copiado para a área de transferência!'));
     });
 
-    // --- FILTROS E ORDENAÇÃO ---
-    document.getElementById('limpar-filtros')?.addEventListener('click', resetarFiltros);
+    document.getElementById('limpar-filtros')?.addEventListener('click', () => {
+        document.querySelectorAll('#filtros-container input').forEach(input => input.value = '');
+        document.querySelectorAll('#filtros-container select').forEach(select => select.value = 'todos');
+        document.getElementById('filtro-periodo-rapido').value = 'custom';
+        
+        sortBy = 'cadastradoEm'; 
+        sortDirection = 'asc'; 
+        localStorage.setItem('mf_sortBy', sortBy); 
+        localStorage.setItem('mf_sortDir', sortDirection);
+        
+        paginaAtual = 1;
+        Object.keys(paginasPorAba).forEach(k => paginasPorAba[k] = 1);
+        abaAtiva = 'todos';
+        refreshUI();
+    });
     
     document.getElementById('mobile-sort')?.addEventListener('change', (e) => {
         const [sortRule, direction] = e.target.value.split('-');
         sortBy = sortRule; 
         sortDirection = direction; 
-        paginaAtual = 1; 
+        localStorage.setItem('mf_sortBy', sortBy); 
+        localStorage.setItem('mf_sortDir', sortDirection);
+        
+        paginaAtual = 1;
+        Object.keys(paginasPorAba).forEach(k => paginasPorAba[k] = 1);
         refreshUI();
     });
 
-    document.querySelectorAll('#filtros-container input, #filtros-container select').forEach(el => {
-        if (el.id === 'filtro-periodo-rapido') return;
-        
-        const eventType = el.tagName === 'SELECT' ? 'change' : 'input';
-        el.addEventListener(eventType, () => {
-             paginaAtual = 1;
-             
-             if (el.id.includes('data')) { 
-                 sortBy = 'dataAssistido'; 
-                 sortDirection = 'desc'; 
-             }
-             
-             if (el.tagName === 'INPUT' && el.type === 'text') { 
-                 clearTimeout(debounceTimer); 
-                 debounceTimer = setTimeout(refreshUI, 300); 
-             } else { 
-                 refreshUI(); 
-             }
-        });
+    document.addEventListener('input', (e) => {
+        if (e.target.closest('#filtros-container')) {
+            paginaAtual = 1;
+            if (e.target.id.includes('data')) { 
+                sortBy = 'dataAssistido'; 
+                sortDirection = 'desc'; 
+            }
+            if (e.target.type === 'text' || e.target.type === 'number') { 
+                clearTimeout(debounceTimer); 
+                debounceTimer = setTimeout(refreshUI, 300); 
+            } else { 
+                refreshUI(); 
+            }
+        }
+    });
+
+    document.addEventListener('change', (e) => {
+        if (e.target.closest('#filtros-container') && e.target.tagName === 'SELECT') {
+            paginaAtual = 1; 
+            refreshUI();
+        }
     });
 
     document.getElementById('filtro-periodo-rapido')?.addEventListener('change', (e) => {
         const periodo = e.target.value; 
         const hoje = new Date(); 
-        let dataInicio = null;
+        let dataInicio = null; 
         let dataFim = null; 
         paginaAtual = 1;
         
@@ -409,25 +585,63 @@ function setupAppListeners() {
         refreshUI(); 
     });
 
-    document.getElementById('btn-pag-anterior')?.addEventListener('click', () => { 
-        if (paginaAtual > 1) { 
-            paginaAtual--; 
-            document.getElementById('lista-section')?.scrollIntoView({ behavior: 'auto', block: 'start' }); 
-            refreshUI(); 
-        } 
-    });
-    
-    document.getElementById('btn-pag-proximo')?.addEventListener('click', () => { 
-        const totalPaginas = Math.ceil(filmesFiltrados.length / ITENS_POR_PAGINA); 
-        if (paginaAtual < totalPaginas) { 
-            paginaAtual++; 
-            document.getElementById('lista-section')?.scrollIntoView({ behavior: 'auto', block: 'start' }); 
-            refreshUI(); 
-        } 
+    // Listeners das abas — detecta qual aba foi clicada e renderiza com paginação própria
+    document.getElementById('filmesTab')?.addEventListener('shown.bs.tab', (e) => {
+        const tabId = e.target.id;
+        if      (tabId === 'todos-tab')          abaAtiva = 'todos';
+        else if (tabId === 'assistidos-tab')     abaAtiva = 'assistidos';
+        else if (tabId === 'nao-assistidos-tab') abaAtiva = 'naoAssistidos';
+        else if (tabId === 'favoritos-tab')      abaAtiva = 'favoritos';
+        paginasPorAba[abaAtiva] = 1;
+        renderAba(abaAtiva);
     });
 
-    // NAVEGAÇÃO POR TECLADO NOS CARDS
+    document.getElementById('btn-pag-anterior')?.addEventListener('click', () => {
+        if (paginasPorAba[abaAtiva] > 1) {
+            paginasPorAba[abaAtiva]--;
+            document.getElementById('lista-section')?.scrollIntoView({ behavior: 'auto', block: 'start' });
+            renderAba(abaAtiva);
+        }
+    });
+
+    document.getElementById('btn-pag-proximo')?.addEventListener('click', () => {
+        const lista = getLista(abaAtiva);
+        const totalPaginas = Math.ceil(lista.length / ITENS_POR_PAGINA);
+        if (paginasPorAba[abaAtiva] < totalPaginas) {
+            paginasPorAba[abaAtiva]++;
+            document.getElementById('lista-section')?.scrollIntoView({ behavior: 'auto', block: 'start' });
+            renderAba(abaAtiva);
+        }
+    });
+
+    // ATALHOS DE TECLADO (POWER USERS)
     document.addEventListener('keydown', (e) => {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+        if (e.key.toLowerCase() === 'n') {
+            e.preventDefault();
+            const section = document.getElementById('cadastro-section');
+            if (section && section.style.display === 'none') {
+                document.getElementById('nav-cadastrar-btn')?.click();
+            }
+            setTimeout(() => document.getElementById('titulo')?.focus(), 400);
+        }
+        
+        if (e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            document.getElementById('filtro-busca')?.focus();
+            document.getElementById('lista-section')?.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        if (e.key === 'Escape') {
+            ['cadastro-section', 'graficos-section', 'perfil-section'].forEach(id => {
+                const sec = document.getElementById(id);
+                if (sec && sec.style.display !== 'none' && sec.style.display !== '') {
+                    toggleSectionSmooth(sec);
+                }
+            });
+        }
+
         if (e.key === 'Enter' || e.key === ' ') {
             const cardAtivo = document.activeElement;
             if (cardAtivo && cardAtivo.classList.contains('movie-card')) { 
@@ -437,11 +651,45 @@ function setupAppListeners() {
         }
     });
 
-    // --- AÇÕES NOS ITENS (GRID/TABLE) ---
+    // Setas das vitrines
+    function setupVitrineArrow(scrollId, leftBtnId, rightBtnId) {
+        const container = document.getElementById(scrollId);
+        const btnLeft   = document.getElementById(leftBtnId);
+        const btnRight  = document.getElementById(rightBtnId);
+        if (!container || !btnLeft || !btnRight) return;
+
+        const SCROLL_AMOUNT = 320;
+
+        btnLeft.addEventListener('click', () => {
+            container.scrollBy({ left: -SCROLL_AMOUNT, behavior: 'smooth' });
+        });
+        btnRight.addEventListener('click', () => {
+            container.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' });
+        });
+
+        // Mostra/esconde setas conforme posição do scroll
+        function updateArrows() {
+            btnLeft.style.opacity  = container.scrollLeft > 0 ? '1' : '0.3';
+            btnLeft.style.pointerEvents  = container.scrollLeft > 0 ? 'auto' : 'none';
+            const atEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 4;
+            btnRight.style.opacity = atEnd ? '0.3' : '1';
+            btnRight.style.pointerEvents = atEnd ? 'none' : 'auto';
+        }
+        container.addEventListener('scroll', updateArrows, { passive: true });
+        updateArrows();
+    }
+
+    // Inicializa após renderVitrines ser chamada (usa MutationObserver)
+    const vitrineObserver = new MutationObserver(() => {
+        setupVitrineArrow('vitrine-destaques',   'arrow-destaques-left',   'arrow-destaques-right');
+        setupVitrineArrow('vitrine-recomendados','arrow-recomendados-left','arrow-recomendados-right');
+    });
+    const vitrineEl = document.getElementById('vitrine-destaques');
+    if (vitrineEl) vitrineObserver.observe(vitrineEl, { childList: true });
+
     document.addEventListener('click', async (e) => {
         const target = e.target;
         
-        // Ordenação nos cabeçalhos da tabela
         const head = target.closest('th.sortable');
         if (head) {
             const col = head.dataset.sort;
@@ -451,7 +699,24 @@ function setupAppListeners() {
                 sortBy = col; 
                 sortDirection = 'asc'; 
             }
+            
+            localStorage.setItem('mf_sortBy', sortBy); 
+            localStorage.setItem('mf_sortDir', sortDirection);
             refreshUI(); 
+            return;
+        }
+
+        const carouselCard = target.closest('.js-carousel-card');
+        if (carouselCard) {
+            const targetId = carouselCard.dataset.targetId;
+            const viewBtnTable = document.getElementById('view-btn-table');
+            if (viewBtnTable) viewBtnTable.click();
+
+            setTimeout(() => {
+                const tr = document.querySelector(`tr[data-id="${targetId}"] .btn-detalhes`);
+                if (tr) tr.click();
+                document.getElementById('lista-section')?.scrollIntoView({behavior: 'smooth'});
+            }, 100);
             return;
         }
 
@@ -460,41 +725,41 @@ function setupAppListeners() {
         
         const id = item.dataset.id;
         
-        // Ação Rápida (Quick Watch) na visualização de Grid
         if (target.closest('.btn-quick-watch')) {
             e.stopPropagation();
-            MovieService.toggleAssistido(currentUser.uid, id, true)
-                .then(() => UI.toast('Marcado como assistido!', 'success'))
+            if (isReadOnly) return;
+            const filme = filmes.find(x => x.id === id);
+            if (!filme) return;
+            const novoStatus = !filme.assistido;
+            MovieService.toggleAssistido(currentUser.uid, id, novoStatus)
+                .then(() => UI.toast(novoStatus ? 'Marcado como assistido!' : 'Desmarcado!', 'success'))
                 .catch(err => UI.alert('Erro', err.message, 'error'));
             return;
         }
         
-        // Ação: Editar
         if (target.closest('.btn-edit')) { 
             e.stopPropagation(); 
-            carregarParaEdicao(id); 
+            if (isReadOnly) return; 
+            FormManager.carregarParaEdicao(id); 
             return; 
         }
         
-        // Ação: Smooth Delete
         if (target.closest('.btn-delete')) {
             e.stopPropagation();
-            if ((await UI.confirm('Excluir filme?', 'Esta ação é irreversível.')).isConfirmed) {
-                item.classList.add('fade-out-delete');
-                setTimeout(async () => {
-                    try { 
-                        await MovieService.delete(currentUser.uid, id); 
-                        UI.toast('Filme excluído.'); 
-                    } catch(err) { 
-                        UI.alert('Erro', err.message, 'error'); 
-                        item.classList.remove('fade-out-delete'); 
-                    }
-                }, 300);
+            if (isReadOnly) return;
+            const confirmacao = await UI.confirm('Excluir filme?', 'Esta ação é irreversível.');
+            
+            if (confirmacao.isConfirmed) {
+                try { 
+                    await MovieService.delete(currentUser.uid, id); 
+                    UI.toast('Filme excluído.'); 
+                } catch(err) { 
+                    UI.alert('Erro', err.message, 'error'); 
+                }
             }
             return;
         }
         
-        // Ação: Ver detalhes expandindo a linha da tabela
         const btnDetalhes = target.closest('.btn-detalhes');
         if (btnDetalhes) {
             const icon = btnDetalhes.querySelector('i');
@@ -505,22 +770,23 @@ function setupAppListeners() {
             return;
         }
 
-        // Clicar na linha da tabela (fora de botões)
         if (currentView === 'table' && !target.closest('.dropdown') && !target.closest('button') && !target.closest('a')) {
              const btn = item.querySelector('.btn-detalhes'); 
              if (btn) btn.click(); 
              return;
         }
         
-        // Clicar no card da grid ou no botão de visualizar
-        if (currentView === 'grid' || target.closest('.btn-view')) {
-            const filme = filmes.find(x => x.id === id);
+        if (currentView === 'grid' || target.closest('.btn-view') || target.closest('.vitrine-card')) {
+            const vitrineCard = target.closest('.vitrine-card');
+            const targetId = vitrineCard ? vitrineCard.dataset.id : id;
+
+            const filme = filmes.find(x => x.id === targetId);
             if (filme) {
                 UI.showMovieDetailModal(
                     filme, 
-                    !isReadOnly ? async (fid) => { 
-                        await MovieService.toggleAssistido(currentUser?.uid, fid, true); 
-                        UI.toast('Marcado como assistido!'); 
+                    !isReadOnly ? async (fid, marcar) => { 
+                        await MovieService.toggleAssistido(currentUser?.uid, fid, marcar);
+                        UI.toast(marcar ? 'Marcado como assistido!' : 'Desmarcado!'); 
                     } : null, 
                     (titulo, ano) => MovieService.getTrailer(titulo, ano)
                 );
@@ -529,231 +795,11 @@ function setupAppListeners() {
     });
 }
 
-function resetarFiltros() {
-    document.querySelectorAll('#filtros-container input').forEach(input => input.value = '');
-    document.querySelectorAll('#filtros-container select').forEach(select => select.value = 'todos');
-    document.getElementById('filtro-periodo-rapido').value = 'custom';
-    
-    sortBy = 'cadastradoEm'; 
-    sortDirection = 'asc'; 
-    paginaAtual = 1; 
-    refreshUI();
-}
-
-function setupFormListeners() {
-    const form = document.getElementById('filme-form'); 
-    if (!form) return;
-    
-    // --- OMDb Auto-Search (Debounce) ---
-    const inputTitulo = document.getElementById('titulo');
-    let omdbTypingTimer;
-    
-    inputTitulo?.addEventListener('input', () => {
-        clearTimeout(omdbTypingTimer);
-        const valor = inputTitulo.value.trim();
-        if (valor.length > 2) {
-            omdbTypingTimer = setTimeout(() => { buscarOMDb(); }, 800);
-        }
-    });
-
-    document.getElementById('btn-buscar-omdb')?.addEventListener('click', buscarOMDb);
-    document.getElementById('titulo')?.addEventListener('keypress', e => { 
-        if (e.key === 'Enter') { 
-            e.preventDefault(); 
-            buscarOMDb(); 
-        } 
-    });
-    
-    // --- ATUALIZAÇÃO RANGE SLIDER ---
-    const inputNota = document.getElementById('nota');
-    const notaDisplay = document.getElementById('nota-display');
-    
-    inputNota?.addEventListener('input', (e) => {
-        const valor = parseFloat(e.target.value).toFixed(1);
-        if (notaDisplay) {
-            notaDisplay.innerHTML = `<i class="fas fa-star me-1"></i>${valor}`;
-        }
-    });
-
-    const inputGenero = document.getElementById('genero-input');
-    inputGenero?.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { 
-            e.preventDefault(); 
-            adicionarGenero(inputGenero.value); 
-        }
-        if (e.key === 'Backspace' && !inputGenero.value && generosSelecionados.length) {
-            removerGenero(generosSelecionados[generosSelecionados.length - 1]);
-        }
-    });
-    
-    inputGenero?.addEventListener('input', () => { 
-        if (GENEROS_PREDEFINIDOS.includes(inputGenero.value)) {
-            adicionarGenero(inputGenero.value); 
-        }
-    });
-
-    const inputTags = document.getElementById('tags-input');
-    inputTags?.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { 
-            e.preventDefault(); 
-            adicionarTag(inputTags.value); 
-        }
-        if (e.key === 'Backspace' && !inputTags.value && tagsSelecionadas.length) {
-            removerTag(tagsSelecionadas[tagsSelecionadas.length - 1]);
-        }
-    });
-
-    document.getElementById('assistido')?.addEventListener('change', e => { 
-        UI.toggleDataAssistido(e.target.value === 'sim'); 
-    });
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault(); 
-        if (!form.checkValidity()) { 
-            form.classList.add('was-validated'); 
-            return; 
-        }
-        
-        const assistido = document.getElementById('assistido').value === 'sim';
-        const imgPreviewSrc = document.getElementById('poster-preview-img').src;
-        
-        const dados = {
-            titulo: document.getElementById('titulo').value.trim(),
-            ano: parseInt(document.getElementById('ano').value) || null,
-            nota: parseFloat(document.getElementById('nota').value) || 0,
-            direcao: document.getElementById('direcao').value.split(',').filter(Boolean).map(s => s.trim()),
-            atores: document.getElementById('atores').value.split(',').filter(Boolean).map(s => s.trim()),
-            genero: [...generosSelecionados], 
-            tags: [...tagsSelecionadas],
-            origem: document.getElementById('origem').value, 
-            assistido: assistido,
-            dataAssistido: assistido ? document.getElementById('data-assistido').value : null,
-            posterUrl: imgPreviewSrc.includes(window.location.href) ? '' : imgPreviewSrc
-        };
-
-        const btnSubmit = form.querySelector('button[type="submit"]');
-        const originalText = btnSubmit.innerHTML; 
-        
-        // Loading Spinner Visual no botão
-        btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Salvando...'; 
-        btnSubmit.disabled = true;
-        
-        try {
-            await MovieService.save(currentUser.uid, dados, filmeEmEdicaoId);
-            UI.toast('Salvo com sucesso!'); 
-            UI.clearForm(); 
-            generosSelecionados = []; 
-            tagsSelecionadas = []; 
-            filmeEmEdicaoId = null;
-            document.getElementById('cadastro-titulo').innerHTML = '<i class=\"fas fa-edit me-2\"></i> Cadastro de Filme';
-        } catch(err) { 
-            UI.alert('Erro', err.message, 'error'); 
-        } finally { 
-            btnSubmit.innerHTML = originalText; 
-            btnSubmit.disabled = false; 
-        }
-    });
-}
-
-async function buscarOMDb() {
-    const titulo = document.getElementById('titulo').value; 
-    const ano = document.getElementById('ano').value;
-    
-    if (!titulo) return;
-    
-    document.getElementById('api-loading').style.display = 'flex';
-    
-    try {
-        const data = await MovieService.searchOMDb(titulo, ano);
-        let posterOriginal = data.Poster;
-        
-        if (posterOriginal && posterOriginal !== 'N/A') {
-            posterOriginal = posterOriginal.replace(/_SX[0-9]+.*\./, ".");
-        }
-
-        document.getElementById('titulo').value = data.Title;
-        document.getElementById('ano').value = parseInt(data.Year) || '';
-        document.getElementById('nota').value = parseFloat(data.imdbRating) || '';
-        
-        const notaDisplay = document.getElementById('nota-display');
-        if (notaDisplay) {
-            notaDisplay.innerHTML = `<i class="fas fa-star me-1"></i>${parseFloat(data.imdbRating) || '0.0'}`;
-        }
-
-        document.getElementById('direcao').value = data.Director !== 'N/A' ? data.Director : '';
-        document.getElementById('atores').value = data.Actors !== 'N/A' ? data.Actors : '';
-        
-        if (data.Country) {
-            document.getElementById('origem').value = data.Country.includes("Brazil") ? "Nacional" : "Internacional";
-        }
-        
-        UI.updatePreviewPoster(posterOriginal !== 'N/A' ? posterOriginal : '');
-        
-        generosSelecionados = []; 
-        if (data.Genre !== 'N/A') {
-            data.Genre.split(', ').forEach(g => adicionarGenero(g));
-        }
-        
-        UI.toast('Filme encontrado!');
-    } catch(err) { 
-        console.log("Não encontrado automaticamente", err); 
-    } finally { 
-        document.getElementById('api-loading').style.display = 'none'; 
-    }
-}
-
-function adicionarGenero(genero) {
-    const limpo = genero.trim(); 
-    if (limpo && !generosSelecionados.includes(limpo)) {
-        generosSelecionados.push(limpo); 
-        UI.renderGenerosTags(generosSelecionados, removerGenero); 
-        document.getElementById('genero-input').value = '';
-    }
-}
-
-function removerGenero(genero) { 
-    generosSelecionados = generosSelecionados.filter(g => g !== genero); 
-    UI.renderGenerosTags(generosSelecionados, removerGenero); 
-}
-
-function adicionarTag(tag) {
-    const limpo = tag.trim(); 
-    if (limpo && !tagsSelecionadas.includes(limpo)) {
-        tagsSelecionadas.push(limpo); 
-        UI.renderCustomTags(tagsSelecionadas, removerTag); 
-        document.getElementById('tags-input').value = '';
-    }
-}
-
-function removerTag(tag) { 
-    tagsSelecionadas = tagsSelecionadas.filter(t => t !== tag); 
-    UI.renderCustomTags(tagsSelecionadas, removerTag); 
-}
-
-function carregarParaEdicao(id) {
-    const filme = filmes.find(x => x.id === id); 
-    if (!filme) return;
-    
-    filmeEmEdicaoId = id; 
-    document.getElementById('cadastro-titulo').innerHTML = `Editando: ${filme.titulo}`;
-    
-    generosSelecionados = filme.genero ? [...filme.genero] : [];
-    tagsSelecionadas = filme.tags ? [...filme.tags] : [];
-    
-    UI.fillForm(
-        filme, 
-        (generos) => UI.renderGenerosTags(generos, removerGenero), 
-        (tags) => UI.renderCustomTags(tags, removerTag)
-    );
-    
-    document.getElementById('cadastro-section').scrollIntoView({ behavior: 'smooth' });
-}
-
 function sugerirFilmeAleatorio() {
-    const pendentes = filmes.filter(f => !f.assistido);
+    const pendentes = filmesFiltrados.filter(f => !f.assistido);
     
     if (!pendentes.length) {
-        return UI.alert('Lista zerada!', 'Você já assistiu a todos os filmes cadastrados.', 'success');
+        return UI.alert('Lista vazia!', 'Não há filmes não assistidos com os filtros atuais.', 'warning');
     }
     
     const filmeSorteado = pendentes[Math.floor(Math.random() * pendentes.length)];
@@ -777,8 +823,8 @@ function setupImportExportListeners() {
     
     document.getElementById('export-csv-btn')?.addEventListener('click', exportarCSV);
     
-    document.getElementById('import-btn')?.addEventListener('click', () => {
-        document.getElementById('import-file-input').click();
+    document.getElementById('import-btn')?.addEventListener('click', () => { 
+        document.getElementById('import-file-input').click(); 
     });
     
     document.getElementById('import-file-input')?.addEventListener('change', importarArquivo);
@@ -833,10 +879,10 @@ function importarArquivo(e) {
             
             if (confirmacao.isConfirmed) {
                 UI.toast('Importando...'); 
-                const { serverTimestamp } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
                 
                 for (const filme of novosFilmes) {
-                    await MovieService.save(currentUser.uid, { ...filme, cadastradoEm: serverTimestamp() });
+                    const { id, cadastradoEm, ...dadosLimpos } = filme;
+                    await MovieService.save(currentUser.uid, { ...dadosLimpos });
                 }
                 UI.toast('Importação concluída!');
             }

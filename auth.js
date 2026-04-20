@@ -19,68 +19,9 @@ const AUTH_ERRORS = {
 
 const getErrorMessage = (error) => AUTH_ERRORS[error.code] || error.message || 'Erro desconhecido.';
 
-const LOGIN_TEMPLATE = `
-<div class="row justify-content-center" style="padding-top: 5rem;">
-    <div class="col-lg-5 col-md-7">
-        <div class="card glass-card" id="login-card">
-            <div class="card-body p-4 p-md-5">
-                <h2 class="card-title mb-4 text-center">Login</h2>
-                <form id="login-form" novalidate>
-                    <div class="mb-3">
-                        <label for="login-identifier" class="form-label">Email ou Nickname</label>
-                        <input type="text" class="form-control" id="login-identifier" required autocomplete="username">
-                    </div>
-                    <div class="mb-3">
-                        <label for="login-password" class="form-label">Senha</label>
-                        <input type="password" class="form-control" id="login-password" required autocomplete="current-password">
-                    </div>
-                    <button type="submit" class="btn btn-gradient w-100 mt-3">Entrar</button>
-                    <p class="text-center mt-4 mb-0">Não tem uma conta? <a href="#" id="show-register-link" class="fw-bold">Cadastre-se</a></p>
-                </form>
-            </div>
-        </div>
-
-        <div class="card glass-card" id="register-card" style="display: none;">
-            <div class="card-body p-4 p-md-5">
-                <h2 class="card-title mb-4 text-center">Cadastro</h2>
-                <form id="register-form" novalidate>
-                    <div class="mb-3">
-                        <label for="register-name" class="form-label">Nome</label>
-                        <input type="text" class="form-control" id="register-name" required autocomplete="name">
-                    </div>
-                    <div class="mb-3 position-relative">
-                        <label for="register-nickname" class="form-label">Nickname</label>
-                        <input type="text" class="form-control" id="register-nickname" minlength="4" required autocomplete="username">
-                        
-                        <div id="nickname-validation-icon" class="nickname-validator">
-                            <div id="nickname-loading" class="spinner-border spinner-border-sm" role="status" style="display: none;"></div>
-                            <i id="nickname-success" class="fas fa-check-circle text-success" style="display: none;"></i>
-                            <i id="nickname-error" class="fas fa-times-circle text-danger" style="display: none;"></i>
-                        </div>
-                        <div class="invalid-feedback" id="nickname-invalid-feedback">Nickname deve ter pelo menos 4 caracteres.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="register-email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="register-email" required autocomplete="email">
-                    </div>
-                    <div class="mb-3">
-                        <label for="register-password" class="form-label">Senha (mín. 6 caracteres)</label>
-                        <input type="password" class="form-control" id="register-password" minlength="6" required autocomplete="new-password">
-                    </div>
-                    <button type="submit" class="btn btn-gradient w-100 mt-3">Criar Conta</button>
-                    <p class="text-center mt-4 mb-0">Já tem uma conta? <a href="#" id="show-login-link" class="fw-bold">Faça o login</a></p>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-`;
-
 export const Auth = {
     init: (onLoginSuccess, onLogoutSuccess) => {
-        const container = document.getElementById('auth-container');
-        if (container) container.innerHTML = LOGIN_TEMPLATE;
-
+        
         setupAuthFormListeners();
 
         onAuthStateChanged(auth, async (user) => {
@@ -127,7 +68,7 @@ function setupAuthFormListeners() {
         const pass = document.getElementById('register-password').value;
 
         const isAvailable = await AuthService.checkNickname(nick);
-        if (!isAvailable && nick !== lastCheckedNickname) {
+        if (!isAvailable) {
             return UI.alert('Erro', 'Nickname já está em uso.', 'warning');
         }
 
@@ -198,9 +139,11 @@ function setupAuthFormListeners() {
                     
                     if (isAvailable) { 
                         if (ok) ok.style.display = 'block'; 
+                        nickInput.classList.remove('is-invalid');
                         nickInput.classList.add('is-valid'); 
                     } else { 
                         if (err) err.style.display = 'block'; 
+                        nickInput.classList.remove('is-valid');
                         nickInput.classList.add('is-invalid'); 
                     }
                 } catch (e) {
@@ -215,8 +158,8 @@ async function handleCompleteProfile(user) {
     const { value: formValues } = await Swal.fire({
         title: 'Complete seu Perfil',
         html: `
-            <input id="swal-nome" class="swal2-input" placeholder="Nome">
-            <input id="swal-nick" class="swal2-input" placeholder="Nickname">
+            <input id="swal-nome" class="swal2-input" placeholder="Nome" required>
+            <input id="swal-nick" class="swal2-input" placeholder="Nickname" required>
         `,
         focusConfirm: false, 
         allowOutsideClick: false,
@@ -228,11 +171,21 @@ async function handleCompleteProfile(user) {
 
     if (formValues) {
         try {
+            const nicknameFormatado = formValues[1].trim().toLowerCase();
+            
+            // CORREÇÃO CRÍTICA: Validação do nickname no fluxo secundário (Logins Sociais)
+            const isAvailable = await AuthService.checkNickname(nicknameFormatado);
+            if (!isAvailable) {
+                await UI.alert('Atenção', 'Este Nickname já está em uso. Tente novamente.', 'warning');
+                return handleCompleteProfile(user); // Reapresenta o modal de forma recursiva
+            }
+
             const { setDoc, doc } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
             await setDoc(doc(db, "users", user.uid), { 
                 uid: user.uid, 
-                nome: formValues[0], 
-                nickname: formValues[1], 
+                nome: formValues[0].trim(), 
+                nickname: nicknameFormatado, 
+                email: user.email || '',
                 membroDesde: serverTimestamp() 
             });
             window.location.reload();
