@@ -1,0 +1,117 @@
+/* ============================================================
+   THEMES.CSS
+   ============================================================ */
+
+/* =========================================================
+   TEMAS ADICIONAIS
+   ========================================================= */
+
+/* ── Midnight (azul escuro profundo) ── */
+body.theme-midnight {
+    --cor-fundo-dark: #0a0e1a;
+    --cor-fundo-dark-gradiente: linear-gradient(180deg, #0d1530, #0a0e1a);
+    --cor-card-dark: rgba(15, 25, 60, 0.6);
+    --cor-borda-dark: rgba(100, 140, 255, 0.15);
+    --cor-acento-principal: #4f6ef7;
+    --cor-acento-secundario: #7c8ff5;
+}
+body.theme-midnight .navbar {
+    background: rgba(10, 14, 26, 0.95) !important;
+    border-bottom-color: rgba(79, 110, 247, 0.2) !important;
+}
+body.theme-midnight .btn-gradient,
+body.theme-midnight .btn-sugerir-modern {
+    background: linear-gradient(135deg, #4f6ef7, #7c3aed) !important;
+}
+
+/* ── Cinema (vermelho e preto) ── */
+body.theme-cinema {
+    --cor-fundo-dark: #0d0808;
+    --cor-fundo-dark-gradiente: linear-gradient(180deg, #1a0a0a, #0d0808);
+    --cor-card-dark: rgba(40, 10, 10, 0.6);
+    --cor-borda-dark: rgba(220, 50, 50, 0.15);
+    --cor-acento-principal: #dc2626;
+    --cor-acento-secundario: #ef4444;
+}
+body.theme-cinema .navbar {
+    background: rgba(13, 8, 8, 0.95) !important;
+    border-bottom-color: rgba(220, 38, 38, 0.25) !important;
+}
+body.theme-cinema .btn-gradient,
+body.theme-cinema .btn-sugerir-modern {
+    background: linear-gradient(135deg, #dc2626, #991b1b) !important;
+}
+body.theme-cinema .nav-tabs-modern .nav-link.active {
+    background-color: rgba(220, 38, 38, 0.15) !important;
+    border-color: rgba(220, 38, 38, 0.3) !important;
+    color: #f87171 !important;
+}
+
+/* ── Forest (verde escuro) ── */
+body.theme-forest {
+    --cor-fundo-dark: #081208;
+    --cor-fundo-dark-gradiente: linear-gradient(180deg, #0f1f0f, #081208);
+    --cor-card-dark: rgba(10, 30, 10, 0.6);
+    --cor-borda-dark: rgba(50, 180, 80, 0.15);
+    --cor-acento-principal: #16a34a;
+    --cor-acento-secundario: #22c55e;
+}
+body.theme-forest .navbar {
+    background: rgba(8, 18, 8, 0.95) !important;
+    border-bottom-color: rgba(22, 163, 74, 0.25) !important;
+}
+body.theme-forest .btn-gradient,
+body.theme-forest .btn-sugerir-modern {
+    background: linear-gradient(135deg, #16a34a, #15803d) !important;
+}
+body.theme-forest .btn-pag-numero.active {
+    background: #16a34a !important;
+    border-color: #16a34a !important;
+}
+
+/* ── Ocean (azul oceano / teal) ── */
+body.theme-ocean {
+    --cor-fundo-dark: #020f14;
+    --cor-fundo-dark-gradiente: linear-gradient(180deg, #051a24, #020f14);
+    --cor-card-dark: rgba(5, 30, 45, 0.65);
+    --cor-borda-dark: rgba(20, 180, 180, 0.15);
+    --cor-acento-principal: #0891b2;
+    --cor-acento-secundario: #22d3ee;
+}
+body.theme-ocean .navbar {
+    background: rgba(2, 15, 20, 0.95) !important;
+    border-bottom-color: rgba(8, 145, 178, 0.25) !important;
+}
+body.theme-ocean .btn-gradient,
+body.theme-ocean .btn-sugerir-modern {
+    background: linear-gradient(135deg, #0891b2, #0e7490) !important;
+}
+body.theme-ocean .btn-pag-numero.active {
+    background: #0891b2 !important;
+    border-color: #0891b2 !important;
+}
+
+/* ── Light (claro) ── */
+body.theme-light {
+    --cor-acento-principal: #3b82f6;
+    --cor-acento-secundario: #60a5fa;
+}
+
+/* Poster hover JS-injected via CSS var */
+.poster-hover-cell[style*="--poster-url"]::after {
+    display: block;
+}
+.poster-hover-cell:not([style*="--poster-url"])::after {
+    display: none;
+}
+
+/* ── Stat card subtitle ── */
+.stat-card-subtitle {
+    display: block;
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.3);
+    margin-top: 2px;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+}
+

@@ -1,5 +1,6 @@
 import { els, templates } from './elements.js';
 import { getResizedUrl } from './helpers.js';
+import { carouselCardHTML, carouselEmptyHTML, rankingBarsHTML } from './html-templates.js';
 
 const ChartJS = window.Chart;
 export const chartsInstances = {};
@@ -43,6 +44,69 @@ export const updateStats = (assistidos, total, filmesGerais = []) => {
         });
         
         els.statMelhor.textContent = melhor.titulo || '-'; els.statPior.textContent = pior.titulo || '-';
+
+        // ── Nota Mediana ──
+        const notasOrdenadas = assistidos.map(f => f.nota || 0).sort((a,b) => a - b);
+        const mid = Math.floor(notasOrdenadas.length / 2);
+        const mediana = notasOrdenadas.length % 2 === 0
+            ? ((notasOrdenadas[mid-1] + notasOrdenadas[mid]) / 2).toFixed(1)
+            : notasOrdenadas[mid].toFixed(1);
+        const medianaEl = document.getElementById('stat-mediana-notas');
+        if (medianaEl) medianaEl.textContent = mediana;
+
+        // ── Sequência atual de dias ──
+        const diasAssistidos = new Set(
+            assistidos.filter(f => f.dataAssistido).map(f => f.dataAssistido.slice(0,10))
+        );
+        let streakAtual = 0;
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        let diaCheck = new Date(hoje);
+        const toStr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        // Verifica se assistiu hoje ou ontem para começar o streak
+        if (!diasAssistidos.has(toStr(diaCheck))) diaCheck.setDate(diaCheck.getDate() - 1);
+        while (diasAssistidos.has(toStr(diaCheck))) {
+            streakAtual++;
+            diaCheck.setDate(diaCheck.getDate() - 1);
+        }
+        const streakEl = document.getElementById('stat-sequencia-dias');
+        if (streakEl) streakEl.textContent = streakAtual;
+
+        // ── Ritmo mensal — 6 meses corridos (incluindo meses com 0 filmes) ──
+        const mesesCount = {};
+        assistidos.filter(f => f.dataAssistido).forEach(f => {
+            const m = f.dataAssistido.slice(0, 7);
+            mesesCount[m] = (mesesCount[m] || 0) + 1;
+        });
+        // Gera os 6 meses corridos anteriores ao mês atual
+        let totalFilmes6Meses = 0;
+        const hojeRitmo = new Date();
+        for (let i = 1; i <= 6; i++) {
+            const d = new Date(hojeRitmo.getFullYear(), hojeRitmo.getMonth() - i, 1);
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+            totalFilmes6Meses += (mesesCount[key] || 0);
+        }
+        const ritmo = Math.round(totalFilmes6Meses / 6);
+        const ritmoEl = document.getElementById('stat-ritmo-mensal');
+        if (ritmoEl) ritmoEl.textContent = ritmo;
+
+        // ── Gênero do momento (últimos 30 dias) ──
+        const limite30 = new Date(); limite30.setDate(limite30.getDate() - 30);
+        const limite30Str = toStr(limite30);
+        const generosRecentes = {};
+        assistidos.filter(f => f.dataAssistido && f.dataAssistido >= limite30Str).forEach(f => {
+            (f.genero || []).forEach(g => { generosRecentes[g] = (generosRecentes[g] || 0) + 1; });
+        });
+        const topGeneroMomento = Object.entries(generosRecentes).sort((a,b) => b[1]-a[1])[0];
+        const genMomentEl = document.getElementById('stat-genero-momento');
+        if (genMomentEl) genMomentEl.textContent = topGeneroMomento ? topGeneroMomento[0] : '-';
+
+        // ── Último assistido ──
+        const ultimoAssistido = assistidos.filter(f => f.dataAssistido).sort((a,b) => b.dataAssistido.localeCompare(a.dataAssistido))[0];
+        const ultimoEl = document.getElementById('stat-ultimo-assistido');
+        if (ultimoEl && ultimoAssistido) {
+            const dataFmt = new Date(ultimoAssistido.dataAssistido.replace(/-/g,'/')).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+            ultimoEl.textContent = `${ultimoAssistido.titulo.length > 20 ? ultimoAssistido.titulo.slice(0,20)+'…' : ultimoAssistido.titulo} · ${dataFmt}`;
+        }
         
         const topAtores = Object.entries(counts.atores).sort((a,b) => b[1] - a[1]); els.statAtor.textContent = topAtores.length ? topAtores[0][0] : '-';
         const topDec = Object.entries(counts.decadas).sort((a,b) => b[1] - a[1]); els.statDecada.textContent = topDec.length ? topDec[0][0] : '-';
@@ -76,38 +140,18 @@ export const renderCarousel = (assistidos) => {
     const ultimos10 = assistidos.filter(f => f.assistido && f.dataAssistido).sort((a, b) => (b.dataAssistido > a.dataAssistido ? 1 : -1)).slice(0, 10);
         
     if (ultimos10.length === 0) { 
-        containerUltimos.innerHTML = `<div class="d-flex align-items-center justify-content-center w-100 p-4 text-muted border rounded" style="background: rgba(0,0,0,0.05);"><i class="fas fa-history me-2"></i> Nenhum filme assistido.</div>`; 
+        containerUltimos.innerHTML = carouselEmptyHTML();
     } else {
-        const html = ultimos10.map((f, i) => `
-            <div class="flex-shrink-0 mini-movie-card js-carousel-card" data-target-id="${f.id}" tabindex="0" style="animation: slideInRight 0.35s ease forwards; animation-delay: ${i * 70}ms; opacity: 0; cursor: pointer;" title="Ver ${f.titulo}">
-                <div class="mini-poster-wrapper mb-2">
-                    <img src="${getResizedUrl(f.posterUrl, 200)}" loading="lazy" decoding="async" class="movie-poster-img" width="110" height="165" style="object-fit:cover;" alt="${f.titulo}" onerror="this.style.display='none';">
-                    <div class="mini-date-badge"><i class="fas fa-calendar-check me-1"></i>${templates.date(f.dataAssistido)}</div>
-                </div>
-                <div class="text-truncate text-center fw-medium px-1 text-muted" style="font-size: 0.8rem;">${f.titulo}</div>
-            </div>`).join('');
+        const html = ultimos10.map((f, i) => carouselCardHTML(f, i)).join('');
             
         requestAnimationFrame(() => { containerUltimos.innerHTML = html; });
     }
 };
 
 export const renderRankings = (elId, data) => {
-    const container = document.getElementById(elId); 
+    const container = document.getElementById(elId);
     if (!container) return;
-    if (!data.length) { container.innerHTML = '<p class="text-muted small">N/A</p>'; return; }
-    
-    const max = Math.max(...data.map(d => d[1]));
-    const html = data.map(([label, count]) => `
-        <div class="ranking-bar-item mb-2">
-            <span class="ranking-bar-label">${label}</span>
-            <div class="ranking-bar-container">
-                <div class="ranking-bar" style="width: ${(count/max)*100}%" title="${label}: ${count}"></div>
-            </div>
-            <span class="ranking-bar-count">${count}</span>
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
+    container.innerHTML = rankingBarsHTML(data);
 };
 
 export const renderCharts = (filmes) => {
@@ -140,12 +184,373 @@ export const renderCharts = (filmes) => {
     
     const origs={}; filmes.forEach(f=>{if(f.origem)origs[f.origem]=(origs[f.origem]||0)+1}); createChart('origemChart','pie',Object.keys(origs),Object.values(origs),'Origem',['#3b82f6','#14b8a6']);
     const anosC={}; filmes.forEach(f=>{if(f.ano)anosC[f.ano]=(anosC[f.ano]||0)+1}); const topAnos=Object.entries(anosC).sort((a,b)=>b[0]-a[0]).slice(0,10).reverse(); createChart('anosChart','bar',topAnos.map(x=>x[0]),topAnos.map(x=>x[1]),'Qtd.','rgba(59,130,246,0.7)',null,{indexAxis:'y'});
-    const notasC={}; filmes.forEach(f=>{if(f.nota!=null){const n=Math.round(f.nota);notasC[n]=(notasC[n]||0)+1}}); const nLabels=Object.keys(notasC).sort((a,b)=>a-b); createChart('notasChart','line',nLabels,nLabels.map(l=>notasC[l]),'Qtd.','rgba(236,72,153,0.2)','#ec4899');
-    
-    const medAno={}; filmes.forEach(f=>{if(f.ano&&f.nota){if(!medAno[f.ano])medAno[f.ano]={s:0,c:0};medAno[f.ano].s+=f.nota;medAno[f.ano].c++}}); const anosM=Object.keys(medAno).sort(); createChart('mediaNotasAnoChart','line',anosM,anosM.map(a=>(medAno[a].s/medAno[a].c).toFixed(1)),'Média','rgba(249,115,22,0.2)','#f97316');
-    
-    const mLab=[]; const mapM={}; const hoje=new Date(); const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
-    for(let i=11;i>=0;i--){ const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1); const k=`${cap(d.toLocaleString('pt-BR',{month:'short'}).replace('.',''))}/${d.getFullYear().toString().slice(-2)}`; mLab.push(k); mapM[k]=0; }
-    filmes.forEach(f=>{ if(f.assistido&&f.dataAssistido){ const d=new Date(f.dataAssistido); const k=`${cap(d.toLocaleString('pt-BR',{month:'short'}).replace('.',''))}/${d.getFullYear().toString().slice(-2)}`; if(mapM[k]!==undefined) mapM[k]++; } });
-    createChart('assistidosMesChart','bar',mLab,mLab.map(k=>mapM[k]),'Assistidos','rgba(168,85,247,0.7)');
+    // ── Distribuição de Notas (barras com cor por faixa) ──
+    const notasC = {};
+    filmes.forEach(f => { if (f.nota != null) { const n = Math.round(f.nota); notasC[n] = (notasC[n] || 0) + 1; } });
+    const nLabels = Array.from({length:11}, (_,i) => String(i));
+    const nData   = nLabels.map(l => notasC[l] || 0);
+    const nColors = nLabels.map(l => {
+        const v = Number(l);
+        if (v <= 4)  return 'rgba(239,68,68,0.75)';   // ruim → vermelho
+        if (v <= 6)  return 'rgba(234,179,8,0.75)';    // ok → amarelo
+        if (v <= 7)  return 'rgba(59,130,246,0.75)';   // bom → azul
+        return 'rgba(34,197,94,0.75)';                  // ótimo → verde
+    });
+    {
+        const ctx = document.getElementById('notasChart')?.getContext('2d');
+        if (ctx) {
+            if (chartsInstances['notasChart']) chartsInstances['notasChart'].destroy();
+            chartsInstances['notasChart'] = new ChartJS(ctx, {
+                type: 'bar',
+                data: { labels: nLabels.map(l => `Nota ${l}`), datasets: [{ label: 'Filmes', data: nData, backgroundColor: nColors, borderWidth: 0, borderRadius: 4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} filme(s)` } }
+                    },
+                    scales: {
+                        x: { ticks: { color: colorText }, grid: { display: false } },
+                        y: { ticks: { color: colorText, precision: 0 }, grid: { color: colorGrid }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+    }
+
+    // ── Média de Notas por Décadas (barras horizontais) ──
+    {
+        // Agrupa por décadas para evitar o ziguezague caótico ano a ano
+        const medDec = {};
+        filmes.forEach(f => {
+            if (!f.ano || !f.nota) return;
+            const dec = `${Math.floor(f.ano / 10) * 10}s`;
+            if (!medDec[dec]) medDec[dec] = { s: 0, c: 0, min: 10, max: 0 };
+            medDec[dec].s += f.nota;
+            medDec[dec].c++;
+            if (f.nota < medDec[dec].min) medDec[dec].min = f.nota;
+            if (f.nota > medDec[dec].max) medDec[dec].max = f.nota;
+        });
+
+        const decLabels = Object.keys(medDec).sort();
+        const decMedias = decLabels.map(d => parseFloat((medDec[d].s / medDec[d].c).toFixed(2)));
+        const decCounts = decLabels.map(d => medDec[d].c);
+        const mediaGeral = decMedias.length
+            ? parseFloat((filmes.filter(f=>f.nota).reduce((s,f)=>s+f.nota,0) / filmes.filter(f=>f.nota).length).toFixed(2))
+            : 0;
+
+        // Cor da barra: verde se acima da média geral, azul se na média, laranja se abaixo
+        const decColors = decMedias.map(m =>
+            m >= mediaGeral + 0.3 ? 'rgba(34,197,94,0.75)'
+            : m >= mediaGeral - 0.3 ? 'rgba(59,130,246,0.75)'
+            : 'rgba(249,115,22,0.75)'
+        );
+
+        const ctx = document.getElementById('mediaNotasAnoChart')?.getContext('2d');
+        if (ctx) {
+            if (chartsInstances['mediaNotasAnoChart']) chartsInstances['mediaNotasAnoChart'].destroy();
+            chartsInstances['mediaNotasAnoChart'] = new ChartJS(ctx, {
+                type: 'bar',
+                data: {
+                    labels: decLabels,
+                    datasets: [
+                        {
+                            label: 'Nota média',
+                            data: decMedias,
+                            backgroundColor: decColors,
+                            borderWidth: 0,
+                            borderRadius: 5,
+                        },
+                        {
+                            // Linha da média geral como dataset de linha
+                            label: `Média geral (${mediaGeral.toFixed(1)})`,
+                            data: decLabels.map(() => mediaGeral),
+                            type: 'line',
+                            borderColor: 'rgba(255,255,255,0.35)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 4],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, labels: { color: colorText, boxWidth: 12, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                title: ctx => `Década de ${ctx[0].label}`,
+                                label: ctx => {
+                                    if (ctx.dataset.type === 'line') return ` Média geral: ${mediaGeral.toFixed(1)}`;
+                                    const dec = decLabels[ctx.dataIndex];
+                                    return [
+                                        ` Nota média: ${ctx.parsed.y.toFixed(1)}`,
+                                        ` Filmes: ${decCounts[ctx.dataIndex]}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: colorText }, grid: { display: false } },
+                        y: {
+                            min: 5, max: 10,
+                            ticks: { color: colorText, stepSize: 0.5 },
+                            grid: { color: colorGrid },
+                            title: { display: true, text: 'Nota média', color: colorText, font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // ── Assistidos por Mês ──
+    {
+        const mLab = [], mapM = {};
+        const hojeM = new Date();
+        const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(hojeM.getFullYear(), hojeM.getMonth() - i, 1);
+            const k = `${cap(d.toLocaleString('pt-BR',{month:'short'}).replace('.','')).replace('./','')}/${d.getFullYear().toString().slice(-2)}`;
+            mLab.push(k); mapM[k] = 0;
+        }
+        filmes.forEach(f => {
+            if (f.assistido && f.dataAssistido) {
+                const d = new Date(f.dataAssistido.replace(/-/g,'/'));
+                const k = `${cap(d.toLocaleString('pt-BR',{month:'short'}).replace('.','')).replace('./','')}/${d.getFullYear().toString().slice(-2)}`;
+                if (mapM[k] !== undefined) mapM[k]++;
+            }
+        });
+        const vals = mLab.map(k => mapM[k]);
+        const maxVal = Math.max(...vals, 1);
+        const barColors = vals.map(v => v >= maxVal * 0.8 ? 'rgba(168,85,247,0.9)' : v >= maxVal * 0.4 ? 'rgba(168,85,247,0.6)' : 'rgba(168,85,247,0.3)');
+        createChart('assistidosMesChart','bar',mLab,vals,'Assistidos',barColors);
+    }
+
+    // ── Nota × Era: barras empilhadas por faixa de nota, agrupadas por era ──
+    {
+        const scatterCtx = document.getElementById('scatterNotaAnoChart')?.getContext('2d');
+        if (scatterCtx) {
+            if (chartsInstances['scatterNotaAnoChart']) chartsInstances['scatterNotaAnoChart'].destroy();
+
+            // Agrupa por era (décadas) e por faixa de nota
+            const eras = {};
+            filmes.filter(f => f.ano && f.nota).forEach(f => {
+                const era = `${Math.floor(f.ano / 10) * 10}s`;
+                if (!eras[era]) eras[era] = { otimo: 0, bom: 0, ok: 0, ruim: 0, total: 0 };
+                eras[era].total++;
+                if (f.nota >= 8)      eras[era].otimo++;
+                else if (f.nota >= 7) eras[era].bom++;
+                else if (f.nota >= 5) eras[era].ok++;
+                else                  eras[era].ruim++;
+            });
+
+            const eraLabels = Object.keys(eras).sort();
+
+            // Converte para percentual para facilitar comparação entre eras com tamanhos diferentes
+            const toP = (era, key) => eras[era].total
+                ? parseFloat(((eras[era][key] / eras[era].total) * 100).toFixed(1))
+                : 0;
+
+            chartsInstances['scatterNotaAnoChart'] = new ChartJS(scatterCtx, {
+                type: 'bar',
+                data: {
+                    labels: eraLabels,
+                    datasets: [
+                        { label: 'Ótimo (≥8)', data: eraLabels.map(e => toP(e,'otimo')), backgroundColor: 'rgba(34,197,94,0.8)', borderWidth: 0, borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0 }, stack: 'notas' },
+                        { label: 'Bom (7–7.9)', data: eraLabels.map(e => toP(e,'bom')), backgroundColor: 'rgba(59,130,246,0.8)', borderWidth: 0, stack: 'notas' },
+                        { label: 'Ok (5–6.9)', data: eraLabels.map(e => toP(e,'ok')), backgroundColor: 'rgba(234,179,8,0.8)', borderWidth: 0, stack: 'notas' },
+                        { label: 'Ruim (<5)', data: eraLabels.map(e => toP(e,'ruim')), backgroundColor: 'rgba(239,68,68,0.8)', borderWidth: 0, stack: 'notas' },
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, labels: { color: colorText, boxWidth: 12, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                title: ctx => `Filmes da década de ${ctx[0].label} (${eras[ctx[0].label]?.total || 0} filmes)`,
+                                label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}% dos filmes desta era`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: colorText }, grid: { display: false }, stacked: true },
+                        y: {
+                            stacked: true,
+                            max: 100,
+                            ticks: { color: colorText, callback: v => v + '%' },
+                            grid: { color: colorGrid },
+                            title: { display: true, text: '% dos filmes desta era', color: colorText, font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // ── Progresso Acumulado ──
+    {
+        const progCtx = document.getElementById('progressoAcumuladoChart')?.getContext('2d');
+        if (progCtx) {
+            if (chartsInstances['progressoAcumuladoChart']) chartsInstances['progressoAcumuladoChart'].destroy();
+            const porMes = {};
+            filmes.filter(f => f.assistido && f.dataAssistido).forEach(f => {
+                const m = f.dataAssistido.slice(0, 7);
+                porMes[m] = (porMes[m] || 0) + 1;
+            });
+            const mesesOrdenados = Object.keys(porMes).sort();
+            let acumulado = 0;
+            const labelsAcum = mesesOrdenados.map(m => {
+                const [y, mo] = m.split('-');
+                const d = new Date(Number(y), Number(mo)-1, 1);
+                return d.toLocaleString('pt-BR',{month:'short',year:'2-digit'}).replace('. ','/').replace('.','');
+            });
+            const dataAcum = mesesOrdenados.map(m => { acumulado += porMes[m]; return acumulado; });
+            // Gradiente de cor da linha conforme sobe
+            chartsInstances['progressoAcumuladoChart'] = new ChartJS(progCtx, {
+                type: 'line',
+                data: { labels: labelsAcum, datasets: [{
+                    label: 'Filmes assistidos',
+                    data: dataAcum,
+                    backgroundColor: 'rgba(34,197,94,0.12)',
+                    borderColor: '#22c55e',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: dataAcum.length > 30 ? 0 : 3,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#22c55e'
+                }]},
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ` Total: ${ctx.parsed.y} filmes` } }
+                    },
+                    scales: {
+                        x: { ticks: { color: colorText, maxTicksLimit: 12, maxRotation: 45 }, grid: { display: false } },
+                        y: { ticks: { color: colorText }, grid: { color: colorGrid }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+    }
+
+    // ── Radar de Gostos ──
+    {
+        const radarCtx = document.getElementById('radarGostosChart')?.getContext('2d');
+        if (radarCtx) {
+            if (chartsInstances['radarGostosChart']) chartsInstances['radarGostosChart'].destroy();
+            const genMedias = {};
+            filmes.filter(f => f.nota && f.genero?.length).forEach(f => {
+                f.genero.forEach(g => {
+                    if (!genMedias[g]) genMedias[g] = { sum: 0, count: 0 };
+                    genMedias[g].sum += f.nota;
+                    genMedias[g].count++;
+                });
+            });
+            // Ordena por quantidade de filmes e pega top 7
+            const topGeneros = Object.entries(genMedias)
+                .filter(([,v]) => v.count >= 2)  // pelo menos 2 filmes
+                .sort((a,b) => b[1].count - a[1].count)
+                .slice(0, 7)
+                .map(([g, v]) => ({ g, media: parseFloat((v.sum/v.count).toFixed(1)), count: v.count }));
+
+            if (topGeneros.length >= 3) {
+                chartsInstances['radarGostosChart'] = new ChartJS(radarCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: topGeneros.map(x => `${x.g} (${x.count})`),
+                        datasets: [{
+                            label: 'Nota Média',
+                            data: topGeneros.map(x => x.media),
+                            backgroundColor: 'rgba(168,85,247,0.18)',
+                            borderColor: '#a855f7',
+                            borderWidth: 2,
+                            pointBackgroundColor: topGeneros.map(x => x.media >= 8 ? '#22c55e' : x.media >= 7 ? '#a855f7' : '#f87171'),
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: ctx => ` Nota média: ${ctx.parsed.r}` } }
+                        },
+                        scales: {
+                            r: {
+                                min: 5, max: 10,
+                                ticks: { color: colorText, stepSize: 1, backdropColor: 'transparent', font: { size: 10 } },
+                                grid: { color: colorGrid },
+                                angleLines: { color: colorGrid },
+                                pointLabels: { color: colorText, font: { size: 11 } }
+                            }
+                        }
+                    }
+                });
+            } else {
+                const el = document.getElementById('radarGostosChart');
+                if (el) el.parentElement.innerHTML = '<p class="text-muted small text-center pt-5">Assista mais filmes de gêneros variados para ver o radar.</p>';
+            }
+        }
+    }
+
+    // ── Heatmap Gênero × Nota Média (redesenhado) ──
+    {
+        const heatmapEl = document.getElementById('heatmap-genero-nota');
+        if (heatmapEl) {
+            const genNotas = {};
+            filmes.filter(f => f.nota && f.genero?.length).forEach(f => {
+                f.genero.forEach(g => {
+                    if (!genNotas[g]) genNotas[g] = { sum: 0, count: 0 };
+                    genNotas[g].sum += f.nota;
+                    genNotas[g].count++;
+                });
+            });
+            const topG = Object.entries(genNotas)
+                .filter(([,v]) => v.count >= 2)
+                .sort((a,b) => b[1].count - a[1].count)
+                .slice(0, 12);
+            const maxCount2 = Math.max(...topG.map(([,v]) => v.count), 1);
+            const mediaGeralG = filmes.filter(f=>f.nota).reduce((s,f)=>s+f.nota,0) / (filmes.filter(f=>f.nota).length || 1);
+
+            const header = `
+                <div style="display:grid;grid-template-columns:130px 1fr 60px 55px 70px;gap:8px;padding:4px 0 8px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:4px;">
+                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.08em;">Gênero</span>
+                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.08em;">Qtd. assistidos</span>
+                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);text-align:right;text-transform:uppercase;letter-spacing:0.08em;">Filmes</span>
+                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);text-align:right;text-transform:uppercase;letter-spacing:0.08em;">Média</span>
+                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);text-align:right;text-transform:uppercase;letter-spacing:0.08em;">vs Geral</span>
+                </div>`;
+
+            const rows = topG.map(([g, v]) => {
+                const media = parseFloat((v.sum / v.count).toFixed(1));
+                const pct = Math.round((v.count / maxCount2) * 100);
+                const diff = parseFloat((media - mediaGeralG).toFixed(1));
+                const hue = Math.round(Math.max(0, Math.min(120, ((media - 5) / 5) * 120)));
+                const diffStr = diff > 0 ? `<span style="color:#22c55e;">+${diff}</span>` : diff < 0 ? `<span style="color:#f87171;">${diff}</span>` : `<span style="color:rgba(255,255,255,0.3);">=${diff}</span>`;
+                return `
+                    <div style="display:grid;grid-template-columns:130px 1fr 60px 55px 70px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                        <span style="font-size:0.82rem;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${g}">${g}</span>
+                        <div style="background:rgba(255,255,255,0.06);border-radius:3px;height:8px;overflow:hidden;">
+                            <div style="width:${pct}%;height:100%;background:hsl(${hue},65%,50%);border-radius:3px;"></div>
+                        </div>
+                        <span style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-align:right;">${v.count}</span>
+                        <span style="font-size:0.82rem;font-weight:600;color:hsl(${hue},65%,62%);text-align:right;">${media}</span>
+                        <span style="font-size:0.78rem;text-align:right;">${diffStr}</span>
+                    </div>`;
+            }).join('');
+
+            heatmapEl.innerHTML = `
+                <div style="padding:8px 0;">
+                    <p style="font-size:0.75rem;color:rgba(255,255,255,0.3);margin-bottom:8px;">Média geral: <strong style="color:rgba(255,255,255,0.5);">${mediaGeralG.toFixed(1)}</strong> — coluna "vs Geral" mostra se você gosta mais ou menos deste gênero em relação à sua média.</p>
+                    ${header}${rows}
+                </div>`;
+        }
+    }
 };

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Guitarra Studio — Entrar</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="login.css">
+
+<!-- ══ FIREBASE ══ -->
+<script type="module">
+import { initializeApp }                                     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,
+         onAuthStateChanged,
+         signInWithPopup,     GoogleAuthProvider,
+         signInWithEmailAndPassword,
+         createUserWithEmailAndPassword,
+         updateProfile,
+         sendEmailVerification,
+         sendPasswordResetEmail }                            from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+/* ── Credenciais — mesmas do index.html ── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyCSBHqOKvgiVxaR4CPMuhlql1D6Rsdh82o",
+  authDomain:        "guitarra-studio.firebaseapp.com",
+  projectId:         "guitarra-studio",
+  storageBucket:     "guitarra-studio.firebasestorage.app",
+  messagingSenderId: "134866276164",
+  appId:             "1:134866276164:web:3802f4bc681b4f70425111"
+};
+
+const app      = initializeApp(firebaseConfig);
+const auth     = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+/* ── Se já logado, vai direto ao app ── */
+onAuthStateChanged(auth, user => {
+  if (user) window.location.replace('index.html');
+});
+
+/* ── Tradução de erros ── */
+const ERROS = {
+  'auth/email-already-in-use':   'Este e-mail já está cadastrado.',
+  'auth/invalid-email':          'E-mail inválido.',
+  'auth/weak-password':          'Senha fraca. Use ao menos 6 caracteres.',
+  'auth/user-not-found':         'E-mail não encontrado.',
+  'auth/wrong-password':         'Senha incorreta.',
+  'auth/invalid-credential':     'E-mail ou senha incorretos.',
+  'auth/too-many-requests':      'Muitas tentativas. Aguarde alguns minutos.',
+  'auth/network-request-failed': 'Sem conexão. Verifique sua internet.',
+  'auth/popup-closed-by-user':   'Login cancelado.',
+  'auth/popup-blocked':          'Popup bloqueado. Permita popups para este site.',
+  'auth/user-disabled':          'Esta conta foi desativada.',
+};
+const errMsg = e => ERROS[e.code] || ('Erro: ' + e.message);
+
+/* ── Helpers UI ── */
+function showAlert(msg, type = 'error') {
+  const el = document.getElementById('auth-alert');
+  el.className = `auth-alert ${type} show`;
+  el.querySelector('.auth-alert-msg').textContent = msg;
+  el.querySelector('.auth-alert-icon').textContent = type === 'success' ? '✓' : '⚠';
+}
+function clearAlert() {
+  document.getElementById('auth-alert').classList.remove('show');
+}
+function setLoading(btnId, on) {
+  const btn = document.getElementById(btnId);
+  btn.classList.toggle('loading', on);
+  btn.disabled = on;
+}
+function toast(msg, type = 'success') {
+  const c = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('toast-out'); setTimeout(() => t.remove(), 220); }, 3400);
+}
+
+/* ── Tabs ── */
+window.showTab = function(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('tab-login').classList.toggle('active', isLogin);
+  document.getElementById('tab-reg').classList.toggle('active', !isLogin);
+  document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+  document.getElementById('form-reg').classList.toggle('hidden', isLogin);
+  document.getElementById('footer-login').style.display = isLogin ? '' : 'none';
+  document.getElementById('footer-reg').style.display   = isLogin ? 'none' : '';
+  clearAlert();
+  // Foca no primeiro campo
+  setTimeout(() => {
+    const first = document.querySelector(`#form-${tab} .field-input`);
+    if (first) first.focus();
+  }, 80);
+};
+
+/* ── Visibilidade da senha ── */
+window.toggleEye = function(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const show  = input.type === 'password';
+  input.type  = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+};
+
+/* ── Força da senha ── */
+window.checkStrength = function(val) {
+  const bars  = ['sb1','sb2','sb3','sb4'].map(id => document.getElementById(id));
+  const label = document.getElementById('pw-label');
+  const checks = [
+    val.length >= 6,
+    val.length >= 10,
+    /[A-Z]/.test(val) || /[0-9]/.test(val),
+    /[^A-Za-z0-9]/.test(val),
+  ];
+  const score = checks.filter(Boolean).length;
+  const cls   = ['', 'weak', 'fair', 'good', 'strong'];
+  const txt   = ['', 'Fraca', 'Razoável', 'Boa', 'Forte 💪'];
+  bars.forEach((b, i) => { b.className = 'pw-bar' + (i < score ? ' ' + cls[score] : ''); });
+  label.textContent = score > 0 ? txt[score] : '';
+};
+
+/* ── Reset de senha ── */
+window.toggleReset = function() {
+  const panel = document.getElementById('reset-panel');
+  panel.classList.toggle('show');
+  if (panel.classList.contains('show')) {
+    document.getElementById('reset-email').value =
+      document.getElementById('login-email').value;
+    setTimeout(() => document.getElementById('reset-email').focus(), 80);
+  }
+};
+window.sendReset = async function() {
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email) { showAlert('Informe o e-mail.'); return; }
+  const btn = document.getElementById('btn-reset');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    await sendPasswordResetEmail(auth, email);
+    toast('E-mail enviado! Verifique sua caixa de entrada.');
+    document.getElementById('reset-panel').classList.remove('show');
+  } catch(e) {
+    showAlert(errMsg(e));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enviar link';
+  }
+};
+
+/* ── Login com e-mail ── */
+window.handleLogin = async function(ev) {
+  ev.preventDefault(); clearAlert();
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  if (!email || !pw) { showAlert('Preencha e-mail e senha.'); return; }
+  setLoading('btn-login', true);
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+    // onAuthStateChanged redireciona
+  } catch(e) {
+    showAlert(errMsg(e));
+    setLoading('btn-login', false);
+  }
+};
+
+/* ── Cadastro ── */
+window.handleRegister = async function(ev) {
+  ev.preventDefault(); clearAlert();
+  const nome    = document.getElementById('reg-nome').value.trim();
+  const email   = document.getElementById('reg-email').value.trim();
+  const pw      = document.getElementById('reg-pw').value;
+  const confirm = document.getElementById('reg-confirm').value;
+  if (!nome)            { showAlert('Informe seu nome.'); return; }
+  if (!email)           { showAlert('Informe o e-mail.'); return; }
+  if (pw.length < 6)    { showAlert('A senha deve ter ao menos 6 caracteres.'); return; }
+  if (pw !== confirm)   { showAlert('As senhas não coincidem.'); return; }
+  setLoading('btn-reg', true);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    await updateProfile(cred.user, { displayName: nome });
+    sendEmailVerification(cred.user).catch(() => {});
+    toast('Conta criada com sucesso! 🎸');
+    // onAuthStateChanged redireciona para index.html
+  } catch(e) {
+    showAlert(errMsg(e));
+    setLoading('btn-reg', false);
+  }
+};
+
+/* ── Google ── */
+window.handleGoogle = async function() {
+  clearAlert();
+  try {
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    showAlert(errMsg(e));
+  }
+};
+
+/* ── Modo offline ── */
+window.goOffline = function() {
+  window.location.href = 'index.html?offline=1';
+};
+</script>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <!-- Header -->
+    <div class="auth-header">
+      <div class="auth-logo">🎸</div>
+      <div class="auth-title">Guitarra Studio</div>
+      <div class="auth-sub">Seu diário de prática e evolução</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login"  onclick="showTab('login')">Entrar</button>
+      <button class="auth-tab"        id="tab-reg"    onclick="showTab('reg')">Criar conta</button>
+    </div>
+
+    <!-- Alerta global -->
+    <div class="auth-alert" id="auth-alert">
+      <span class="auth-alert-icon">⚠</span>
+      <span class="auth-alert-msg"></span>
+    </div>
+
+    <!-- ════ FORM LOGIN ════ -->
+    <form class="auth-form" id="form-login" onsubmit="handleLogin(event)" novalidate>
+
+      <div class="field">
+        <label class="field-label" for="login-email">E-mail</label>
+        <input class="field-input" type="email" id="login-email"
+               placeholder="seu@email.com" autocomplete="email" required>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="login-pw">
+          Senha
+          <button type="button" class="forgot-btn" onclick="toggleReset()">
+            Esqueci minha senha
+          </button>
+        </label>
+        <div class="pw-wrap">
+          <input class="field-input" type="password" id="login-pw"
+                 placeholder="Sua senha" autocomplete="current-password" required>
+          <button type="button" class="pw-eye" onclick="toggleEye('login-pw',this)"
+                  aria-label="Ver senha">👁</button>
+        </div>
+      </div>
+
+      <!-- Painel de recuperação -->
+      <div class="reset-panel" id="reset-panel">
+        <p>Digite seu e-mail para receber um link de redefinição de senha.</p>
+        <input class="field-input" type="email" id="reset-email" placeholder="seu@email.com">
+        <button type="button" class="btn-secondary" id="btn-reset" onclick="sendReset()">
+          Enviar link
+        </button>
+      </div>
+
+      <button type="submit" class="btn-primary" id="btn-login">
+        <span class="btn-label">Entrar</span>
+        <div class="spinner"></div>
+      </button>
+
+      <div class="divider">ou</div>
+
+      <button type="button" class="btn-google" onclick="handleGoogle()">
+        <svg class="g-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continuar com Google
+      </button>
+
+    </form>
+
+    <!-- ════ FORM CADASTRO ════ -->
+    <form class="auth-form hidden" id="form-reg" onsubmit="handleRegister(event)" novalidate>
+
+      <div class="field">
+        <label class="field-label" for="reg-nome">Seu nome</label>
+        <input class="field-input" type="text" id="reg-nome"
+               placeholder="Como quer ser chamado?" autocomplete="given-name" required>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="reg-email">E-mail</label>
+        <input class="field-input" type="email" id="reg-email"
+               placeholder="seu@email.com" autocomplete="email" required>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="reg-pw">Senha</label>
+        <div class="pw-wrap">
+          <input class="field-input" type="password" id="reg-pw"
+                 placeholder="Mínimo 6 caracteres" autocomplete="new-password" required
+                 oninput="checkStrength(this.value)">
+          <button type="button" class="pw-eye" onclick="toggleEye('reg-pw',this)"
+                  aria-label="Ver senha">👁</button>
+        </div>
+        <div class="pw-strength">
+          <div class="pw-bars">
+            <div class="pw-bar" id="sb1"></div>
+            <div class="pw-bar" id="sb2"></div>
+            <div class="pw-bar" id="sb3"></div>
+            <div class="pw-bar" id="sb4"></div>
+          </div>
+          <div class="pw-label" id="pw-label"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="reg-confirm">Confirmar senha</label>
+        <div class="pw-wrap">
+          <input class="field-input" type="password" id="reg-confirm"
+                 placeholder="Repita a senha" autocomplete="new-password" required>
+          <button type="button" class="pw-eye" onclick="toggleEye('reg-confirm',this)"
+                  aria-label="Ver senha">👁</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="btn-reg">
+        <span class="btn-label">Criar conta</span>
+        <div class="spinner"></div>
+      </button>
+
+      <div class="divider">ou</div>
+
+      <button type="button" class="btn-google" onclick="handleGoogle()">
+        <svg class="g-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Cadastrar com Google
+      </button>
+
+    </form>
+
+    <!-- Footers -->
+    <div class="auth-footer" id="footer-login">
+      Não tem conta?
+      <button class="link-btn" onclick="showTab('reg')">Criar conta grátis</button>
+    </div>
+    <div class="auth-footer" id="footer-reg" style="display:none">
+      Já tem conta?
+      <button class="link-btn" onclick="showTab('login')">Entrar</button>
+    </div>
+    <div class="auth-footer">
+      <button class="link-btn muted" onclick="goOffline()">
+        Usar sem conta (dados locais apenas)
+      </button>
+    </div>
+
+  </div><!-- /auth-card -->
+</div><!-- /auth-wrap -->
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+</body>
+</html>

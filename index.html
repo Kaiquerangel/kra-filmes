@@ -11,7 +11,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <!-- Base: variáveis CSS e reset -->
     <link rel="stylesheet" href="style.css">
+    <!-- Componentes visuais: cards, tabela, grid, modais, stats, animações -->
+    <link rel="stylesheet" href="components.css">
+    <!-- Layout: filtros, lista, perfil, conquistas -->
+    <link rel="stylesheet" href="layout.css">
+    <!-- Responsividade: media queries -->
+    <link rel="stylesheet" href="responsive.css">
+    <!-- Temas: escuro, cinema, floresta, oceano, meia-noite -->
+    <link rel="stylesheet" href="themes.css">
+    <!-- Autenticação: split-screen login -->
+    <link rel="stylesheet" href="auth.css">
 </head>
 <body>
     <div id="visitor-banner"></div>
@@ -97,64 +109,267 @@
         </nav>
     </header>
     
-    <div class="container mt-5 pt-5" id="auth-container" style="display: none;">
-        <div class="row justify-content-center" style="padding-top: 5rem;">
-            <div class="col-lg-5 col-md-7">
-                
-                <div class="card glass-card" id="login-card">
-                    <div class="card-body p-4 p-md-5">
-                        <h2 class="card-title mb-4 text-center">Login</h2>
-                        <form id="login-form" novalidate>
-                            <div class="mb-3">
-                                <label for="login-identifier" class="form-label">Email ou Nickname</label>
-                                <input type="text" class="form-control" id="login-identifier" required autocomplete="username">
-                            </div>
-                            <div class="mb-3">
-                                <label for="login-password" class="form-label">Senha</label>
-                                <input type="password" class="form-control" id="login-password" required autocomplete="current-password">
-                            </div>
-                            <button type="submit" class="btn btn-gradient w-100 mt-3">Entrar</button>
-                            <p class="text-center mt-4 mb-0">Não tem uma conta? <a href="#" id="show-register-link" class="fw-bold">Cadastre-se</a></p>
-                        </form>
-                    </div>
+    <!-- ═══════════════════════════════════════════
+         AUTH — Layout dois painéis
+    ═══════════════════════════════════════════ -->
+    <div id="auth-container" class="auth-split-container" style="display: none;">
+
+        <!-- Painel esquerdo: Arte / Branding -->
+        <div class="auth-panel-art">
+
+            <video id="auth-bg-video" class="auth-bg-video" autoplay loop muted playsinline>
+                <source src="assets/bg-cinema.mp4" type="video/mp4">
+            </video>
+            <div class="auth-stars"></div>
+            <div class="auth-posters" aria-hidden="true">
+
+                <div class="auth-poster ap1">
+                    <img class="auth-poster-img" loading="lazy"
+                         src="https://m.media-amazon.com/images/M/MV5BNzA1Njg4NzYxOV5BMl5BanBnXkFtZTgwODk5NjU3MzI@._V1_SX1000.jpg"
+                         onerror="this.style.display='none'" alt="Blade Runner 2049">
+                    <div class="auth-poster-inner">BLADE RUNNER</div>
                 </div>
 
-                <div class="card glass-card" id="register-card" style="display: none;">
-                    <div class="card-body p-4 p-md-5">
-                        <h2 class="card-title mb-4 text-center">Cadastro</h2>
-                        <form id="register-form" novalidate>
-                            <div class="mb-3">
-                                <label for="register-name" class="form-label">Nome</label>
-                                <input type="text" class="form-control" id="register-name" required autocomplete="name">
-                            </div>
-                            <div class="mb-3 position-relative">
-                                <label for="register-nickname" class="form-label">Nickname</label>
-                                <input type="text" class="form-control" id="register-nickname" minlength="4" required autocomplete="username">
-                                
-                                <div id="nickname-validation-icon" class="nickname-validator">
-                                    <div id="nickname-loading" class="spinner-border spinner-border-sm" role="status" style="display: none;"></div>
-                                    <i id="nickname-success" class="fas fa-check-circle text-success" style="display: none;"></i>
-                                    <i id="nickname-error" class="fas fa-times-circle text-danger" style="display: none;"></i>
-                                </div>
-                                <div class="invalid-feedback" id="nickname-invalid-feedback">Nickname deve ter pelo menos 4 caracteres.</div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="register-email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="register-email" required autocomplete="email">
-                            </div>
-                            <div class="mb-3">
-                                <label for="register-password" class="form-label">Senha (mín. 6 caracteres)</label>
-                                <input type="password" class="form-control" id="register-password" minlength="6" required autocomplete="new-password">
-                            </div>
-                            <button type="submit" class="btn btn-gradient w-100 mt-3">Criar Conta</button>
-                            <p class="text-center mt-4 mb-0">Já tem uma conta? <a href="#" id="show-login-link" class="fw-bold">Faça o login</a></p>
-                        </form>
+                <div class="auth-poster ap2">
+                    <img class="auth-poster-img" loading="lazy"
+                         src="https://m.media-amazon.com/images/M/MV5BN2FjNmEyNWMtYzM0ZS00NjIyLTg5YzYtYThlMGVjNzE1OGViXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_SX1000.jpg"
+                         onerror="this.style.display='none'" alt="Dune">
+                    <div class="auth-poster-inner">DUNE</div>
+                </div>
+
+                <div class="auth-poster ap3">
+                    <img class="auth-poster-img" loading="lazy"
+                         src="https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_SX1000.jpg"
+                         onerror="this.style.display='none'" alt="Parasite">
+                    <div class="auth-poster-inner">PARASITE</div>
+                </div>
+
+                <div class="auth-poster ap4">
+                    <img class="auth-poster-img" loading="lazy"
+                         src="https://m.media-amazon.com/images/M/MV5BMDBmYTZjNjUtN2M1MS00MTQ2LTk2ODgtNzc2M2QyZGE5NTVjXkEyXkFqcGdeQXVyNzAwMjU2MTY@._V1_SX1000.jpg"
+                         onerror="this.style.display='none'" alt="Oppenheimer">
+                    <div class="auth-poster-inner">OPPENHEIMER</div>
+                </div>
+
+                <div class="auth-poster ap5">
+                    <img class="auth-poster-img" loading="lazy"
+                         src="https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX1000.jpg"
+                         onerror="this.style.display='none'" alt="Interstellar">
+                    <div class="auth-poster-inner">INTERSTELLAR</div>
+                </div>
+
+                <div class="auth-poster ap6">
+                    <img class="auth-poster-img" loading="lazy"
+                         src="https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX1000.jpg"
+                         onerror="this.style.display='none'" alt="The Godfather">
+                    <div class="auth-poster-inner">THE GODFATHER</div>
+                </div>
+
+                <div class="auth-poster ap7">
+                    <img class="auth-poster-img" loading="lazy"
+                         src="https://m.media-amazon.com/images/M/MV5BOTA5NDZlZGUtMjAxOS00YTRkLTkwYmMtYWQ0NWEwZDZiNjEzXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX1000.jpg"
+                         onerror="this.style.display='none'" alt="Whiplash">
+                    <div class="auth-poster-inner">WHIPLASH</div>
+                </div>
+
+                <div class="auth-poster ap8">
+                    <img class="auth-poster-img" loading="lazy"
+                         src="https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX1000.jpg"
+                         onerror="this.style.display='none'" alt="Inception">
+                    <div class="auth-poster-inner">INCEPTION</div>
+                </div>
+
+                <div class="auth-poster ap9">
+                    <img class="auth-poster-img" loading="lazy"
+                        src="https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX1000.jpg"
+                        onerror="this.style.display='none'" alt="The Dark Knight">
+                    <div class="auth-poster-inner">THE DARK KNIGHT</div>
+                </div>    
+
+            </div>
+            <div class="auth-brand-info">
+                <div class="auth-brand-logo">
+                    <div class="auth-logo-icon">
+                        <i class="fas fa-film"></i>
+                    </div>
+                    <span class="auth-logo-name">Meus Filmes</span>
+                </div>
+                <p class="auth-brand-tagline">
+                    Sua biblioteca cinematográfica pessoal.<br>
+                    Organize e analise suas estatísticas de consumo.
+                </p>
+                <div class="auth-stats-row">
+                    <div class="auth-stat-item">
+                        <span class="auth-stat-num">800K+</span>
+                        <span class="auth-stat-label">Filmes</span>
+                    </div>
+                    <div class="auth-stat-item">
+                        <span class="auth-stat-num">8.8★</span>
+                        <span class="auth-stat-label">Avaliação</span>
+                    </div>
+                    <div class="auth-stat-item">
+                        <span class="auth-stat-num">zero</span>
+                        <span class="auth-stat-label">ANÚNCIOS</span>
                     </div>
                 </div>
-                
             </div>
         </div>
-    </div>
+
+        <!-- Painel direito: Formulários -->
+        <div class="auth-panel-form">
+
+            <!-- Tabs Login / Cadastro -->
+            <div class="auth-tabs" role="tablist">
+                <button class="auth-tab-btn active" id="tab-btn-login" role="tab"
+                        aria-selected="true" aria-controls="login-card">
+                    Entrar
+                </button>
+                <button class="auth-tab-btn" id="tab-btn-register" role="tab"
+                        aria-selected="false" aria-controls="register-card">
+                    Criar Conta
+                </button>
+            </div>
+
+            <!-- LOGIN -->
+            <div id="login-card" class="auth-form-view active" role="tabpanel">
+                <p class="auth-form-subtitle">Acesse sua coleção de filmes.</p>
+                <form id="login-form" novalidate>
+
+                    <div class="auth-field">
+                        <label for="login-identifier" class="auth-label">Email ou Nickname</label>
+                        <div class="auth-input-wrap">
+                            <i class="fas fa-user auth-input-icon"></i>
+                            <input type="text" class="form-control auth-input" id="login-identifier"
+                                   placeholder="seu@email.com" required autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="auth-field">
+                        <label for="login-password" class="auth-label">Senha</label>
+                        <div class="auth-input-wrap">
+                            <i class="fas fa-lock auth-input-icon"></i>
+                            <input type="password" class="form-control auth-input" id="login-password"
+                                   placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="auth-eye-btn"
+                                    data-eye-toggle="login-password"
+                                    aria-label="Mostrar/ocultar senha">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auth-extras">
+                        <label class="auth-remember-label">
+                            <input type="checkbox" id="login-remember" class="auth-check-input">
+                            <span class="auth-custom-check">
+                                <i class="fas fa-check" style="font-size:9px;display:none;"></i>
+                            </span>
+                            Lembrar de mim
+                        </label>
+                        <a href="#" class="auth-forgot-link"
+                           id="forgot-password-link">Esqueci a senha</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-gradient w-100 auth-submit-btn">
+                        <span class="auth-btn-text">Entrar</span>
+                        <span class="auth-btn-spinner spinner-border spinner-border-sm ms-2"
+                              style="display:none;" role="status"></span>
+                    </button>
+
+                    <div class="auth-divider">
+                        <span>ou continue com</span>
+                    </div>
+
+                    <button type="button" id="btn-google-login" class="auth-btn-google">
+                        <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        <span>Entrar com Google</span>
+                        <span class="auth-google-spinner spinner-border spinner-border-sm ms-2" style="display:none;" role="status"></span>
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- CADASTRO -->
+            <div id="register-card" class="auth-form-view" role="tabpanel" style="display:none;">
+                <p class="auth-form-subtitle">Comece a organizar seus filmes hoje.</p>
+                <form id="register-form" novalidate>
+
+                    <div class="auth-field">
+                        <label for="register-name" class="auth-label">Nome</label>
+                        <div class="auth-input-wrap">
+                            <i class="fas fa-user auth-input-icon"></i>
+                            <input type="text" class="form-control auth-input" id="register-name"
+                                   placeholder="Seu nome completo" required autocomplete="name">
+                        </div>
+                    </div>
+
+                    <div class="auth-field position-relative">
+                        <label for="register-nickname" class="auth-label">Nickname</label>
+                        <div class="auth-input-wrap">
+                            <i class="fas fa-at auth-input-icon"></i>
+                            <input type="text" class="form-control auth-input" id="register-nickname"
+                                   placeholder="@seunick" minlength="4" required autocomplete="username">
+                            <div id="nickname-validation-icon" class="auth-nick-status">
+                                <div id="nickname-loading" class="spinner-border spinner-border-sm" role="status" style="display:none;"></div>
+                                <i id="nickname-success" class="fas fa-check-circle text-success" style="display:none;"></i>
+                                <i id="nickname-error" class="fas fa-times-circle text-danger" style="display:none;"></i>
+                            </div>
+                        </div>
+                        <div class="invalid-feedback" id="nickname-invalid-feedback">Nickname deve ter pelo menos 4 caracteres.</div>
+                    </div>
+
+                    <div class="auth-field">
+                        <label for="register-email" class="auth-label">Email</label>
+                        <div class="auth-input-wrap">
+                            <i class="fas fa-envelope auth-input-icon"></i>
+                            <input type="email" class="form-control auth-input" id="register-email"
+                                   placeholder="seu@email.com" required autocomplete="email">
+                        </div>
+                    </div>
+
+                    <div class="auth-field">
+                        <label for="register-password" class="auth-label">Senha <small class="text-muted">(mín. 6 caracteres)</small></label>
+                        <div class="auth-input-wrap">
+                            <i class="fas fa-lock auth-input-icon"></i>
+                            <input type="password" class="form-control auth-input" id="register-password"
+                                   placeholder="••••••••" minlength="6" required autocomplete="new-password"
+                                   data-strength-input="true">
+                            <button type="button" class="auth-eye-btn"
+                                    data-eye-toggle="register-password"
+                                    aria-label="Mostrar/ocultar senha">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <!-- Barra de força da senha -->
+                        <div class="auth-strength-bar" id="auth-strength-bar" style="display:none;">
+                            <div class="auth-strength-track">
+                                <div class="auth-strength-seg" id="auth-s1"></div>
+                                <div class="auth-strength-seg" id="auth-s2"></div>
+                                <div class="auth-strength-seg" id="auth-s3"></div>
+                                <div class="auth-strength-seg" id="auth-s4"></div>
+                            </div>
+                            <span class="auth-strength-label" id="auth-strength-label">Força da senha</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-gradient w-100 auth-submit-btn mt-2">
+                        <span class="auth-btn-text">Criar Conta</span>
+                        <span class="auth-btn-spinner spinner-border spinner-border-sm ms-2"
+                              style="display:none;" role="status"></span>
+                    </button>
+
+                </form>
+            </div>
+
+        </div><!-- /auth-panel-form -->
+    </div><!-- /auth-split-container -->
+
+
     
     <main class="container mt-5 pt-5" id="app-content" style="display: none;">
 
@@ -348,6 +563,42 @@
                      </div>
                      
                      <div class="row g-3 text-center mb-4">
+                        <div class="col-lg-2 col-4">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Nota Mediana</span>
+                                <span class="stat-card-value" id="stat-mediana-notas">0.0</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-4">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Sequência Atual</span>
+                                <span class="stat-card-value" id="stat-sequencia-dias">0</span>
+                                <span class="stat-card-subtitle">dias seguidos</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-4">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Ritmo Mensal</span>
+                                <span class="stat-card-value" id="stat-ritmo-mensal">0</span>
+                                <span class="stat-card-subtitle">filmes/mês</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Gênero do Momento</span>
+                                <span class="stat-card-value-text" id="stat-genero-momento">-</span>
+                                <span class="stat-card-subtitle">últimos 30 dias</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-6">
+                            <div class="stat-card">
+                                <span class="stat-card-title">Último Assistido</span>
+                                <span class="stat-card-value-text" id="stat-ultimo-assistido">-</span>
+                            </div>
+                        </div>
+                     </div>
+
+                     <div class="row g-3 text-center mb-4">
                         <div class="col-md-6">
                             <div class="stat-card">
                                 <span class="stat-card-title">Melhor Filme</span>
@@ -414,34 +665,134 @@
                         <i class="fas fa-palette me-2"></i> Análise Visual
                     </h2>
                     <div class="row g-4">
+
+                        <!-- Top 5 Gêneros -->
                         <div class="col-lg-4 col-md-6">
-                            <h5 class="ranking-title">Top 5 Gêneros</h5>
-                            <div style="height: 300px;"><canvas id="generosChart"></canvas></div>
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Top 5 Gêneros</h5>
+                                <p class="chart-desc">Os 5 gêneros com mais filmes na sua coleção. Passa o mouse sobre cada fatia para ver a quantidade exata.</p>
+                                <div class="chart-legend-row">
+                                    <span class="chart-legend-dot" style="background:#a855f7"></span><span>Drama</span>
+                                    <span class="chart-legend-dot" style="background:#3b82f6"></span><span>Action</span>
+                                    <span class="chart-legend-dot" style="background:#ec4899"></span><span>Crime</span>
+                                    <span class="chart-legend-dot" style="background:#f97316"></span><span>Thriller</span>
+                                    <span class="chart-legend-dot" style="background:#14b8a6"></span><span>Adventure</span>
+                                </div>
+                                <div style="height: 260px;"><canvas id="generosChart"></canvas></div>
+                            </div>
                         </div>
+
+                        <!-- Top 5 Direção -->
                         <div class="col-lg-4 col-md-6">
-                            <h5 class="ranking-title">Top 5 Direção</h5>
-                            <div style="height: 300px;"><canvas id="diretoresChart"></canvas></div>
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Top 5 Direção</h5>
+                                <p class="chart-desc">Os diretores com mais filmes assistidos. O tamanho da barra é proporcional à quantidade de filmes de cada um na sua coleção.</p>
+                                <div style="height: 300px;"><canvas id="diretoresChart"></canvas></div>
+                            </div>
                         </div>
+
+                        <!-- Origem dos Filmes -->
                         <div class="col-lg-4 col-md-6">
-                            <h5 class="ranking-title">Origem dos Filmes</h5>
-                            <div style="height: 300px;"><canvas id="origemChart"></canvas></div>
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Origem dos Filmes</h5>
+                                <p class="chart-desc">Proporção entre filmes nacionais (brasileiros) e internacionais que você assistiu. Cada fatia mostra o percentual do total.</p>
+                                <div class="chart-legend-row">
+                                    <span class="chart-legend-dot" style="background:#3b82f6"></span><span>Internacional</span>
+                                    <span class="chart-legend-dot" style="background:#14b8a6"></span><span>Nacional</span>
+                                </div>
+                                <div style="height: 260px;"><canvas id="origemChart"></canvas></div>
+                            </div>
                         </div>
+
+                        <!-- Filmes por Ano -->
                         <div class="col-lg-6 col-md-6">
-                            <h5 class="ranking-title">Filmes por Ano (Top 10 Recentes)</h5>
-                            <div style="height: 300px;"><canvas id="anosChart"></canvas></div>
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Filmes por Ano de Lançamento</h5>
+                                <p class="chart-desc">Quantos filmes você assistiu de cada ano de lançamento, mostrando os 10 anos com mais títulos. Revela de qual época são os filmes que você mais consome.</p>
+                                <div style="height: 300px;"><canvas id="anosChart"></canvas></div>
+                            </div>
                         </div>
+
+                        <!-- Distribuição de Notas -->
                         <div class="col-lg-6">
-                            <h5 class="ranking-title">Distribuição de Notas</h5>
-                            <div style="height: 300px;"><canvas id="notasChart"></canvas></div>
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Distribuição de Notas</h5>
+                                <p class="chart-desc">Quantos filmes você avaliou com cada nota, de 0 a 10. A cor indica a faixa de qualidade.</p>
+                                <div class="chart-legend-row">
+                                    <span class="chart-legend-dot" style="background:rgba(239,68,68,0.75)"></span><span>Ruim (0–4)</span>
+                                    <span class="chart-legend-dot" style="background:rgba(234,179,8,0.75)"></span><span>Ok (5–6)</span>
+                                    <span class="chart-legend-dot" style="background:rgba(59,130,246,0.75)"></span><span>Bom (7)</span>
+                                    <span class="chart-legend-dot" style="background:rgba(34,197,94,0.75)"></span><span>Ótimo (8–10)</span>
+                                </div>
+                                <div style="height: 260px;"><canvas id="notasChart"></canvas></div>
+                            </div>
                         </div>
+
+                        <!-- Média de Notas por Ano -->
                         <div class="col-lg-6">
-                            <h5 class="ranking-title">Média de Notas por Ano</h5>
-                            <div style="height: 300px;"><canvas id="mediaNotasAnoChart"></canvas></div>
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Nota Média por Década</h5>
+                                <p class="chart-desc">Sua nota média agrupada por década de lançamento. A linha tracejada é sua média geral. <span style="color:#22c55e;font-weight:600;">Verde</span> = acima da média, <span style="color:#3b82f6;font-weight:600;">Azul</span> = na média, <span style="color:#f97316;font-weight:600;">Laranja</span> = abaixo. Passe o mouse para ver quantos filmes cada década tem.</p>
+                                <div class="chart-legend-row">
+                                    <span class="chart-legend-dot" style="background:rgba(34,197,94,0.75)"></span><span>Acima da média</span>
+                                    <span class="chart-legend-dot" style="background:rgba(59,130,246,0.75)"></span><span>Na média</span>
+                                    <span class="chart-legend-dot" style="background:rgba(249,115,22,0.75)"></span><span>Abaixo da média</span>
+                                </div>
+                                <div style="height: 280px;"><canvas id="mediaNotasAnoChart"></canvas></div>
+                            </div>
                         </div>
+
+                        <!-- Assistidos por Mês -->
                         <div class="col-lg-6">
-                            <h5 class="ranking-title">Assistidos (Últimos 12 Meses)</h5>
-                            <div style="height: 300px;"><canvas id="assistidosMesChart"></canvas></div>
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Assistidos nos Últimos 12 Meses</h5>
+                                <p class="chart-desc">Quantos filmes você marcou como assistido em cada mês dos últimos 12 meses. Barras mais escuras = meses mais ativos. Ideal para ver seu ritmo de consumo.</p>
+                                <div style="height: 280px;"><canvas id="assistidosMesChart"></canvas></div>
+                            </div>
                         </div>
+
+                        <!-- Nota × Ano de Lançamento -->
+                        <div class="col-lg-6">
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Qualidade por Era do Cinema</h5>
+                                <p class="chart-desc">Para cada década, mostra a proporção de filmes que você avaliou em cada faixa de nota. Permite comparar se você tende a gostar mais de filmes antigos ou recentes. Passe o mouse sobre cada barra para ver os percentuais.</p>
+                                <div class="chart-legend-row">
+                                    <span class="chart-legend-dot" style="background:rgba(34,197,94,0.8)"></span><span>Ótimo (≥8)</span>
+                                    <span class="chart-legend-dot" style="background:rgba(59,130,246,0.8)"></span><span>Bom (7–7.9)</span>
+                                    <span class="chart-legend-dot" style="background:rgba(234,179,8,0.8)"></span><span>Ok (5–6.9)</span>
+                                    <span class="chart-legend-dot" style="background:rgba(239,68,68,0.8)"></span><span>Ruim (&lt;5)</span>
+                                </div>
+                                <div style="height: 260px;"><canvas id="scatterNotaAnoChart"></canvas></div>
+                            </div>
+                        </div>
+
+                        <!-- Progresso Acumulado -->
+                        <div class="col-lg-6">
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Progresso Acumulado</h5>
+                                <p class="chart-desc">Total de filmes assistidos ao longo do tempo, mês a mês desde o início da sua coleção. A linha só sobe — mostra sua jornada cinematográfica completa.</p>
+                                <div style="height: 280px;"><canvas id="progressoAcumuladoChart"></canvas></div>
+                            </div>
+                        </div>
+
+                        <!-- Radar de Gostos -->
+                        <div class="col-lg-6">
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Radar de Gostos</h5>
+                                <p class="chart-desc">Sua nota média para cada um dos seus gêneros mais assistidos. Quanto mais próximo da borda, mais você gosta daquele gênero. O label mostra a quantidade de filmes assistidos.</p>
+                                <div style="height: 300px;"><canvas id="radarGostosChart"></canvas></div>
+                            </div>
+                        </div>
+
+                        <!-- Heatmap Gênero × Nota -->
+                        <div class="col-lg-12">
+                            <div class="chart-card">
+                                <h5 class="ranking-title">Gênero × Nota Média</h5>
+                                <p class="chart-desc">Comparação entre quantidade assistida e nota média por gênero. A barra mostra quantos filmes você assistiu (relativo ao gênero mais assistido). A coluna <strong>"vs Geral"</strong> indica se você tende a gostar mais (↑ verde) ou menos (↓ vermelho) daquele gênero em relação à sua média geral de notas.</p>
+                                <div id="heatmap-genero-nota" style="overflow-x:auto;"></div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -532,6 +883,9 @@
                                 </div>
                                 <div id="conquistas-container"></div>
                             </div>
+
+                            <!-- Ano em Filmes -->
+                            <div id="ano-em-filmes-wrapper" class="mt-4"></div>
 
                             <!-- Heatmap -->
                             <div id="heatmap-wrapper"></div>
@@ -745,5 +1099,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="main.js"></script>
+
 </body>
 </html>

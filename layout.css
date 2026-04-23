@@ -1,0 +1,444 @@
+/* ============================================================
+   LAYOUT.CSS
+   ============================================================ */
+
+/* -------------------------------------------
+   Modos Especiais e Utilitários Extras
+------------------------------------------- */
+#welcome-message { 
+    color: var(--cor-texto-dark); 
+    font-weight: 500; 
+    opacity: 0.9; 
+}
+
+body:not(.dark-mode) #welcome-message { 
+    color: #ffffff; 
+}
+
+#visitor-banner { 
+    background-color: var(--cor-acento-principal); 
+    color: white; 
+    text-align: center; 
+    padding: 10px; 
+    font-weight: bold; 
+    position: fixed; 
+    bottom: 0; 
+    width: 100%; 
+    z-index: 1050; 
+    display: none; 
+}
+
+body.read-only .col-acoes, 
+body.read-only #cadastro-section, 
+body.read-only #logout-container, 
+body.read-only .btn-edit, 
+body.read-only .btn-delete, 
+body.read-only .movie-card-actions, 
+body.read-only #import-btn, 
+body.read-only #import-file-input + button, 
+body.read-only .import-export-buttons { 
+    display: none !important; 
+}
+
+body.read-only .col-assistido { 
+    padding-right: 20px; 
+}
+
+/* =========================================================
+   NOVO LAYOUT: BARRA DE FILTROS E HEADER (LISTA DE FILMES)
+   ========================================================= */
+   
+.view-toggle-modern {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 4px;
+    display: flex;
+    gap: 4px;
+}
+
+.btn-view-toggle {
+    background: transparent;
+    color: var(--cor-texto-secundario-dark-claro);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-view-toggle.active {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.btn-view-toggle:not(.active):hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sort-modern-container {
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.sort-modern-container:hover {
+    border-color: #3b82f6;
+}
+
+.sort-modern-container .sort-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cor-texto-secundario-dark-claro);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.sort-modern-select {
+    background: transparent !important;
+    border: none !important;
+    color: white !important;
+    padding-left: 32px !important;
+    font-size: 0.85rem !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.sort-modern-select option {
+    background-color: #151a23;
+    color: white;
+}
+
+.btn-sugerir-modern {
+    background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.btn-sugerir-modern:hover {
+    opacity: 0.9;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-icon-modern {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--cor-texto-secundario-dark-claro);
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-icon-modern:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.filtros-box-modern {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.filtros-box-modern .form-control, 
+.filtros-box-modern .form-select {
+    background-color: rgba(17, 24, 39, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+.filtros-box-modern .form-control:focus, 
+.filtros-box-modern .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.input-icon-wrapper {
+    position: relative;
+}
+
+.input-icon-wrapper input {
+    padding-right: 30px;
+}
+
+.input-icon-wrapper i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.nota-min-max-wrapper {
+    display: flex;
+    background-color: rgba(17, 24, 39, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.nota-min-max-wrapper .nota-icon {
+    padding: 6px 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nota-min-max-wrapper input {
+    background: transparent;
+    border: none;
+    color: white;
+    width: 50%;
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.nota-min-max-wrapper input:first-of-type {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Abas Nav (Todos, Assistidos, Favoritos) */
+.nav-tabs-modern {
+    display: flex;
+    gap: 8px;
+    border: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.nav-tabs-modern .nav-link {
+    background: transparent;
+    color: var(--cor-texto-secundario-dark-claro);
+    border: 1px solid transparent;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin: 0;
+}
+
+.nav-tabs-modern .nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tabs-modern .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.nav-tabs-modern .tab-fav.active {
+    background-color: rgba(250, 204, 21, 0.1);
+    border-color: rgba(250, 204, 21, 0.2);
+    color: #facc15;
+}
+/* =========================================================
+   CORREÇÕES RESPONSIVAS — MOBILE
+   ========================================================= */
+
+/* ── Perfil: grid colapsa em coluna única em mobile ── */
+@media (max-width: 768px) {
+    .perfil-layout-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+    .perfil-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .perfil-stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ── Conquistas: 2 colunas em mobile estreito ── */
+@media (max-width: 500px) {
+    #conquistas-container > div {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* ── Heatmap: scroll interno no mobile ── */
+@media (max-width: 768px) {
+    #heatmap-wrapper {
+        margin-top: 1.5rem !important;
+    }
+    #heatmap-scroll-inner {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ── Lista: header em coluna no mobile ── */
+@media (max-width: 640px) {
+    #lista-section .card-body > .d-flex.flex-wrap {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    #lista-section .d-flex.align-items-center.gap-3.flex-wrap {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .btn-sugerir-modern {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .import-export-buttons {
+        justify-content: flex-end;
+    }
+}
+
+/* ── Filtros: segunda linha em mobile, tudo em coluna ── */
+@media (max-width: 768px) {
+    .filtros-box-modern .row {
+        gap: 0.5rem;
+    }
+
+    /* Datas lado a lado ainda em telas médias */
+    #filtro-data-inicio,
+    #filtro-data-fim {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    /* Filtro de nota ocupa largura full */
+    .nota-min-max-wrapper {
+        width: 100%;
+    }
+}
+
+/* ── Abas da lista em mobile: sem truncamento ── */
+@media (max-width: 576px) {
+    .nav-tabs-modern {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .nav-tabs-modern .nav-link {
+        font-size: 0.78rem;
+        padding: 5px 10px;
+    }
+}
+
+/* ── Paginação: botões responsivos ── */
+.btn-paginacao {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.88rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .paginacao-wrapper {
+        gap: 0.5rem !important;
+    }
+
+    .btn-paginacao {
+        padding: 0.45rem 0.85rem;
+        font-size: 0.8rem;
+    }
+
+    /* Esconde texto "Anterior"/"Próximo", mostra só ícone */
+    .btn-paginacao .pag-texto {
+        display: none;
+    }
+
+    #info-paginacao {
+        font-size: 0.75rem;
+    }
+}
+
+/* ── Tabela no mobile: scroll horizontal limpo ── */
+@media (max-width: 768px) {
+    .table-responsive {
+        padding-bottom: 1rem !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Cards grid: 2 colunas em telas menores */
+    .movies-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.6rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .movies-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+}
+
+/* ── Navbar: padding-top correto em mobile ── */
+@media (max-width: 576px) {
+    body {
+        padding-top: 70px;
+    }
+
+    main.container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .glass-card .card-body {
+        padding: 1rem !important;
+    }
+}
+
+/* ── Sort container: não encolhe em mobile ── */
+@media (max-width: 640px) {
+    .sort-modern-container {
+        flex: 1;
+        min-width: 140px;
+    }
+
+    .sort-modern-select {
+        width: 100%;
+    }
+}
+
+/* ── Btn view toggle: ícone apenas em mobile muito pequeno ── */
+@media (max-width: 380px) {
+    .btn-view-toggle span,
+    .btn-view-toggle .me-2 {
+        display: none;
+    }
+}
+
+/* ── Read-only: oculta botões de edição/exclusão na tabela ── */
+body.read-only .btn-edit-item,
+body.read-only .btn-delete-item {
+    display: none !important;
+}
+

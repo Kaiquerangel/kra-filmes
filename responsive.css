@@ -1,0 +1,163 @@
+/* ============================================================
+   RESPONSIVE.CSS
+   ============================================================ */
+
+/* -------------------------------------------
+   MEDIA QUERIES (Responsividade)
+------------------------------------------- */
+@media (max-width: 991px) {
+    body { 
+        padding-top: 80px; 
+    }
+    .container { 
+        padding-left: 20px; 
+        padding-right: 20px; 
+    }
+    .navbar-nav.mx-auto { 
+        display: none; 
+    }
+    .navbar-brand { 
+        font-size: 1.2rem; 
+    }
+    .table-responsive { 
+        padding-bottom: 1rem; 
+    }
+    .suggestion-layout { 
+        flex-direction: column !important; 
+        text-align: center !important; 
+        gap: 1.5rem; 
+    }
+    .suggestion-poster { 
+        margin: 0 auto !important; 
+        width: 100%; 
+        display: flex; 
+        justify-content: center; 
+    }
+    .suggestion-poster img { 
+        max-width: 180px !important; 
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+    }
+    .suggestion-main-info { 
+        width: 100%; 
+        text-align: center !important; 
+    }
+    .suggestion-layout .suggestion-title { 
+        text-align: center !important; 
+        font-size: 1.5rem !important; 
+    }
+    .suggestion-layout .suggestion-details p, 
+    .suggestion-main-info p { 
+        justify-content: center !important; 
+        display: flex; 
+        align-items: center; 
+        gap: 5px; 
+    }
+    .suggestion-side-info { 
+        width: 100%; 
+        flex-direction: row; 
+        justify-content: center; 
+        flex-wrap: wrap; 
+    }
+}
+
+@media (max-width: 768px) {
+    .btn-action, 
+    .btn-sm, 
+    .nav-link, 
+    .dropdown-item { 
+        min-height: 44px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+    }
+    
+    .tabela-filmes .dropdown-menu { 
+        min-width: 200px; 
+    }
+    
+    #filtros-container .form-label { 
+        display: none; 
+    }
+    
+    #btn-pag-anterior, 
+    #btn-pag-proximo { 
+        padding: 0.5rem 1rem !important; 
+        font-size: 0.9rem; 
+    }
+    
+    #btn-voltar-topo { 
+        bottom: 20px; 
+        right: 20px; 
+        width: 44px; 
+        height: 44px; 
+    }
+    
+    .tabela-filmes thead { 
+        display: none; 
+    }
+    
+    .tabela-filmes, 
+    .tabela-filmes tbody, 
+    .tabela-filmes tr, 
+    .tabela-filmes td { 
+        display: block; 
+        width: 100%; 
+    }
+    
+    .tabela-filmes tr { 
+        margin-bottom: 1rem; 
+        background-color: var(--cor-card); 
+        border: 1px solid var(--cor-borda); 
+        border-radius: 0.75rem; 
+        padding: 1rem; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        position: relative; 
+    }
+    
+    body.dark-mode .tabela-filmes tr { 
+        background-color: var(--cor-card-dark); 
+        border-color: var(--cor-borda-dark); 
+    }
+    
+    .tabela-filmes td { 
+        text-align: left; 
+        padding: 0.4rem 0; 
+        border: none !important; 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+    }
+    
+    .tabela-filmes .col-num { 
+        display: none; 
+    }
+    
+    .tabela-filmes .col-acoes { 
+        margin-top: 0.5rem; 
+        padding-top: 0.5rem; 
+        border-top: 1px solid var(--cor-borda); 
+        justify-content: flex-end; 
+    }
+    
+    body.dark-mode .tabela-filmes .col-acoes { 
+        border-top-color: var(--cor-borda-dark); 
+    }
+}
+
+@media (max-width: 576px) {
+    .suggestion-swal-popup .swal2-actions { 
+        flex-direction: column; 
+        width: 100%; 
+        gap: 0.5rem; 
+    }
+    
+    .suggestion-swal-popup .swal2-actions button { 
+        width: 100%; 
+        margin: 0 !important; 
+    }
+    
+    .suggestion-swal-popup .swal2-title { 
+        font-size: 1.4rem !important; 
+    }
+}
+

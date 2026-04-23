@@ -48,6 +48,7 @@ export const renderProfile = (profile, filmes) => {
         }
     }
 
+    _renderAnoEmFilmes(filmes);
     _renderHeatmap(filmes);
 };
 
@@ -69,7 +70,7 @@ export const renderAchievements = (conquistas) => {
 
     // Grid: sempre 3 colunas no desktop, 2 no mobile, centralizado
     container.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start;">
             ${conquistas.map(_cardHtml).join('')}
         </div>`;
 
@@ -122,26 +123,36 @@ function _cardHtml(c) {
                <i class="fas fa-lock" style="font-size:9px;color:rgba(255,255,255,0.2);"></i>
            </div>`;
 
-    const progress = (!ok && c.target)
-        ? `<span style="font-size:0.75rem;color:rgba(255,255,255,0.3);">${c.progress ?? 0}/${c.target}</span>`
-        : `<span style="font-size:0.75rem;color:#d4af37;"><i class="fas fa-check me-1"></i>Concluída</span>`;
+    // Footer padrão: sempre mostra descricao + progresso
+    const progress = ok
+        ? `<div style="text-align:center;">
+               <span style="font-size:0.72rem;color:#d4af37;display:block;"><i class="fas fa-check me-1"></i>Concluída</span>
+               <span style="font-size:0.65rem;color:rgba(255,255,255,0.28);display:block;margin-top:3px;line-height:1.3;">${c.descricao}</span>
+           </div>`
+        : `<div style="text-align:center;">
+               ${c.target ? `<span style="font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.4);display:block;">${c.progress ?? 0} / ${c.target}</span>` : ''}
+               <span style="font-size:0.65rem;color:rgba(255,255,255,0.28);display:block;margin-top:3px;line-height:1.3;">${c.descricao}</span>
+           </div>`;
 
+    // Hover: compartilhar (desbloqueada) ou apenas descricao mais legível (bloqueada)
     const shareBtn = ok
-        ? `<button class="btn-share-conquista" data-nome="${c.nome.replace(/"/g,'&quot;')}"
+        ? `<div style="text-align:center;">
+               <button class="btn-share-conquista" data-nome="${c.nome.replace(/"/g,'&quot;')}"
                    style="background:none;border:none;color:#3b9eff;font-size:0.75rem;
-                          cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;">
-               <i class="fas fa-share-alt"></i> Compartilhar
-           </button>`
-        : `<span style="font-size:0.73rem;color:rgba(255,255,255,0.3);text-align:center;
-                        display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-               ${c.descricao}
-           </span>`;
+                          cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;margin:0 auto;">
+                   <i class="fas fa-share-alt"></i> Compartilhar
+               </button>
+           </div>`
+        : `<div style="text-align:center;">
+               ${c.target ? `<span style="font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.4);display:block;">${c.progress ?? 0} / ${c.target}</span>` : ''}
+               <span style="font-size:0.65rem;color:rgba(255,255,255,0.35);display:block;margin-top:3px;line-height:1.3;">${c.descricao}</span>
+           </div>`;
 
     return `
         <div class="conquista-card" style="position:relative;border:1px solid ${border};
-             border-radius:10px;background:${bg};padding:16px 12px 12px;
+             border-radius:10px;background:${bg};padding:14px 12px 12px;
              display:flex;flex-direction:column;align-items:center;text-align:center;
-             min-height:120px;transition:transform 0.18s ease,border-color 0.18s ease;cursor:default;">
+             transition:transform 0.18s ease,border-color 0.18s ease;cursor:default;">
             ${badge}
             <i class="${c.icone} fa-lg mb-2" style="color:${iconC};"></i>
             <span style="font-size:0.82rem;font-weight:600;color:${nameC};line-height:1.2;margin-bottom:auto;padding-bottom:8px;">${c.nome}</span>
@@ -159,6 +170,63 @@ function _cardHtml(c) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  Heatmap estilo GitHub
 // ─────────────────────────────────────────────────────────────────────────────
+function _renderAnoEmFilmes(filmes) {
+    const wrapper = document.getElementById('ano-em-filmes-wrapper');
+    if (!wrapper) return;
+
+    const anoAtual = new Date().getFullYear();
+    const assistidosAno = filmes.filter(f => f.assistido && f.dataAssistido && f.dataAssistido.startsWith(String(anoAtual)));
+    const assistidosAnoAnterior = filmes.filter(f => f.assistido && f.dataAssistido && f.dataAssistido.startsWith(String(anoAtual - 1)));
+
+    if (!assistidosAno.length) { wrapper.innerHTML = ''; return; }
+
+    // Gênero do ano
+    const genCount = {};
+    assistidosAno.forEach(f => (f.genero || []).forEach(g => { genCount[g] = (genCount[g] || 0) + 1; }));
+    const topGeneroAno = Object.entries(genCount).sort((a,b) => b[1]-a[1])[0];
+
+    // Diretor do ano
+    const dirCount = {};
+    assistidosAno.forEach(f => (f.direcao || []).forEach(d => { if(d) dirCount[d] = (dirCount[d] || 0) + 1; }));
+    const topDirAno = Object.entries(dirCount).sort((a,b) => b[1]-a[1])[0];
+
+    // Nota média do ano
+    const mediAno = assistidosAno.filter(f => f.nota).reduce((s,f) => s+f.nota, 0) / (assistidosAno.filter(f=>f.nota).length || 1);
+
+    // Comparativo com ano anterior
+    const diff = assistidosAno.length - assistidosAnoAnterior.length;
+    const diffTxt = diff > 0
+        ? `<span style="color:#22c55e;">↑ ${diff}a mais que em ${anoAtual-1}</span>`
+        : diff < 0
+        ? `<span style="color:#f87171;">↓ ${Math.abs(diff)} a menos que em ${anoAtual-1}</span>`
+        : `<span style="color:rgba(255,255,255,0.4);">igual a ${anoAtual-1}</span>`;
+
+    wrapper.innerHTML = `
+        <div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.25rem;background:rgba(255,255,255,0.02);margin-bottom:1.5rem;">
+            <h5 style="font-size:0.9rem;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 1rem;">
+                Seu ${anoAtual} em Filmes
+            </h5>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+                <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:12px;text-align:center;">
+                    <div style="font-size:2rem;font-weight:800;color:#3b9eff;">${assistidosAno.length}</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px;">filmes em ${anoAtual} · ${diffTxt}</div>
+                </div>
+                <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:8px;padding:12px;text-align:center;">
+                    <div style="font-size:2rem;font-weight:800;color:#a855f7;">${mediAno.toFixed(1)}</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px;">nota média do ano</div>
+                </div>
+                <div style="background:rgba(245,200,66,0.06);border:1px solid rgba(245,200,66,0.15);border-radius:8px;padding:12px;text-align:center;">
+                    <div style="font-size:0.95rem;font-weight:700;color:#f5c842;">${topGeneroAno ? topGeneroAno[0] : '-'}</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px;">gênero favorito do ano</div>
+                </div>
+                <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:8px;padding:12px;text-align:center;">
+                    <div style="font-size:0.88rem;font-weight:700;color:#22c55e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${topDirAno ? topDirAno[0].split(' ').slice(-1)[0] : '-'}</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px;">diretor mais assistido</div>
+                </div>
+            </div>
+        </div>`;
+}
+
 function _renderHeatmap(filmes) {
     if (!document.getElementById('heatmap-css')) {
         document.head.insertAdjacentHTML('beforeend', `
@@ -254,7 +322,7 @@ function _renderHeatmap(filmes) {
     const eixoY = DSEM.map((d,i) =>
         `<div style="height:${ROW}px;font-size:0.58rem;color:rgba(255,255,255,0.32);
                      line-height:${ROW}px;text-align:right;padding-right:5px;
-                     ${[1,3,5].includes(i)?'visibility:hidden;':''}">${d}</div>`
+                     ${![0,3,6].includes(i)?'visibility:hidden;':''}">${d}</div>`
     ).join('');
 
     wrapper.innerHTML = `
