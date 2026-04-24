@@ -418,7 +418,8 @@
                                             Nota 
                                             <span id="nota-display" class="badge bg-warning text-dark fs-6 shadow-sm" style="display:none;"></span>
                                         </label>
-                                        <input type="number" class="form-control" id="nota" step="0.1" min="0" max="10" required>
+                                        <input type="number" class="form-control" id="nota" step="0.1" min="0" max="10" required inputmode="decimal">
+                                    <input type="hidden" id="sinopse-hidden">
                                     </div>
                                 </div>
                                 
@@ -933,6 +934,9 @@
                         <div class="d-flex align-items-center gap-2">
                             <button id="sugerir-filme-btn" class="btn btn-sugerir-modern">
                                 <i class="fas fa-magic me-2"></i> Sugerir Filme
+                            </button>
+                            <button id="btn-indicar-filme" class="btn btn-indicar-modern">
+                                <i class="fas fa-share-alt me-2"></i> Indicar Filme
                             </button>
                             
                             <div class="btn-group import-export-buttons gap-1">

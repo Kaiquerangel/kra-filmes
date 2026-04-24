@@ -161,3 +161,38 @@
     }
 }
 
+
+/* ── Setas das vitrines: mínimo 44×44px para toque ── */
+@media (max-width: 768px) {
+    .vitrine-arrow {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 1rem !important;
+    }
+}
+
+/* ── Paginação em telas pequenas: mostra menos botões ── */
+@media (max-width: 480px) {
+    .btn-pag-numero {
+        min-width: 30px;
+        height: 30px;
+        font-size: 0.72rem;
+        padding: 0 4px;
+    }
+    #paginas-numeradas {
+        max-width: 200px;
+        justify-content: center;
+    }
+}
+
+/* ── Poster hover: desabilitado em touch (sem mouseover) ── */
+@media (hover: none) {
+    .poster-hover-cell::after {
+        display: none !important;
+    }
+}
+
+/* ── Vitrines: previne conflito dragScroll × scroll vertical ── */
+.vitrine-scroll-container {
+    touch-action: pan-x;
+}

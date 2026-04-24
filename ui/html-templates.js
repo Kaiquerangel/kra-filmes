@@ -13,7 +13,7 @@ import { getResizedUrl } from './helpers.js';
 // LISTA — TABELA
 // ─────────────────────────────────────────────
 
-export const tabelaLinhaHTML = (f, index) => {
+export const tabelaLinhaHTML = (f, index, numero = null) => {
     const tagsHtml = f.tags?.length
         ? `<div class="mt-1">${f.tags.map(t =>
             `<span class="badge border border-secondary text-secondary me-1 fw-normal">
@@ -31,7 +31,7 @@ export const tabelaLinhaHTML = (f, index) => {
 
     return `
         <tr data-id="${f.id}" style="cursor:pointer;animation:rowFadeIn 0.25s ease forwards;animation-delay:${index*50}ms;opacity:0;">
-            <td class="col-num align-middle">${index + 1}</td>
+            <td class="col-num align-middle">${numero !== null ? numero : index + 1}</td>
             <td class="col-poster align-middle">${templates.poster(f.posterUrl, 'poster-thumb')}</td>
             <td class="col-titulo align-middle fw-bold text-truncate poster-hover-cell"
                 style="max-width:250px;"
@@ -57,6 +57,7 @@ export const tabelaLinhaHTML = (f, index) => {
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow">
                             <li><button class="dropdown-item btn-view"><i class="fas fa-eye me-2 text-primary"></i> Ver Detalhes</button></li>
+                            <li><button class="dropdown-item btn-indicar"><i class="fas fa-share-alt me-2 text-success"></i> Indicar para Amigo</button></li>
                             <li class="btn-edit-item"><button class="dropdown-item btn-edit"><i class="fas fa-pen me-2 text-info"></i> Editar</button></li>
                             <li class="btn-delete-item"><hr class="dropdown-divider"></li>
                             <li class="btn-delete-item"><button class="dropdown-item btn-delete text-danger"><i class="fas fa-trash me-2"></i> Excluir</button></li>
@@ -129,6 +130,9 @@ export const gridCardHTML = (f, index) => `
                     : ''}
                 <button class="btn-action btn-view" aria-label="Ver detalhes de ${f.titulo}" title="Ver Detalhes">
                     <i class="fas fa-eye" aria-hidden="true"></i>
+                </button>
+                <button class="btn-action btn-indicar" aria-label="Indicar ${f.titulo}" title="Indicar para Amigo">
+                    <i class="fas fa-share-alt" aria-hidden="true"></i>
                 </button>
                 <button class="btn-action btn-edit" aria-label="Editar ${f.titulo}" title="Editar">
                     <i class="fas fa-pen" aria-hidden="true"></i>
@@ -284,6 +288,14 @@ export const modalDetalhesHTML = (f) => {
                 </div>
             </div>
         </div>
+        ${f.sinopse
+            ? `<div class="mt-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.07);">
+                   <p style="font-size:0.72rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">
+                       <i class="fas fa-align-left me-1"></i> Sinopse
+                   </p>
+                   <p style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.6;margin:0;">${f.sinopse}</p>
+               </div>`
+            : '<div id="sinopse-box"></div>'}
         <div id="trailer-box" class="mt-4 w-100" style="min-height:50px;"></div>`;
 };
 

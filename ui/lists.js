@@ -68,7 +68,7 @@ export const renderTable = (lista, container, append = false, totalBanco = 0, of
     let numeroInicial = offset + 1;
     if (append) { const linhas = container.querySelectorAll('tbody tr[data-id]'); numeroInicial = linhas.length + 1; }
 
-    const rows = lista.map((f, i) => tabelaLinhaHTML(f, i)).join('');
+    const rows = lista.map((f, i) => tabelaLinhaHTML(f, i, numeroInicial + i - 1)).join('');
 
     if (append) { 
         const tbody = container.querySelector('tbody'); 

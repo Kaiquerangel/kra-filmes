@@ -107,7 +107,8 @@ export const FormManager = {
                 origem: document.getElementById('origem').value, 
                 assistido: assistido,
                 dataAssistido: assistido ? document.getElementById('data-assistido').value : null,
-                posterUrl: finalPosterUrl
+                posterUrl: finalPosterUrl,
+                sinopse: document.getElementById('sinopse-hidden')?.value || ''
             };
 
             const btnSubmit = form.querySelector('button[type="submit"]');
@@ -173,6 +174,10 @@ export const FormManager = {
                 data.Genre.split(', ').forEach(g => FormManager.adicionarGenero(g));
             }
             
+            // Salva sinopse em campo oculto para persistir no Firestore
+            const sinopseField = document.getElementById('sinopse-hidden');
+            if (sinopseField) sinopseField.value = (data.Plot && data.Plot !== 'N/A') ? data.Plot : '';
+
             if (!silencioso) UI.toast('Filme encontrado!');
         } catch(err) { 
             console.log("Não encontrado automaticamente", err); 
@@ -219,6 +224,8 @@ export const FormManager = {
         
         FormManager.generosSelecionados = filme.genero ? [...filme.genero] : [];
         FormManager.tagsSelecionadas = filme.tags ? [...filme.tags] : [];
+        const sinopseHidden = document.getElementById('sinopse-hidden');
+        if (sinopseHidden) sinopseHidden.value = filme.sinopse || '';
         
         UI.fillForm(
             filme, 
@@ -232,5 +239,15 @@ export const FormManager = {
             sectionCadastro.style.animation = 'fadeInUp 0.4s ease-out forwards';
         }
         document.getElementById('cadastro-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+
+    // Chamado ao fechar o formulário sem salvar — limpa estado de edição
+    cancelarEdicao: () => {
+        FormManager.filmeEmEdicaoId = null;
+        FormManager.generosSelecionados = [];
+        FormManager.tagsSelecionadas = [];
+        UI.clearForm?.();
+        const titulo = document.getElementById('cadastro-titulo');
+        if (titulo) titulo.innerHTML = '<i class="fas fa-edit me-2"></i> Cadastre Seu Filme';
     }
 };

@@ -1429,3 +1429,26 @@ body.dark-mode .mini-movie-card:hover .text-muted {
     border-radius: 50%;
     flex-shrink: 0;
 }
+
+/* ── Botão Indicar Filme ── */
+.btn-indicar-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    background: rgba(34, 197, 94, 0.1);
+    color: #4ade80;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+}
+.btn-indicar-modern:hover {
+    background: rgba(34, 197, 94, 0.22);
+    border-color: rgba(34, 197, 94, 0.55);
+    color: #86efac;
+    transform: translateY(-1px);
+}

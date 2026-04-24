@@ -1,5 +1,6 @@
 import { onSnapshot, query, collection, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-import { auth, db } from './config.js';
+import { auth, db, OMDB_API_KEY } from './config.js';
+window._OMDB_KEY = OMDB_API_KEY;
 import { AuthService, MovieService } from './services.js';
 import { UI } from './ui.js';
 import { Auth } from './auth.js';
@@ -8,6 +9,7 @@ import { Filters } from './filters.js';
 import { Achievements } from './achievements.js';
 import { FormManager } from './form.js';
 import { QRManager } from './qr-manager.js';
+import { abrirModalIndicar } from './ui/indicar.js';
 
 let currentUser = null;          
 let currentUserProfile = null;   
@@ -235,7 +237,7 @@ function getLista(aba) {
     switch(aba) {
         case 'assistidos':    return filmesFiltrados.filter(f => f.assistido);
         case 'naoAssistidos': return filmesFiltrados.filter(f => !f.assistido);
-        case 'favoritos':     return filmesFiltrados.filter(f => (f.nota || 0) >= 8);
+        case 'favoritos':     return filmesFiltrados.filter(f => f.assistido && (f.nota || 0) >= 8);
         default:              return filmesFiltrados;
     }
 }
@@ -275,11 +277,9 @@ function renderAba(aba) {
     const renderFn = currentView === 'table' ? UI.renderTable : UI.renderGrid;
     if (container) renderFn(lote, container, false, filmes.length, inicio);
 
-    // Stats sempre da lista completa filtrada
-    if (aba === 'todos' || !document.querySelector('#estatisticas-section')) {
-        const assistidosTotal = filmesFiltrados.filter(f => f.assistido);
-        requestAnimationFrame(() => UI.updateStats(assistidosTotal, filmesFiltrados.length, filmesFiltrados));
-    }
+    // Stats sempre da lista completa filtrada (independente da aba ativa)
+    const assistidosTotal = filmesFiltrados.filter(f => f.assistido);
+    requestAnimationFrame(() => UI.updateStats(assistidosTotal, filmesFiltrados.length, filmesFiltrados));
 
     atualizarControlesPaginacao(lista, pagina);
     atualizarContadorAba(lista, aba);
@@ -367,28 +367,42 @@ function atualizarControlesPaginacao(lista, pagAtual) {
     });
 }
 
+const TOGGLE_SECTIONS = ['cadastro-section', 'graficos-section', 'perfil-section'];
+
 function toggleSectionSmooth(section) {
     if (!section) return;
-    
-    if (section.style.display === 'none' || !section.style.display) {
+
+    const isHidden = section.style.display === 'none' || !section.style.display;
+
+    if (isHidden) {
+        // Fecha as outras seções antes de abrir esta
+        TOGGLE_SECTIONS.forEach(id => {
+            if (id !== section.id) {
+                const other = document.getElementById(id);
+                if (other && other.style.display !== 'none') {
+                    other.style.opacity = '0';
+                    other.style.transform = 'translateY(15px)';
+                    other.style.transition = 'opacity 0.2s ease-in, transform 0.2s ease-in';
+                    setTimeout(() => { other.style.display = 'none'; }, 200);
+                }
+            }
+        });
+
         section.style.display = 'block';
         section.style.opacity = '0';
         section.style.transform = 'translateY(15px)';
         section.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
-        
+
         requestAnimationFrame(() => {
             section.style.opacity = '1';
             section.style.transform = 'translateY(0)';
         });
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     } else {
         section.style.opacity = '0';
         section.style.transform = 'translateY(15px)';
         section.style.transition = 'opacity 0.3s ease-in, transform 0.3s ease-in';
-        
-        setTimeout(() => { 
-            section.style.display = 'none'; 
-        }, 300);
+        setTimeout(() => { section.style.display = 'none'; }, 300);
     }
 }
 
@@ -459,9 +473,20 @@ function setupAppListeners() {
         sugerirFilmeAleatorio();
     });
 
+    document.getElementById('btn-indicar-filme')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const nome = currentUser?.displayName || currentUserProfile?.nome || 'Um amigo';
+        abrirModalIndicar(filmes, nome);
+    });
+
     document.getElementById('nav-cadastrar-btn')?.addEventListener('click', (e) => {
         e.preventDefault();
-        toggleSectionSmooth(document.getElementById('cadastro-section'));
+        const section = document.getElementById('cadastro-section');
+        // Se está fechando o formulário e havia edição em andamento, cancela
+        if (section && section.style.display !== 'none' && FormManager.filmeEmEdicaoId) {
+            FormManager.cancelarEdicao();
+        }
+        toggleSectionSmooth(section);
     });
     
     document.getElementById('nav-graficos-btn')?.addEventListener('click', (e) => {
@@ -500,6 +525,12 @@ function setupAppListeners() {
         paginaAtual = 1;
         Object.keys(paginasPorAba).forEach(k => paginasPorAba[k] = 1);
         abaAtiva = 'todos';
+        // Ativa a aba "Todos" visualmente no Bootstrap
+        const todosTabEl = document.getElementById('todos-tab');
+        if (todosTabEl) {
+            const bsTab = window.bootstrap?.Tab?.getOrCreateInstance(todosTabEl);
+            if (bsTab) bsTab.show();
+        }
         refreshUI();
     });
     
@@ -725,6 +756,13 @@ function setupAppListeners() {
         
         const id = item.dataset.id;
         
+        if (target.closest('.btn-indicar')) {
+            e.stopPropagation();
+            const nome = currentUser?.displayName || currentUserProfile?.nome || 'Um amigo';
+            abrirModalIndicar([filme], nome);
+            return;
+        }
+
         if (target.closest('.btn-quick-watch')) {
             e.stopPropagation();
             if (isReadOnly) return;
@@ -784,11 +822,15 @@ function setupAppListeners() {
             if (filme) {
                 UI.showMovieDetailModal(
                     filme, 
-                    !isReadOnly ? async (fid, marcar) => { 
+                    !isReadOnly ? async (fid, marcar) => {
                         await MovieService.toggleAssistido(currentUser?.uid, fid, marcar);
-                        UI.toast(marcar ? 'Marcado como assistido!' : 'Desmarcado!'); 
-                    } : null, 
-                    (titulo, ano) => MovieService.getTrailer(titulo, ano)
+                        UI.toast(marcar ? 'Marcado como assistido!' : 'Desmarcado!');
+                    } : null,
+                    (titulo, ano) => {
+                        // Só busca trailer se o modal ainda estiver aberto
+                        if (!Swal.isVisible()) return Promise.resolve(null);
+                        return MovieService.getTrailer(titulo, ano);
+                    }
                 );
             }
         }
@@ -796,10 +838,11 @@ function setupAppListeners() {
 }
 
 function sugerirFilmeAleatorio() {
-    const pendentes = filmesFiltrados.filter(f => !f.assistido);
+    // Usa todos os filmes não assistidos (ignora filtros ativos para não surpreender o usuário)
+    const pendentes = filmes.filter(f => !f.assistido);
     
     if (!pendentes.length) {
-        return UI.alert('Lista vazia!', 'Não há filmes não assistidos com os filtros atuais.', 'warning');
+        return UI.alert('Lista vazia!', 'Não há filmes não assistidos na sua coleção.', 'warning');
     }
     
     const filmeSorteado = pendentes[Math.floor(Math.random() * pendentes.length)];
@@ -836,11 +879,11 @@ function exportarCSV() {
     const headers = ['titulo', 'ano', 'nota', 'direcao', 'atores', 'genero', 'tags', 'origem', 'assistido', 'dataAssistido', 'posterUrl'];
     
     const rows = filmesFiltrados.map(f => headers.map(header => { 
-        let val = f[header]; 
-        if (Array.isArray(val)) val = val.join('; '); 
-        if (val == null) val = ''; 
-        val = String(val).replace(/"/g, '""'); 
-        if (val.includes(',')) val = `"${val}"`; 
+        let val = f[header];
+        if (Array.isArray(val)) val = val.join('; ');
+        if (val == null) val = '';
+        val = String(val).replace(/"/g, '""').replace(/\n/g, ' ').replace(/\r/g, '');
+        if (val.includes(',') || val.includes('"') || val.includes('\n')) val = `"${val}"`;
         return val; 
     }).join(','));
     
@@ -887,9 +930,10 @@ function importarArquivo(e) {
                 UI.toast('Importação concluída!');
             }
         } catch(err) { 
-            UI.alert('Erro na Importação', err.message, 'error'); 
-        } 
-        e.target.value = '';
+            UI.alert('Erro na Importação', err.message, 'error');
+        } finally {
+            e.target.value = ''; // Limpa input sempre, mesmo após erro
+        }
     }; 
     
     reader.readAsText(file);
