@@ -3,6 +3,39 @@ import { MovieService } from './services.js';
 
 const isValidPosterUrl = (url) => url && url.startsWith('http') && !url.includes(window.location.origin);
 
+// Validação robusta dos campos antes de salvar
+function validarCampos(dados) {
+    const erros = [];
+
+    if (!dados.titulo?.trim())
+        erros.push('Título é obrigatório.');
+    else if (dados.titulo.trim().length > 200)
+        erros.push('Título deve ter no máximo 200 caracteres.');
+
+    if (dados.ano != null && dados.ano !== '') {
+        const ano = parseInt(dados.ano);
+        if (isNaN(ano) || ano < 1888 || ano > new Date().getFullYear() + 5)
+            erros.push(`Ano inválido. Deve ser entre 1888 e ${new Date().getFullYear() + 5}.`);
+    }
+
+    if (dados.nota != null && dados.nota !== '') {
+        const nota = parseFloat(dados.nota);
+        if (isNaN(nota) || nota < 0 || nota > 10)
+            erros.push('Nota deve ser entre 0 e 10.');
+    }
+
+    if (dados.assistido && !dados.dataAssistido)
+        erros.push('Informe a data em que assistiu o filme.');
+
+    if (dados.assistido && dados.dataAssistido) {
+        const data = new Date(dados.dataAssistido);
+        if (isNaN(data.getTime()) || data > new Date())
+            erros.push('Data assistido inválida ou no futuro.');
+    }
+
+    return erros;
+}
+
 const TMDB_KEY = ''; // Deixe vazio — usa fallback automático
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 
@@ -79,15 +112,133 @@ export const FormManager = {
             } 
         });
 
-        // Autocomplete: busca automaticamente enquanto o usuário digita (debounce 600ms)
-        let _autocompletTimer = null;
-        document.getElementById('titulo')?.addEventListener('input', () => {
-            clearTimeout(_autocompletTimer);
-            const val = document.getElementById('titulo').value.trim();
-            if (val.length < 3) return; // só busca a partir de 3 caracteres
-            _autocompletTimer = setTimeout(() => {
-                FormManager.buscarOMDb(true); // silencioso no autocomplete
-            }, 600);
+        // Busca de sugestões — lista de filmes para o usuário escolher
+        let _sugTimer = null;
+        let _sugAberto = false;
+
+        const inputTitulo = document.getElementById('titulo');
+
+        function fecharSugestoes() {
+            const box = document.getElementById('sugestoes-box');
+            if (box) box.remove();
+            _sugAberto = false;
+        }
+
+        function criarSugestaoItem(filme) {
+            const item = document.createElement('div');
+            item.className = 'sug-item';
+            item.style.cssText = `display:flex;align-items:center;gap:10px;padding:8px 12px;
+                cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.12s;`;
+
+            const poster = filme.Poster && filme.Poster !== 'N/A'
+                ? `<img src="${filme.Poster}" style="width:32px;height:48px;object-fit:cover;border-radius:3px;flex-shrink:0;">`
+                : `<div style="width:32px;height:48px;background:rgba(255,255,255,0.06);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="fas fa-film" style="font-size:0.6rem;color:rgba(255,255,255,0.2);"></i></div>`;
+
+            item.innerHTML = `
+                ${poster}
+                <div style="min-width:0;flex:1;">
+                    <div style="font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.92);
+                                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        ${filme.Title}
+                    </div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px;">
+                        ${filme.Year || ''}
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="font-size:0.65rem;color:rgba(255,255,255,0.2);flex-shrink:0;"></i>`;
+
+            item.addEventListener('mouseenter', () => item.style.background = 'rgba(59,130,246,0.12)');
+            item.addEventListener('mouseleave', () => item.style.background = '');
+
+            item.addEventListener('click', async () => {
+                fecharSugestoes();
+                if (inputTitulo) inputTitulo.value = filme.Title;
+                // Busca detalhes completos pelo imdbID
+                document.getElementById('api-loading').style.display = 'flex';
+                try {
+                    const data = await MovieService.getOMDbById(filme.imdbID);
+                    await FormManager.preencherComDados(data);
+                    UI.toast('Filme encontrado!');
+                } catch(e) {
+                    UI.toast('Erro ao carregar detalhes.', 'error');
+                } finally {
+                    document.getElementById('api-loading').style.display = 'none';
+                }
+            });
+
+            return item;
+        }
+
+        async function mostrarSugestoes(query) {
+            fecharSugestoes();
+            const resultados = await MovieService.searchOMDbSugestoes(query);
+            if (!resultados.length || !inputTitulo) return;
+
+            const rect = inputTitulo.getBoundingClientRect();
+            const box  = document.createElement('div');
+            box.id = 'sugestoes-box';
+            box.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;
+                width:${Math.max(rect.width, 340)}px;max-height:320px;overflow-y:auto;
+                background:#1a2235;border:1px solid rgba(255,255,255,0.12);border-radius:10px;
+                box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:99999;`;
+
+            // Header
+            const header = document.createElement('div');
+            header.style.cssText = `padding:8px 12px;font-size:0.68rem;color:rgba(255,255,255,0.35);
+                text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid rgba(255,255,255,0.06);
+                display:flex;justify-content:space-between;align-items:center;`;
+            header.innerHTML = `<span>${resultados.length} resultado${resultados.length > 1 ? 's' : ''} para "${query}"</span>
+                <button onclick="document.getElementById('sugestoes-box')?.remove()"
+                    style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:0.75rem;">✕</button>`;
+            box.appendChild(header);
+
+            resultados.forEach(f => box.appendChild(criarSugestaoItem(f)));
+
+            // Footer — opção de busca manual
+            const footer = document.createElement('div');
+            footer.style.cssText = `padding:8px 12px;font-size:0.75rem;color:rgba(255,255,255,0.35);
+                text-align:center;border-top:1px solid rgba(255,255,255,0.06);cursor:pointer;
+                transition:color 0.12s;`;
+            footer.innerHTML = `<i class="fas fa-keyboard me-1"></i>Não é o que procura? <span style="color:#60a5fa;">Preencha manualmente</span>`;
+            footer.addEventListener('click', () => {
+                fecharSugestoes();
+                if (inputTitulo) inputTitulo.focus();
+            });
+            box.appendChild(footer);
+
+            document.body.appendChild(box);
+            _sugAberto = true;
+
+            // Fecha ao clicar fora
+            setTimeout(() => {
+                document.addEventListener('click', function handler(e) {
+                    if (!box.contains(e.target) && e.target !== inputTitulo) {
+                        fecharSugestoes();
+                        document.removeEventListener('click', handler);
+                    }
+                });
+            }, 100);
+        }
+
+        inputTitulo?.addEventListener('input', () => {
+            clearTimeout(_sugTimer);
+            const val = inputTitulo.value.trim();
+
+            if (val.length < 2) { fecharSugestoes(); return; }
+
+            // IMDb URL — busca direto sem mostrar sugestões
+            if (/tt\d{7,8}/.test(val)) {
+                fecharSugestoes();
+                _sugTimer = setTimeout(() => FormManager.buscarOMDb(false), 300);
+                return;
+            }
+
+            // Sugestões a partir de 2 caracteres, debounce 500ms
+            _sugTimer = setTimeout(() => mostrarSugestoes(val), 500);
+        });
+
+        inputTitulo?.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') fecharSugestoes();
         });
         
         const inputGenero = document.getElementById('genero-input');
@@ -134,10 +285,20 @@ export const FormManager = {
             
             const finalPosterUrl = isValidPosterUrl(imgPreviewSrc) ? imgPreviewSrc : '';
             
+            // Validação extra antes de salvar
+            const tituloVal = document.getElementById('titulo').value.trim();
+            const anoVal    = parseInt(document.getElementById('ano').value) || null;
+            const notaVal   = parseFloat(document.getElementById('nota').value) || 0;
+
+            if (!tituloVal) return UI.alert('Atenção', 'O título é obrigatório.', 'warning');
+            if (tituloVal.length > 200) return UI.alert('Atenção', 'Título muito longo (máx. 200 caracteres).', 'warning');
+            if (anoVal && (anoVal < 1888 || anoVal > 2100)) return UI.alert('Atenção', 'Ano inválido. Cinema existe desde 1888.', 'warning');
+            if (notaVal < 0 || notaVal > 10) return UI.alert('Atenção', 'Nota deve ser entre 0 e 10.', 'warning');
+
             const dados = {
-                titulo: document.getElementById('titulo').value.trim(),
-                ano: parseInt(document.getElementById('ano').value) || null,
-                nota: parseFloat(document.getElementById('nota').value) || 0,
+                titulo: tituloVal,
+                ano: anoVal,
+                nota: notaVal,
                 direcao: document.getElementById('direcao').value.split(',').filter(Boolean).map(s => s.trim()),
                 atores: document.getElementById('atores').value.split(',').filter(Boolean).map(s => s.trim()),
                 genero: [...FormManager.generosSelecionados], 
@@ -147,7 +308,8 @@ export const FormManager = {
                 dataAssistido: assistido ? document.getElementById('data-assistido').value : null,
                 posterUrl: finalPosterUrl,
                 sinopse: document.getElementById('sinopse-hidden')?.value || '',
-                imdbId: document.getElementById('imdb-id-hidden')?.value || ''
+                imdbId:  document.getElementById('imdb-id-hidden')?.value || '',
+                pais:    document.getElementById('pais-hidden')?.value || ''
             };
 
             const btnSubmit = form.querySelector('button[type="submit"]');
@@ -176,6 +338,33 @@ export const FormManager = {
         });
     },
 
+    preencherComDados: async (data) => {
+        let posterOriginal = data.Poster;
+        if (posterOriginal && posterOriginal !== 'N/A') {
+            posterOriginal = posterOriginal.replace(/_SX[0-9]+.*\./, ".");
+        }
+        document.getElementById('titulo').value = data.Title || '';
+        document.getElementById('ano').value = parseInt(data.Year) || '';
+        const rating = parseFloat(data.imdbRating);
+        document.getElementById('nota').value = !isNaN(rating) ? rating : '';
+        document.getElementById('direcao').value = data.Director !== 'N/A' ? data.Director : '';
+        document.getElementById('atores').value = data.Actors !== 'N/A' ? data.Actors : '';
+        if (data.Country) {
+            document.getElementById('origem').value = data.Country.includes("Brazil") ? "Nacional" : "Internacional";
+        }
+        UI.updatePreviewPoster(posterOriginal && posterOriginal !== 'N/A' ? posterOriginal : '');
+        FormManager.generosSelecionados = [];
+        if (data.Genre && data.Genre !== 'N/A') {
+            data.Genre.split(', ').forEach(g => FormManager.adicionarGenero(g));
+        }
+        const imdbIdField = document.getElementById('imdb-id-hidden');
+        if (imdbIdField) imdbIdField.value = data.imdbID || '';
+        const sinopseField = document.getElementById('sinopse-hidden');
+        if (sinopseField && data.imdbID) {
+            buscarSinopsePtBr(data.imdbID).then(s => { if (sinopseField) sinopseField.value = s || ''; });
+        }
+    },
+
     buscarOMDb: async (silencioso = false) => {
         const titulo = document.getElementById('titulo').value; 
         const ano = document.getElementById('ano').value;
@@ -186,45 +375,7 @@ export const FormManager = {
         
         try {
             const data = await MovieService.searchOMDb(titulo, ano);
-            let posterOriginal = data.Poster;
-            
-            if (posterOriginal && posterOriginal !== 'N/A') {
-                posterOriginal = posterOriginal.replace(/_SX[0-9]+.*\./, ".");
-            }
-
-            document.getElementById('titulo').value = data.Title;
-            document.getElementById('ano').value = parseInt(data.Year) || '';
-            
-            // CORREÇÃO: Tratamento estrito do parseFloat para evitar que nota 0 fique vazia
-            const rating = parseFloat(data.imdbRating);
-            document.getElementById('nota').value = !isNaN(rating) ? rating : '';
-
-            document.getElementById('direcao').value = data.Director !== 'N/A' ? data.Director : '';
-            document.getElementById('atores').value = data.Actors !== 'N/A' ? data.Actors : '';
-            
-            if (data.Country) {
-                document.getElementById('origem').value = data.Country.includes("Brazil") ? "Nacional" : "Internacional";
-            }
-            
-            UI.updatePreviewPoster(posterOriginal !== 'N/A' ? posterOriginal : '');
-            
-            FormManager.generosSelecionados = []; 
-            if (data.Genre !== 'N/A') {
-                data.Genre.split(', ').forEach(g => FormManager.adicionarGenero(g));
-            }
-            
-            // Salva imdbID em campo oculto
-            const imdbIdField = document.getElementById('imdb-id-hidden');
-            if (imdbIdField) imdbIdField.value = data.imdbID || '';
-
-            // Busca sinopse em PT-BR via TMDB usando o imdbID
-            const sinopseField = document.getElementById('sinopse-hidden');
-            if (sinopseField && data.imdbID) {
-                buscarSinopsePtBr(data.imdbID).then(sinopse => {
-                    if (sinopseField) sinopseField.value = sinopse || '';
-                });
-            }
-
+            await FormManager.preencherComDados(data);
             if (!silencioso) UI.toast('Filme encontrado!');
         } catch(err) { 
             console.log("Não encontrado automaticamente", err); 
@@ -275,6 +426,8 @@ export const FormManager = {
         if (sinopseHidden) sinopseHidden.value = filme.sinopse || '';
         const imdbIdHidden = document.getElementById('imdb-id-hidden');
         if (imdbIdHidden) imdbIdHidden.value = filme.imdbId || '';
+        const paisHid = document.getElementById('pais-hidden');
+        if (paisHid) paisHid.value = filme.pais || '';
         
         UI.fillForm(
             filme, 
@@ -299,6 +452,8 @@ export const FormManager = {
         const imdbIdHidden  = document.getElementById('imdb-id-hidden');
         if (sinopseHidden) sinopseHidden.value = '';
         if (imdbIdHidden)  imdbIdHidden.value  = '';
+        const paisHidden = document.getElementById('pais-hidden');
+        if (paisHidden) paisHidden.value = '';
         UI.clearForm?.();
         const titulo = document.getElementById('cadastro-titulo');
         if (titulo) titulo.innerHTML = '<i class="fas fa-edit me-2"></i> Cadastre Seu Filme';

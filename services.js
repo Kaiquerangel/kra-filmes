@@ -81,7 +81,7 @@ export const MovieService = {
     },
     
     searchOMDb: async (titulo, ano = null) => {
-        // Detecta se é URL do IMDb e extrai o ID (tt1234567)
+        // Detecta se é URL/ID do IMDb e busca direto por ID
         const imdbMatch = titulo.match(/tt\d{7,8}/);
         let url;
         if (imdbMatch) {
@@ -90,10 +90,27 @@ export const MovieService = {
             url = `https://www.omdbapi.com/?t=${encodeURIComponent(titulo)}&apikey=${OMDB_API_KEY}`;
             if (ano) url += `&y=${ano}`;
         }
-        
         const res = await fetch(url);
         const data = await res.json();
         if (data.Response === "False") throw new Error("Filme não encontrado na API.");
+        return data;
+    },
+
+    // Busca lista de sugestões (até 10 resultados) pelo ?s= da OMDb
+    searchOMDbSugestoes: async (titulo, ano = null) => {
+        let url = `https://www.omdbapi.com/?s=${encodeURIComponent(titulo)}&type=movie&apikey=${OMDB_API_KEY}`;
+        if (ano) url += `&y=${ano}`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        if (data.Response === "False") return [];
+        return (data.Search || []).slice(0, 8);
+    },
+
+    // Busca detalhes completos por imdbID
+    getOMDbById: async (imdbId) => {
+        const res  = await fetch(`https://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_API_KEY}`);
+        const data = await res.json();
+        if (data.Response === "False") throw new Error("Filme não encontrado.");
         return data;
     },
 
@@ -139,6 +156,23 @@ export const MovieService = {
     // Atualiza campos específicos sem reescrever o documento inteiro
     updateCampos: (uid, id, campos) =>
         updateDoc(doc(db, "users", uid, "filmes", id), campos),
+
+    // Salva reavaliação mantendo histórico de notas anteriores
+    reavaliarFilme: async (uid, id, novaNota, filmeAtual) => {
+        const historico = filmeAtual.historicoNotas || [];
+        if (filmeAtual.nota && filmeAtual.nota !== novaNota) {
+            historico.push({
+                nota: filmeAtual.nota,
+                data: new Date().toISOString().slice(0, 10),
+                versao: historico.length + 1
+            });
+        }
+        return updateDoc(doc(db, "users", uid, "filmes", id), {
+            nota: novaNota,
+            historicoNotas: historico,
+            ultimaReavaliacao: new Date().toISOString().slice(0, 10)
+        });
+    },
     
     toggleAssistido: (uid, id, status) => {
         return updateDoc(doc(db, "users", uid, "filmes", id), {
