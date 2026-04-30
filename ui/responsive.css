@@ -235,3 +235,204 @@
         flex-direction: column;
     }
 }
+
+/* ── Abas da lista: scroll horizontal em mobile ── */
+@media (max-width: 576px) {
+    #filmesTab {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+    }
+    #filmesTab::-webkit-scrollbar { display: none; }
+    #filmesTab .nav-link {
+        white-space: nowrap;
+        font-size: 0.78rem;
+        padding: 6px 12px;
+    }
+}
+
+/* ── Abas mobile: wizard de cadastro ── */
+@media (max-width: 576px) {
+    #cadastro-section .row.g-3 > [class*='col-'] {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* ── Abas da lista: scroll horizontal em mobile ── */
+@media (max-width: 576px) {
+    #filmesTab {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 4px;
+        padding-bottom: 2px;
+    }
+    #filmesTab::-webkit-scrollbar { display: none; }
+    #filmesTab .nav-item { flex-shrink: 0; }
+    #filmesTab .nav-link {
+        white-space: nowrap;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ── Abas da lista — scroll horizontal em mobile ── */
+@media (max-width: 576px) {
+    #filmesTab {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        padding-bottom: 2px;
+    }
+    #filmesTab::-webkit-scrollbar { display: none; }
+    #filmesTab .nav-item { flex-shrink: 0; }
+    #filmesTab .nav-link { 
+        white-space: nowrap;
+        font-size: 0.78rem;
+        padding: 6px 12px;
+    }
+}
+
+/* =========================================================
+   MOBILE GERAL — NAVBAR E BOTÕES DE AÇÃO
+   ========================================================= */
+
+/* ── Navbar collapse mobile ── */
+@media (max-width: 991px) {
+    /* Collapse abre empurrando o conteúdo, não por cima */
+    #navbarNav {
+        background: rgba(15, 23, 42, 0.98);
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding: 12px 0;
+        margin-top: 4px;
+    }
+
+    /* Itens do menu centralizados e com padding correto */
+    #navbarNav .nav-link {
+        text-align: center !important;
+        padding: 10px 20px !important;
+        font-size: 1rem !important;
+        border-radius: 8px;
+        margin: 2px 12px;
+    }
+
+    #navbarNav .nav-link:hover {
+        background: rgba(255,255,255,0.06);
+    }
+
+    /* Remove ícones sociais do mobile — pouco espaço */
+    #navbarNav .navbar-nav.mx-auto {
+        display: none !important;
+    }
+
+    /* Boas-vindas e sair centralizados */
+    #welcome-message {
+        display: block !important;
+        text-align: center;
+        padding: 8px 0 4px;
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.6) !important;
+    }
+
+    #logout-container {
+        justify-content: center;
+        margin-top: 4px;
+    }
+
+    #logout-container .btn {
+        min-width: 120px;
+    }
+
+    /* Tema e nome alinhados */
+    .navbar .ms-auto {
+        align-items: center !important;
+    }
+}
+
+/* ── Botões de ação da lista — scroll horizontal ── */
+.lista-acoes-scroll {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    flex-wrap: nowrap;
+}
+
+.lista-acoes-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* Botões dentro do scroll — tamanho fixo, não encolhem */
+.btn-acao-lista {
+    flex-shrink: 0;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.btn-acao-secondary {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.65);
+}
+
+.btn-acao-secondary:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.btn-acao-listas {
+    background: rgba(168,85,247,0.12);
+    border: 1px solid rgba(168,85,247,0.3);
+    color: #c084fc;
+}
+
+.btn-acao-listas:hover {
+    background: rgba(168,85,247,0.22);
+    border-color: rgba(168,85,247,0.5);
+    color: #e9d5ff;
+}
+
+/* Botões de import/export — compactos */
+.import-export-buttons {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 576px) {
+    .btn-acao-lista {
+        padding: 6px 12px;
+        font-size: 0.78rem;
+    }
+
+    /* Oculta labels longos em telas muito pequenas */
+    .btn-acao-lista .btn-label-long {
+        display: none;
+    }
+}
+
+/* ── Navbar brand e toggler alinhados ── */
+@media (max-width: 576px) {
+    .navbar-brand {
+        font-size: 1rem !important;
+    }
+
+    .navbar-toggler {
+        padding: 4px 8px;
+        font-size: 0.9rem;
+    }
+}

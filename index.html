@@ -35,12 +35,14 @@
                     <i class="fas fa-film me-2"></i>Meus Filmes
                 </a>
                 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Menu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav mx-auto">
+                    <!-- Ícones sociais — só desktop -->
+                    <ul class="navbar-nav mx-auto d-none d-lg-flex">
                         <li class="nav-item">
                             <a class="nav-link social-icon" href="#" target="_blank">
                                 <i class="fab fa-github"></i>
@@ -53,7 +55,7 @@
                         </li>
                     </ul>
 
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center align-items-lg-center">
                         <li class="nav-item app-nav" style="display: none;">
                             <a class="nav-link" href="#" id="nav-sugerir-btn">
                                 <i class="fas fa-magic me-1"></i>Sugerir Filme
@@ -924,51 +926,61 @@
             <div class="card glass-card">
                 <div class="card-body">
                     
-                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
-                        <div class="d-flex align-items-center gap-3 flex-wrap">
-                            <h4 class="mb-0 text-white fw-bold d-flex align-items-center me-2" style="font-size: 1.25rem;">
-                                <i class="fas fa-list me-2 text-muted"></i> Lista de Filmes
+                    <div class="lista-header-wrapper mb-4">
+                        <!-- Linha 1: Título + view toggle + sort -->
+                        <div class="lista-header-row1">
+                            <h4 class="lista-titulo">
+                                <i class="fas fa-list me-2 text-muted"></i>
+                                <span class="d-none d-sm-inline">Lista de Filmes</span>
+                                <span class="d-inline d-sm-none">Filmes</span>
                             </h4>
-                            
-                            <div class="view-toggle-modern flex-shrink-0">
-                                <button type="button" class="btn-view-toggle" id="view-btn-table">
-                                    <i class="fas fa-table me-2"></i>Tabela
-                                </button>
-                                <button type="button" class="btn-view-toggle active" id="view-btn-grid">
-                                    <i class="fas fa-th-large me-2"></i>Cards
-                                </button>
-                            </div>
-
-                            <div class="sort-modern-container">
-                                <i class="fas fa-arrow-down sort-icon"></i>
-                                <select id="mobile-sort" class="form-select sort-modern-select">
-                                    <option value="cadastradoEm-desc">Adicionados Recentes</option>
-                                    <option value="nota-desc">Maior Nota</option>
-                                    <option value="nota-asc">Menor Nota</option>
-                                    <option value="ano-desc">Mais Novos (Ano)</option>
-                                    <option value="ano-asc">Mais Antigos (Ano)</option>
-                                    <option value="titulo-asc">A → Z</option>
-                                    <option value="titulo-desc">Z → A</option>
-                                </select>
+                            <div class="lista-header-controles">
+                                <div class="view-toggle-modern flex-shrink-0">
+                                    <button type="button" class="btn-view-toggle" id="view-btn-table">
+                                        <i class="fas fa-table me-1"></i><span class="d-none d-md-inline">Tabela</span>
+                                    </button>
+                                    <button type="button" class="btn-view-toggle active" id="view-btn-grid">
+                                        <i class="fas fa-th-large me-1"></i><span class="d-none d-md-inline">Cards</span>
+                                    </button>
+                                </div>
+                                <div class="sort-modern-container">
+                                    <i class="fas fa-arrow-down sort-icon"></i>
+                                    <select id="mobile-sort" class="form-select sort-modern-select">
+                                        <option value="cadastradoEm-desc">Recentes</option>
+                                        <option value="nota-desc">Maior Nota</option>
+                                        <option value="nota-asc">Menor Nota</option>
+                                        <option value="ano-desc">Mais Novos</option>
+                                        <option value="ano-asc">Mais Antigos</option>
+                                        <option value="titulo-asc">A → Z</option>
+                                        <option value="titulo-desc">Z → A</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2">
-                            <button id="sugerir-filme-btn" class="btn btn-sugerir-modern">
-                                <i class="fas fa-magic me-2"></i> Sugerir Filme
+                        <!-- Linha 2: Botões de ação (scroll horizontal em mobile) -->
+                        <div class="lista-acoes-scroll">
+                            <button id="sugerir-filme-btn" class="btn btn-sugerir-modern btn-acao-lista">
+                                <i class="fas fa-magic"></i>
+                                <span>Sugerir</span>
                             </button>
-                            <button id="btn-indicar-filme" class="btn btn-indicar-modern">
-                                <i class="fas fa-share-alt me-2"></i> Indicar Filme
+                            <button id="btn-indicar-filme" class="btn btn-indicar-modern btn-acao-lista">
+                                <i class="fas fa-share-alt"></i>
+                                <span>Indicar</span>
                             </button>
-                            <button id="btn-minhas-listas" class="btn btn-outline-secondary btn-sm rounded-pill">
-                                <i class="fas fa-bookmark me-1"></i> Minhas Listas
+                            <button id="btn-minhas-listas" class="btn btn-acao-lista btn-acao-listas">
+                                <i class="fas fa-bookmark"></i>
+                                <span>Listas</span>
                             </button>
-                            <button id="btn-comparar-amigo" class="btn btn-comparar-modern">
-                                <i class="fas fa-user-friends me-2"></i> Comparar com Amigo
+                            <button id="btn-comparar-amigo" class="btn btn-comparar-modern btn-acao-lista">
+                                <i class="fas fa-user-friends"></i>
+                                <span class="d-none d-sm-inline">Comparar</span>
+                                <span class="d-inline d-sm-none">Amigo</span>
                             </button>
-                            <button id="btn-importar-letterboxd" class="btn btn-outline-secondary btn-sm"
-                                    title="Importar lista do Letterboxd">
-                                <i class="fas fa-file-import me-1"></i> Letterboxd
+                            <button id="btn-importar-letterboxd" class="btn btn-acao-lista btn-acao-secondary"
+                                    title="Importar do Letterboxd">
+                                <i class="fas fa-file-import"></i>
+                                <span>Letterboxd</span>
                             </button>
                             
                             <div class="btn-group import-export-buttons gap-1">
