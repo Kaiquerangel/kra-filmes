@@ -58,6 +58,7 @@ export const tabelaLinhaHTML = (f, index, numero = null) => {
                         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow">
                             <li><button class="dropdown-item btn-view"><i class="fas fa-eye me-2 text-primary"></i> Ver Detalhes</button></li>
                             <li><button class="dropdown-item btn-indicar"><i class="fas fa-share-alt me-2 text-success"></i> Indicar para Amigo</button></li>
+                            <li><button class="dropdown-item btn-add-to-lista"><i class="fas fa-bookmark me-2" style="color:#a855f7"></i> Adicionar à Lista</button></li>
                             <li class="btn-edit-item"><button class="dropdown-item btn-edit"><i class="fas fa-pen me-2 text-info"></i> Editar</button></li>
                             <li class="btn-delete-item"><hr class="dropdown-divider"></li>
                             <li class="btn-delete-item"><button class="dropdown-item btn-delete text-danger"><i class="fas fa-trash me-2"></i> Excluir</button></li>
@@ -67,7 +68,7 @@ export const tabelaLinhaHTML = (f, index, numero = null) => {
             </td>
         </tr>
         <tr class="linha-detalhes">
-            <td colspan="12" class="p-0 border-0">
+            <td colspan="10" class="p-0 border-0">
                 <div class="collapse" id="detalhes-${f.id}">
                     <div class="p-3 bg-dark bg-opacity-25 border-bottom border-secondary text-white-50 small">
                         <div class="d-flex align-items-start">
@@ -122,24 +123,24 @@ export const gridCardHTML = (f, index) => `
             ${templates.poster(f.posterUrl, 'movie-poster-img', f.titulo)}
             ${f.assistido ? '<div class="movie-watched-badge"><i class="fas fa-eye"></i></div>' : ''}
             <div class="movie-card-actions">
-                ${!f.assistido
-                    ? `<button class="btn-action btn-quick-watch text-success"
-                              aria-label="Marcar ${f.titulo} como assistido" title="Já assisti!">
-                           <i class="fas fa-check-circle" aria-hidden="true"></i>
-                       </button>`
-                    : ''}
-                <button class="btn-action btn-view" aria-label="Ver detalhes de ${f.titulo}" title="Ver Detalhes">
-                    <i class="fas fa-eye" aria-hidden="true"></i>
-                </button>
-                <button class="btn-action btn-indicar" aria-label="Indicar ${f.titulo}" title="Indicar para Amigo">
-                    <i class="fas fa-share-alt" aria-hidden="true"></i>
-                </button>
-                <button class="btn-action btn-edit" aria-label="Editar ${f.titulo}" title="Editar">
-                    <i class="fas fa-pen" aria-hidden="true"></i>
-                </button>
-                <button class="btn-action btn-delete" aria-label="Excluir ${f.titulo}" title="Excluir">
-                    <i class="fas fa-trash" aria-hidden="true"></i>
-                </button>
+                <div class="actions-row">
+                    ${!f.assistido
+                        ? `<button class="btn-action btn-quick-watch" title="Já assisti!">
+                               <i class="fas fa-check-circle"></i>
+                           </button>`
+                        : `<button class="btn-action btn-view" title="Ver Detalhes">
+                               <i class="fas fa-eye"></i>
+                           </button>`}
+                    <button class="btn-action btn-add-to-lista" title="Adicionar à Lista">
+                        <i class="fas fa-bookmark"></i>
+                    </button>
+                    <button class="btn-action btn-edit" title="Editar">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                    <button class="btn-action btn-delete" title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>`;
@@ -288,6 +289,43 @@ export const modalDetalhesHTML = (f) => {
                 </div>
             </div>
         </div>
+        ${f.historicoNotas?.length ? `
+        <div class="mt-3 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">
+            <p style="font-size:0.7rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">
+                <i class="fas fa-history me-1"></i> Histórico de Notas
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${f.historicoNotas.map(h => `
+                    <span style="font-size:0.72rem;padding:3px 9px;border-radius:20px;
+                                 background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+                                 color:rgba(255,255,255,0.4);">
+                        ★ ${h.nota} <span style="opacity:0.5;">${h.data}</span>
+                    </span>`).join('')}
+                <span style="font-size:0.72rem;padding:3px 9px;border-radius:20px;
+                             background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.25);
+                             color:#fbbf24;">
+                    ★ ${f.nota} <span style="opacity:0.6;">atual</span>
+                </span>
+            </div>
+        </div>` : ''}
+
+        ${f.historicoNotas?.length ? `
+        <div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.06);">
+            <p style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">
+                <i class="fas fa-history me-1"></i> Histórico de notas
+            </p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                ${f.historicoNotas.map(h => `
+                    <div style="text-align:center;padding:5px 9px;border-radius:6px;
+                                border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);">
+                        <div style="font-size:0.85rem;font-weight:600;color:#fbbf24;">★ ${h.nota.toFixed(1)}</div>
+                        <div style="font-size:0.6rem;color:rgba(255,255,255,0.25);">
+                            ${new Date(h.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}
+                        </div>
+                    </div>`).join('')}
+            </div>
+        </div>` : ''}
+
         ${f.sinopse
             ? `<div class="mt-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.07);">
                    <p style="font-size:0.72rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">

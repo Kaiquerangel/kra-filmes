@@ -16,3 +16,4 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const OMDB_API_KEY = '5e553669';
 export const YOUTUBE_API_KEY = 'AIzaSyCa8ZBy8dIKECdHrOmazSWaGB96F_yi5cs';
+export const TMDB_API_KEY = '1b96a74262914d54473ad3e48e23856e';

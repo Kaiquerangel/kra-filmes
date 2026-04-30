@@ -135,6 +135,10 @@ export const MovieService = {
     },
 
     delete: (uid, id) => deleteDoc(doc(db, "users", uid, "filmes", id)),
+
+    // Atualiza campos específicos sem reescrever o documento inteiro
+    updateCampos: (uid, id, campos) =>
+        updateDoc(doc(db, "users", uid, "filmes", id), campos),
     
     toggleAssistido: (uid, id, status) => {
         return updateDoc(doc(db, "users", uid, "filmes", id), {

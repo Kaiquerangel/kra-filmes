@@ -1,6 +1,43 @@
 import { onSnapshot, query, collection, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-import { auth, db, OMDB_API_KEY } from './config.js';
+import { auth, db, OMDB_API_KEY, TMDB_API_KEY } from './config.js';
 window._OMDB_KEY = OMDB_API_KEY;
+window._TMDB_KEY = TMDB_API_KEY;
+
+// ── Web Worker: filtros e stats em thread separada ──
+let filterWorker = null;
+let workerCallbackFiltrar = null;
+
+function initWorker() {
+    try {
+        filterWorker = new Worker('./workers/filters.worker.js');
+        filterWorker.onmessage = (e) => {
+            if (e.data.tipo === 'filtrado' && workerCallbackFiltrar) {
+                workerCallbackFiltrar(e.data.filmes);
+                workerCallbackFiltrar = null;
+            }
+        };
+        filterWorker.onerror = () => { filterWorker = null; }; // fallback gracioso
+    } catch(err) {
+        filterWorker = null; // browsers sem suporte ou CSP restrito
+    }
+}
+
+function filtrarComWorker(filmes, filtros, sortBy, sortDir) {
+    return new Promise((resolve) => {
+        if (!filterWorker) {
+            // Fallback: roda na thread principal
+            resolve(Filters.aplicar(filmes));
+            return;
+        }
+        workerCallbackFiltrar = resolve;
+        // Serializa datas para passar ao worker (não serializa automaticamente)
+        const filmesSerializados = filmes.map(f => ({
+            ...f,
+            cadastradoEm: f.cadastradoEm instanceof Date ? f.cadastradoEm.toISOString() : f.cadastradoEm
+        }));
+        filterWorker.postMessage({ tipo: 'filtrar', payload: { filmes: filmesSerializados, filtros, sortBy, sortDir } });
+    });
+}
 import { AuthService, MovieService } from './services.js';
 import { UI } from './ui.js';
 import { Auth } from './auth.js';
@@ -10,12 +47,19 @@ import { Achievements } from './achievements.js';
 import { FormManager } from './form.js';
 import { QRManager } from './qr-manager.js';
 import { abrirModalIndicar } from './ui/indicar.js';
+import { getListas, criarLista, abrirGerenciadorListas, abrirAdicionarALista } from './ui/colecoes.js';
+import { verificarNotificacoesConquistas } from './ui/notificacoes-meta.js';
+import { mostrarOnboarding } from './ui/onboarding.js';
+import { mostrarModalLetterboxd } from './ui/letterboxd.js';
+import { mostrarComparacao } from './ui/comparar.js';
+import { mostrarModalReavaliacao, salvarReavaliacao } from './ui/historico-notas.js';
 
 let currentUser = null;          
 let currentUserProfile = null;   
 let unsubscribeFilmes = null;    
 let filmes = [];                 
-let filmesFiltrados = [];        
+let filmesFiltrados = [];
+let listasPersonalizadas = [];        
 let isReadOnly = false;
 
 let currentView = 'grid'; 
@@ -33,6 +77,7 @@ const paginasPorAba = { todos: 1, assistidos: 1, naoAssistidos: 1, favoritos: 1 
 let abaAtiva = 'todos'; // 'todos' | 'assistidos' | 'naoAssistidos' | 'favoritos' 
 
 document.addEventListener('DOMContentLoaded', () => {
+    initWorker();
     const savedTheme = localStorage.getItem('theme') || 'dark';
     UI.applyTheme(savedTheme);
 
@@ -197,25 +242,38 @@ function conectarBancoDeDados(uid) {
     
     const q = query(collection(db, "users", uid, "filmes"), limit(2000));
 
+    let onboardingMostrado = false;
     unsubscribeFilmes = onSnapshot(q, (snapshot) => {
         filmes = snapshot.docs.map(doc => {
             const data = doc.data();
             let dataCadastro = (data.cadastradoEm && data.cadastradoEm.toDate) 
                 ? data.cadastradoEm.toDate() 
                 : new Date(0);
-
-            return { 
-                id: doc.id, 
-                ...data, 
-                cadastradoEm: dataCadastro 
-            };
+            return { id: doc.id, ...data, cadastradoEm: dataCadastro };
         });
 
         filmes.sort((a, b) => a.cadastradoEm - b.cadastradoEm);
 
+        // Onboarding — apenas na primeira abertura com lista vazia
+        // Lembrete de backup mensal
+        verificarLembreteBackup(currentUserProfile, filmes);
+
+        if (!onboardingMostrado && filmes.length === 0 && currentUserProfile && !currentUserProfile.tourCompleto) {
+            onboardingMostrado = true;
+            setTimeout(() => mostrarOnboarding(async () => {
+                try {
+                    const { doc: fsDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
+                    await updateDoc(fsDoc(db, "users", currentUser.uid), { tourCompleto: true });
+                } catch(e) {}
+            }), 800);
+        }
+
         requestAnimationFrame(() => {
             Filters.atualizarExtras(filmes);
             Achievements.verificar(currentUserProfile, filmes);
+
+        // Notificação motivacional ao se aproximar de conquistas
+        _verificarMetasProximas(filmes);
             
             // Configura o botão de QR Code no perfil
             QRManager.setupShareButton(currentUserProfile);
@@ -231,6 +289,74 @@ function conectarBancoDeDados(uid) {
         console.error(error); 
         UI.toast("Erro de conexão com o banco de dados.", "error"); 
     });
+}
+
+// ── Backup: lembrete mensal ──────────────────────────────────
+function verificarLembreteBackup(perfil, filmes) {
+    if (!filmes.length) return;
+    const KEY = 'mf_backup_lembrete';
+    const ultimo = parseInt(localStorage.getItem(KEY) || '0');
+    const agora  = Date.now();
+    const UM_MES = 30 * 24 * 60 * 60 * 1000;
+
+    if (agora - ultimo < UM_MES) return;
+
+    // Mostra apenas se tem 10+ filmes
+    if (filmes.length < 10) return;
+
+    setTimeout(() => {
+        const div = document.createElement('div');
+        div.style.cssText = `position:fixed;bottom:24px;left:20px;
+            background:rgba(15,23,42,0.96);border:1px solid rgba(251,191,36,0.3);
+            border-left:3px solid #fbbf24;border-radius:10px;padding:14px 16px;
+            max-width:280px;z-index:9990;box-shadow:0 8px 24px rgba(0,0,0,0.4);
+            animation:slideInRight 0.35s ease forwards;`;
+        div.innerHTML = `
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+                <span style="font-size:1.1rem;">💾</span>
+                <div style="flex:1;">
+                    <div style="font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.9);margin-bottom:4px;">
+                        Lembrete de backup
+                    </div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);line-height:1.4;margin-bottom:8px;">
+                        Você tem ${filmes.length} filmes. Exporte para não perder seus dados.
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <button id="backup-agora" style="padding:4px 10px;border-radius:6px;border:none;
+                            background:#fbbf24;color:#000;font-size:0.72rem;font-weight:600;cursor:pointer;">
+                            Exportar agora
+                        </button>
+                        <button id="backup-depois" style="padding:4px 10px;border-radius:6px;
+                            border:1px solid rgba(255,255,255,0.1);background:transparent;
+                            color:rgba(255,255,255,0.4);font-size:0.72rem;cursor:pointer;">
+                            Depois
+                        </button>
+                    </div>
+                </div>
+                <button onclick="this.closest('div[style]').remove()" style="background:none;border:none;
+                    color:rgba(255,255,255,0.25);cursor:pointer;font-size:0.85rem;padding:0;">✕</button>
+            </div>`;
+
+        document.body.appendChild(div);
+
+        document.getElementById('backup-agora')?.addEventListener('click', () => {
+            document.getElementById('exportar-json-btn')?.click();
+            localStorage.setItem(KEY, Date.now().toString());
+            div.remove();
+        });
+        document.getElementById('backup-depois')?.addEventListener('click', () => {
+            localStorage.setItem(KEY, Date.now().toString());
+            div.remove();
+        });
+
+        setTimeout(() => {
+            if (div.parentNode) {
+                div.style.opacity = '0';
+                div.style.transition = 'opacity 0.4s ease';
+                setTimeout(() => div.remove(), 400);
+            }
+        }, 12000);
+    }, 3000);
 }
 
 function getLista(aba) {
@@ -251,6 +377,9 @@ function refreshUI() {
 
     renderAba(abaAtiva);
     atualizarIndicadoresVisuais();
+
+    // Verifica notificações de meta após atualização
+    verificarNotificacoesConquistas(filmes, currentUserProfile);
 }
 
 function renderAba(aba) {
@@ -336,15 +465,20 @@ function atualizarControlesPaginacao(lista, pagAtual) {
     const MAX_VISIBLE = 7;
     let paginas = [];
 
-    if (totalPaginas <= MAX_VISIBLE) {
+    // Em telas pequenas reduz o número de botões visíveis
+    const isMobile = window.innerWidth < 480;
+    const maxVis = isMobile ? 5 : MAX_VISIBLE;
+
+    if (totalPaginas <= maxVis) {
         paginas = Array.from({ length: totalPaginas }, (_, i) => i + 1);
     } else {
         paginas.push(1);
-        if (pagAtual > 3) paginas.push('...');
-        const start = Math.max(2, pagAtual - 1);
-        const end   = Math.min(totalPaginas - 1, pagAtual + 1);
+        const wing = isMobile ? 1 : 1;
+        if (pagAtual > 2 + wing) paginas.push('...');
+        const start = Math.max(2, pagAtual - wing);
+        const end   = Math.min(totalPaginas - 1, pagAtual + wing);
         for (let p = start; p <= end; p++) paginas.push(p);
-        if (pagAtual < totalPaginas - 2) paginas.push('...');
+        if (pagAtual < totalPaginas - 1 - wing) paginas.push('...');
         paginas.push(totalPaginas);
     }
 
@@ -473,10 +607,34 @@ function setupAppListeners() {
         sugerirFilmeAleatorio();
     });
 
+    document.getElementById('btn-importar-letterboxd')?.addEventListener('click', () => {
+        // Passa a lista atual para detecção de duplicatas
+        mostrarModalLetterboxd(filmes, async (filmesImportados) => {
+            for (const f of filmesImportados) {
+                try {
+                    await MovieService.save(currentUser.uid, f, null);
+                } catch(e) {
+                    console.warn('[Letterboxd] Falha ao salvar:', f.titulo, e.message);
+                }
+            }
+        });
+    });
+
+    document.getElementById('btn-minhas-listas')?.addEventListener('click', () => {
+        abrirGerenciadorListas(db, currentUser.uid, filmes, listasPersonalizadas, (l) => {
+            listasPersonalizadas = l;
+        });
+    });
+
     document.getElementById('btn-indicar-filme')?.addEventListener('click', (e) => {
         e.preventDefault();
         const nome = currentUser?.displayName || currentUserProfile?.nome || 'Um amigo';
         abrirModalIndicar(filmes, nome);
+    });
+
+    document.getElementById('btn-comparar-amigo')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        mostrarComparacao(db, currentUser?.uid, filmes, currentUserProfile);
     });
 
     document.getElementById('nav-cadastrar-btn')?.addEventListener('click', (e) => {
@@ -652,10 +810,18 @@ function setupAppListeners() {
         if (e.key.toLowerCase() === 'n') {
             e.preventDefault();
             const section = document.getElementById('cadastro-section');
-            if (section && section.style.display === 'none') {
-                document.getElementById('nav-cadastrar-btn')?.click();
+            const isHidden = !section || section.style.display === 'none' || !section.style.display;
+            if (isHidden) {
+                toggleSectionSmooth(section);
             }
-            setTimeout(() => document.getElementById('titulo')?.focus(), 400);
+            // Aguarda scroll + animação terminar antes de focar
+            setTimeout(() => {
+                const titulo = document.getElementById('titulo');
+                if (titulo) {
+                    titulo.focus();
+                    titulo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 420);
         }
         
         if (e.key.toLowerCase() === 'f') {
@@ -680,6 +846,74 @@ function setupAppListeners() {
                 cardAtivo.click(); 
             }
         }
+    });
+
+    // Dropdown da tabela — teleporta o menu para o body para escapar de
+    // qualquer stacking context criado por transform/will-change nos ancestrais
+    let _activeTableMenu = null;
+    let _activeTableToggle = null;
+
+    document.addEventListener('show.bs.dropdown', (e) => {
+        const toggle = e.target;
+        if (!toggle?.closest('.tabela-filmes')) return;
+
+        const dropdown = toggle.closest('.dropdown');
+        const menu = dropdown?.querySelector('.dropdown-menu');
+        if (!menu) return;
+
+        _activeTableToggle = toggle;
+        _activeTableMenu   = menu;
+
+        // Move para o body antes do Bootstrap posicionar
+        document.body.appendChild(menu);
+        menu.style.position   = 'fixed';
+        menu.style.display    = 'block';
+        menu.style.visibility = 'hidden';
+        menu.style.zIndex     = '99999';
+        menu.style.inset      = 'auto';
+        menu.style.transform  = 'none';
+        menu.style.margin     = '0';
+        menu.style.minWidth   = '180px';
+    });
+
+    document.addEventListener('shown.bs.dropdown', (e) => {
+        const toggle = e.target;
+        if (!toggle?.closest('.tabela-filmes') && toggle !== _activeTableToggle) return;
+        const menu = _activeTableMenu;
+        if (!menu) return;
+
+        const rect  = toggle.getBoundingClientRect();
+        const viewW = window.innerWidth;
+        const viewH = window.innerHeight;
+        const menuW = menu.offsetWidth  || 190;
+        const menuH = menu.offsetHeight || 170;
+
+        let top  = rect.bottom + 2;
+        let left = rect.right  - menuW;
+        if (left < 8)              left = 8;
+        if (left + menuW > viewW - 8) left = viewW - menuW - 8;
+        if (top  + menuH > viewH - 8) top  = rect.top - menuH - 2;
+
+        menu.style.top        = `${top}px`;
+        menu.style.left       = `${left}px`;
+        menu.style.visibility = 'visible';
+    });
+
+    document.addEventListener('hide.bs.dropdown', (e) => {
+        const toggle = e.target;
+        if (toggle !== _activeTableToggle) return;
+
+        const menu = _activeTableMenu;
+        if (!menu) return;
+
+        // Devolve o menu ao dropdown original antes de fechar
+        const dropdown = _activeTableToggle?.closest('.dropdown');
+        if (dropdown && !dropdown.contains(menu)) {
+            dropdown.appendChild(menu);
+        }
+        menu.style.cssText = '';
+        _activeTableMenu   = null;
+        _activeTableToggle = null;
     });
 
     // Setas das vitrines
@@ -763,6 +997,29 @@ function setupAppListeners() {
             return;
         }
 
+        if (target.closest('.btn-reavaliar')) {
+            e.stopPropagation();
+            if (isReadOnly || !filme.assistido) return;
+            mostrarModalReavaliacao(filme, async (fid, novaNota, notaAnterior) => {
+                try {
+                    await salvarReavaliacao(db, currentUser.uid, fid, novaNota, notaAnterior, filme.titulo);
+                    UI.toast(`Nota atualizada para ★ ${novaNota.toFixed(1)}`, 'success');
+                } catch(e) {
+                    UI.alert('Erro', e.message, 'error');
+                }
+            });
+            return;
+        }
+
+        if (target.closest('.btn-add-to-lista')) {
+            e.stopPropagation();
+            if (isReadOnly) return;
+            abrirAdicionarALista(db, currentUser.uid, id, listasPersonalizadas, (l) => {
+                listasPersonalizadas = l;
+            });
+            return;
+        }
+
         if (target.closest('.btn-quick-watch')) {
             e.stopPropagation();
             if (isReadOnly) return;
@@ -821,20 +1078,87 @@ function setupAppListeners() {
             const filme = filmes.find(x => x.id === targetId);
             if (filme) {
                 UI.showMovieDetailModal(
-                    filme, 
+                    filme,
                     !isReadOnly ? async (fid, marcar) => {
                         await MovieService.toggleAssistido(currentUser?.uid, fid, marcar);
                         UI.toast(marcar ? 'Marcado como assistido!' : 'Desmarcado!');
                     } : null,
                     (titulo, ano) => {
-                        // Só busca trailer se o modal ainda estiver aberto
                         if (!Swal.isVisible()) return Promise.resolve(null);
                         return MovieService.getTrailer(titulo, ano);
-                    }
+                    },
+                    !isReadOnly ? async (fid, sinopse) => {
+                        try {
+                            await MovieService.updateCampos(currentUser?.uid, fid, { sinopse });
+                        } catch(e) {
+                            console.warn('[Sinopse] Falha ao salvar:', e.message);
+                        }
+                    } : null,
+                    // Reavaliar nota — salva histórico
+                    !isReadOnly ? async (filmeObj) => {
+                        const { value: novaNota } = await Swal.fire({
+                            title: `Reavaliar: ${filmeObj.titulo}`,
+                            html: `<p style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-bottom:12px;">
+                                       Nota atual: <strong style="color:#fbbf24;">★ ${filmeObj.nota?.toFixed(1)}</strong>
+                                   </p>
+                                   <input id="nova-nota-input" type="number" min="0" max="10" step="0.5"
+                                       value="${filmeObj.nota || ''}"
+                                       inputmode="decimal"
+                                       style="width:120px;padding:10px;text-align:center;font-size:1.4rem;
+                                              font-weight:700;border-radius:10px;border:1px solid rgba(255,255,255,0.15);
+                                              background:rgba(255,255,255,0.05);color:#fff;">`,
+                            showCancelButton: true,
+                            confirmButtonText: 'Salvar nova nota',
+                            cancelButtonText: 'Cancelar',
+                            customClass: { popup: 'suggestion-swal-popup' },
+                            preConfirm: () => {
+                                const v = parseFloat(document.getElementById('nova-nota-input').value);
+                                if (isNaN(v) || v < 0 || v > 10) {
+                                    Swal.showValidationMessage('Nota deve ser entre 0 e 10');
+                                    return false;
+                                }
+                                return v;
+                            }
+                        });
+                        if (novaNota !== undefined) {
+                            await MovieService.reavaliarFilme(currentUser?.uid, filmeObj.id, novaNota, filmeObj);
+                            UI.toast(`Nova nota ${novaNota.toFixed(1)} salva! Histórico atualizado.`);
+                        }
+                    } : null
                 );
             }
         }
     });
+}
+
+let _ultimaNotifMeta = 0;
+function _verificarMetasProximas(filmes) {
+    // Throttle: só verifica a cada 5 minutos
+    const agora = Date.now();
+    if (agora - _ultimaNotifMeta < 300000) return;
+
+    const metas = [
+        { meta: 50,  atual: filmes.length, label: 'filmes cadastrados' },
+        { meta: 100, atual: filmes.length, label: 'filmes cadastrados' },
+        { meta: 200, atual: filmes.length, label: 'filmes cadastrados' },
+        { meta: 300, atual: filmes.length, label: 'filmes cadastrados' },
+        { meta: 7,   atual: (() => {
+            const dias = new Set(filmes.filter(f=>f.assistido&&f.dataAssistido).map(f=>f.dataAssistido.slice(0,10)));
+            let s=0; const hoje=new Date();
+            const ts = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            let c=new Date(hoje); if(!dias.has(ts(c))) c.setDate(c.getDate()-1);
+            while(dias.has(ts(c))){ s++; c.setDate(c.getDate()-1); } return s;
+        })(), label: 'dias seguidos' },
+    ];
+
+    for (const { meta, atual, label } of metas) {
+        const faltam = meta - atual;
+        if (faltam > 0 && faltam <= 5) {
+            _ultimaNotifMeta = agora;
+            UI.toast(`🏆 Você está a ${faltam} ${label === 'dias seguidos' ? 'dia(s)' : 'filme(s)'} de uma conquista! (${atual}/${meta} ${label})`);
+            break;
+        }
+    }
 }
 
 function sugerirFilmeAleatorio() {

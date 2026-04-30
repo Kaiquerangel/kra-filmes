@@ -3,6 +3,44 @@ import { MovieService } from './services.js';
 
 const isValidPosterUrl = (url) => url && url.startsWith('http') && !url.includes(window.location.origin);
 
+const TMDB_KEY = ''; // Deixe vazio — usa fallback automático
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+
+// Busca sinopse PT-BR: TMDB (por imdbID) → OMDb em inglês como fallback
+async function buscarSinopsePtBr(imdbId) {
+    if (!imdbId) return '';
+    try {
+        // 1. Busca o filme no TMDB pelo ID do IMDb
+        const findRes = await fetch(
+            `${TMDB_BASE}/find/${imdbId}?api_key=${window._TMDB_KEY || TMDB_KEY}&external_source=imdb_id&language=pt-BR`
+        );
+        const findData = await findRes.json();
+        const tmdbFilme = findData.movie_results?.[0];
+        if (!tmdbFilme) return '';
+
+        // 2. Busca detalhes em PT-BR
+        const detRes = await fetch(
+            `${TMDB_BASE}/movie/${tmdbFilme.id}?api_key=${window._TMDB_KEY || TMDB_KEY}&language=pt-BR`
+        );
+        const detData = await detRes.json();
+
+        // 3. Retorna overview PT-BR se disponível e não vazio
+        if (detData.overview && detData.overview.trim().length > 20) {
+            return detData.overview;
+        }
+
+        // 4. Fallback: overview em inglês
+        const engRes = await fetch(
+            `${TMDB_BASE}/movie/${tmdbFilme.id}?api_key=${window._TMDB_KEY || TMDB_KEY}&language=en-US`
+        );
+        const engData = await engRes.json();
+        return engData.overview || '';
+    } catch (e) {
+        console.warn('[Sinopse] Falha no TMDB:', e.message);
+        return '';
+    }
+}
+
 export const FormManager = {
     filmeEmEdicaoId: null,
     generosSelecionados: [],
@@ -108,7 +146,8 @@ export const FormManager = {
                 assistido: assistido,
                 dataAssistido: assistido ? document.getElementById('data-assistido').value : null,
                 posterUrl: finalPosterUrl,
-                sinopse: document.getElementById('sinopse-hidden')?.value || ''
+                sinopse: document.getElementById('sinopse-hidden')?.value || '',
+                imdbId: document.getElementById('imdb-id-hidden')?.value || ''
             };
 
             const btnSubmit = form.querySelector('button[type="submit"]');
@@ -174,9 +213,17 @@ export const FormManager = {
                 data.Genre.split(', ').forEach(g => FormManager.adicionarGenero(g));
             }
             
-            // Salva sinopse em campo oculto para persistir no Firestore
+            // Salva imdbID em campo oculto
+            const imdbIdField = document.getElementById('imdb-id-hidden');
+            if (imdbIdField) imdbIdField.value = data.imdbID || '';
+
+            // Busca sinopse em PT-BR via TMDB usando o imdbID
             const sinopseField = document.getElementById('sinopse-hidden');
-            if (sinopseField) sinopseField.value = (data.Plot && data.Plot !== 'N/A') ? data.Plot : '';
+            if (sinopseField && data.imdbID) {
+                buscarSinopsePtBr(data.imdbID).then(sinopse => {
+                    if (sinopseField) sinopseField.value = sinopse || '';
+                });
+            }
 
             if (!silencioso) UI.toast('Filme encontrado!');
         } catch(err) { 
@@ -226,6 +273,8 @@ export const FormManager = {
         FormManager.tagsSelecionadas = filme.tags ? [...filme.tags] : [];
         const sinopseHidden = document.getElementById('sinopse-hidden');
         if (sinopseHidden) sinopseHidden.value = filme.sinopse || '';
+        const imdbIdHidden = document.getElementById('imdb-id-hidden');
+        if (imdbIdHidden) imdbIdHidden.value = filme.imdbId || '';
         
         UI.fillForm(
             filme, 
@@ -246,6 +295,10 @@ export const FormManager = {
         FormManager.filmeEmEdicaoId = null;
         FormManager.generosSelecionados = [];
         FormManager.tagsSelecionadas = [];
+        const sinopseHidden = document.getElementById('sinopse-hidden');
+        const imdbIdHidden  = document.getElementById('imdb-id-hidden');
+        if (sinopseHidden) sinopseHidden.value = '';
+        if (imdbIdHidden)  imdbIdHidden.value  = '';
         UI.clearForm?.();
         const titulo = document.getElementById('cadastro-titulo');
         if (titulo) titulo.innerHTML = '<i class="fas fa-edit me-2"></i> Cadastre Seu Filme';

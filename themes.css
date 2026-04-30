@@ -93,9 +93,132 @@ body.theme-ocean .btn-pag-numero.active {
 
 /* ── Light (claro) ── */
 body.theme-light {
-    --cor-acento-principal: #3b82f6;
-    --cor-acento-secundario: #60a5fa;
+    --cor-acento-principal: #2563eb;
+    --cor-acento-secundario: #3b82f6;
 }
+
+/* Fundo e base */
+body.theme-light,
+body.theme-light.dark-mode {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+}
+
+body.theme-light .navbar {
+    background: #fff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06) !important;
+}
+body.theme-light .navbar .nav-link,
+body.theme-light .navbar .navbar-brand,
+body.theme-light #welcome-message {
+    color: #1e293b !important;
+}
+body.theme-light .navbar .btn-outline-light {
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+/* Cards */
+body.theme-light .card,
+body.theme-light .glass-card {
+    background: #fff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
+}
+body.theme-light .card-title { color: #334155 !important; }
+
+/* Texto geral */
+body.theme-light .text-white    { color: #1e293b !important; }
+body.theme-light .text-white-50 { color: #64748b !important; }
+body.theme-light .text-muted    { color: #94a3b8 !important; }
+body.theme-light small, body.theme-light .small { color: #64748b !important; }
+
+/* Tabela */
+body.theme-light .table-dark,
+body.theme-light .tabela-filmes {
+    background: #fff !important;
+    color: #1e293b !important;
+}
+body.theme-light .tabela-filmes th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+}
+body.theme-light .tabela-filmes tr:hover { background: #f1f5f9 !important; }
+body.theme-light .tabela-filmes td { border-color: #f1f5f9 !important; color: #334155 !important; }
+
+/* Stat cards */
+body.theme-light .stat-card {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+body.theme-light .stat-card-value   { color: #1e293b !important; }
+body.theme-light .stat-card-title   { color: #64748b !important; }
+body.theme-light .stat-card-subtitle{ color: #94a3b8 !important; }
+
+/* Abas */
+body.theme-light .nav-tabs-modern .nav-link       { color: #64748b !important; }
+body.theme-light .nav-tabs-modern .nav-link.active{
+    background: rgba(37,99,235,0.1) !important;
+    border-color: rgba(37,99,235,0.3) !important;
+    color: #2563eb !important;
+}
+
+/* Filtros */
+body.theme-light .form-control,
+body.theme-light .form-select {
+    background: #fff !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+}
+body.theme-light .form-control::placeholder { color: #94a3b8 !important; }
+
+/* Botões */
+body.theme-light .btn-gradient,
+body.theme-light .btn-sugerir-modern {
+    background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+    color: #fff !important;
+}
+body.theme-light .btn-outline-secondary {
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+/* Ranking bars */
+body.theme-light .ranking-bar-label { color: #475569 !important; }
+body.theme-light .ranking-bar-count { color: #94a3b8 !important; }
+body.theme-light .ranking-bar-container { background: #f1f5f9 !important; }
+
+/* Paginação */
+body.theme-light .btn-pag-numero {
+    border-color: #e2e8f0 !important;
+    color: #64748b !important;
+}
+body.theme-light .btn-pag-numero:hover  { background: #f1f5f9 !important; color: #1e293b !important; }
+body.theme-light .btn-pag-numero.active { background: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
+
+/* Dropdown menus */
+body.theme-light .dropdown-menu-dark {
+    background: #fff !important;
+    border: 1px solid #e2e8f0 !important;
+}
+body.theme-light .dropdown-menu-dark .dropdown-item { color: #334155 !important; }
+body.theme-light .dropdown-menu-dark .dropdown-item:hover { background: #f1f5f9 !important; }
+body.theme-light .dropdown-menu-dark .dropdown-divider { border-color: #e2e8f0 !important; }
+
+/* Badges e tags */
+body.theme-light .tag-pill {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+/* Chart cards */
+body.theme-light .chart-card { background: #f8fafc !important; border-color: #e2e8f0 !important; }
+body.theme-light .chart-desc { color: #64748b !important; }
+body.theme-light .chart-legend-row { color: #64748b !important; }
+body.theme-light .ranking-title { color: #334155 !important; }
 
 /* Poster hover JS-injected via CSS var */
 .poster-hover-cell[style*="--poster-url"]::after {

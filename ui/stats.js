@@ -154,7 +154,18 @@ export const renderRankings = (elId, data) => {
     container.innerHTML = rankingBarsHTML(data);
 };
 
+const isMobileDevice = () => window.matchMedia('(hover:none)').matches;
+
 export const renderCharts = (filmes) => {
+    // Opções de interação touch para Chart.js (substitui touchPlugin indefinido)
+    const touchPlugin = {
+        interaction: {
+            mode: 'nearest',
+            intersect: false,
+            axis: 'x'
+        },
+        events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove']
+    };
     if (!ChartJS) return;
     
     const isDark = els.body.classList.contains('dark-mode');
@@ -170,10 +181,20 @@ export const renderCharts = (filmes) => {
         
         if (chartsInstances[id]) chartsInstances[id].destroy();
         
-        chartsInstances[id] = new ChartJS(ctx, { 
-            type, 
-            data: { labels, datasets: [{ label: labelStr, data, backgroundColor: bgColors, borderColor: borderColor || (Array.isArray(bgColors)?bgColors[0]:bgColors), borderWidth: type.includes('line') ? 2 : 0, fill: true, tension: 0.3 }] }, 
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: colorText, boxWidth: 12 } } }, scales: opts.scales || {}, indexAxis: opts.indexAxis || 'x' } 
+        const mobile = isMobileDevice();
+        chartsInstances[id] = new ChartJS(ctx, {
+            type,
+            data: { labels, datasets: [{ label: labelStr, data, backgroundColor: bgColors, borderColor: borderColor || (Array.isArray(bgColors)?bgColors[0]:bgColors), borderWidth: type.includes('line') ? 2 : 0, fill: true, tension: 0.3 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'nearest', intersect: false },
+                events: mobile
+                    ? ['touchstart', 'touchmove', 'click']
+                    : ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove'],
+                plugins: { legend: { display: true, labels: { color: colorText, boxWidth: 12 } } },
+                scales: opts.scales || {},
+                indexAxis: opts.indexAxis || 'x'
+            }
         });
     };
     
@@ -497,6 +518,143 @@ export const renderCharts = (filmes) => {
                 const el = document.getElementById('radarGostosChart');
                 if (el) el.parentElement.innerHTML = '<p class="text-muted small text-center pt-5">Assista mais filmes de gêneros variados para ver o radar.</p>';
             }
+        }
+    }
+
+    // ── Relógio Cinematográfico (por dia da semana) ──
+    {
+        const ctx = document.getElementById('relogioCinemaChart')?.getContext('2d');
+        if (ctx) {
+            if (chartsInstances['relogioCinemaChart']) chartsInstances['relogioCinemaChart'].destroy();
+            const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+            const contDias = new Array(7).fill(0);
+            filmes.filter(f => f.assistido && f.dataAssistido).forEach(f => {
+                const d = new Date(f.dataAssistido.replace(/-/g,'/'));
+                contDias[d.getDay()]++;
+            });
+            const maxDia = Math.max(...contDias, 1);
+            const diaColors = contDias.map(v => {
+                const pct = v / maxDia;
+                if (pct > 0.75) return 'rgba(59,130,246,0.85)';
+                if (pct > 0.4)  return 'rgba(99,102,241,0.7)';
+                return 'rgba(139,92,246,0.45)';
+            });
+            chartsInstances['relogioCinemaChart'] = new ChartJS(ctx, {
+                type: 'bar',
+                data: { labels: dias, datasets: [{ label: 'Filmes', data: contDias, backgroundColor: diaColors, borderWidth: 0, borderRadius: 6 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    ...touchPlugin,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: c => ` ${c.parsed.y} filme(s) assistidos` } }
+                    },
+                    scales: {
+                        x: { ticks: { color: colorText }, grid: { display: false } },
+                        y: { ticks: { color: colorText, precision: 0 }, grid: { color: colorGrid }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+    }
+
+
+    // ── Evolução do Gosto (nota média por ano de cadastro) ──
+    {
+        const ctx = document.getElementById('evolucaoGostoChart')?.getContext('2d');
+        if (ctx) {
+            if (chartsInstances['evolucaoGostoChart']) chartsInstances['evolucaoGostoChart'].destroy();
+            const porAnoUso = {};
+            filmes.filter(f => f.assistido && f.nota && f.cadastradoEm).forEach(f => {
+                const ano = new Date(f.cadastradoEm?.seconds ? f.cadastradoEm.seconds*1000 : f.cadastradoEm).getFullYear();
+                if (!porAnoUso[ano]) porAnoUso[ano] = { s: 0, c: 0 };
+                porAnoUso[ano].s += f.nota;
+                porAnoUso[ano].c++;
+            });
+            const anos = Object.keys(porAnoUso).sort();
+            const medias = anos.map(a => parseFloat((porAnoUso[a].s/porAnoUso[a].c).toFixed(2)));
+            const mediaGeral2 = medias.length ? parseFloat((medias.reduce((s,v)=>s+v,0)/medias.length).toFixed(2)) : 0;
+            if (anos.length >= 2) {
+                chartsInstances['evolucaoGostoChart'] = new ChartJS(ctx, {
+                    type: 'line',
+                    data: { labels: anos, datasets: [
+                        { label: 'Nota média', data: medias, borderColor: '#a855f7', backgroundColor: 'rgba(168,85,247,0.1)', borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 6, pointBackgroundColor: medias.map(m => m >= mediaGeral2 ? '#22c55e' : '#f87171'), pointBorderWidth: 0 },
+                        { label: `Média geral (${mediaGeral2.toFixed(1)})`, data: anos.map(()=>mediaGeral2), borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderDash: [5,4], pointRadius: 0, fill: false }
+                    ]},
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        ...touchPlugin,
+                        plugins: {
+                            legend: { display: true, labels: { color: colorText, boxWidth: 12 } },
+                            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}` } }
+                        },
+                        scales: {
+                            x: { ticks: { color: colorText }, grid: { display: false } },
+                            y: { min: 5, max: 10, ticks: { color: colorText, stepSize: 0.5 }, grid: { color: colorGrid } }
+                        }
+                    }
+                });
+            } else if (ctx.canvas?.parentElement) {
+                ctx.canvas.parentElement.innerHTML = '<p class="text-muted small text-center pt-5">Dados insuficientes.<br>Use o app por mais de 1 ano para ver a evolução.</p>';
+            }
+        }
+    }
+
+
+    // ── Evolução da Nota Média ao longo do tempo de uso ──
+    {
+        const evolCtx = document.getElementById('evolucaoGostoChart')?.getContext('2d');
+        if (evolCtx) {
+            if (chartsInstances['evolucaoGostoChart']) chartsInstances['evolucaoGostoChart'].destroy();
+            // Agrupa por mês de cadastro (não de lançamento)
+            const porMesCad = {};
+            filmes.filter(f => f.nota && f.cadastradoEm).forEach(f => {
+                const d = new Date(f.cadastradoEm);
+                const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                if (!porMesCad[k]) porMesCad[k] = { sum: 0, count: 0 };
+                porMesCad[k].sum += f.nota;
+                porMesCad[k].count++;
+            });
+            const meses = Object.keys(porMesCad).sort();
+            // Média móvel de 3 meses para suavizar
+            const medias = meses.map((m, i) => {
+                const slice = meses.slice(Math.max(0, i-1), i+2);
+                const total = slice.reduce((s, k) => s + porMesCad[k].sum, 0);
+                const count = slice.reduce((s, k) => s + porMesCad[k].count, 0);
+                return count ? parseFloat((total / count).toFixed(2)) : null;
+            });
+            const labels = meses.map(m => {
+                const [y, mo] = m.split('-');
+                return new Date(Number(y), Number(mo)-1).toLocaleString('pt-BR', {month:'short', year:'2-digit'}).replace('. ','/');
+            });
+            chartsInstances['evolucaoGostoChart'] = new ChartJS(evolCtx, {
+                type: 'line',
+                data: { labels, datasets: [{
+                    label: 'Nota média (média móvel 3m)',
+                    data: medias,
+                    borderColor: '#a855f7',
+                    backgroundColor: 'rgba(168,85,247,0.1)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: medias.length > 24 ? 0 : 3,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#a855f7',
+                    spanGaps: true
+                }]},
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'nearest', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ` Nota média: ${ctx.parsed.y?.toFixed(1)}` } }
+                    },
+                    scales: {
+                        x: { ticks: { color: colorText, maxTicksLimit: 12, maxRotation: 45 }, grid: { display: false } },
+                        y: { min: 5, max: 10, ticks: { color: colorText, stepSize: 0.5 }, grid: { color: colorGrid } }
+                    }
+                }
+            });
         }
     }
 

@@ -420,6 +420,8 @@
                                         </label>
                                         <input type="number" class="form-control" id="nota" step="0.1" min="0" max="10" required inputmode="decimal">
                                     <input type="hidden" id="sinopse-hidden">
+                                    <input type="hidden" id="imdb-id-hidden">
+                                    <input type="hidden" id="pais-hidden">
                                     </div>
                                 </div>
                                 
@@ -671,7 +673,7 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Top 5 Gêneros</h5>
-                                <p class="chart-desc">Os 5 gêneros com mais filmes na sua coleção. Passa o mouse sobre cada fatia para ver a quantidade exata.</p>
+                                <p class="chart-desc">Todos os filmes da sua coleção. Os 5 gêneros com mais filmes cadastrados.</p>
                                 <div class="chart-legend-row">
                                     <span class="chart-legend-dot" style="background:#a855f7"></span><span>Drama</span>
                                     <span class="chart-legend-dot" style="background:#3b82f6"></span><span>Action</span>
@@ -687,7 +689,7 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Top 5 Direção</h5>
-                                <p class="chart-desc">Os diretores com mais filmes assistidos. O tamanho da barra é proporcional à quantidade de filmes de cada um na sua coleção.</p>
+                                <p class="chart-desc">Todos os filmes assistidos. Diretores com mais filmes na sua coleção.</p>
                                 <div style="height: 300px;"><canvas id="diretoresChart"></canvas></div>
                             </div>
                         </div>
@@ -696,7 +698,7 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Origem dos Filmes</h5>
-                                <p class="chart-desc">Proporção entre filmes nacionais (brasileiros) e internacionais que você assistiu. Cada fatia mostra o percentual do total.</p>
+                                <p class="chart-desc">Todos os filmes assistidos. Proporção entre nacional e internacional.</p>
                                 <div class="chart-legend-row">
                                     <span class="chart-legend-dot" style="background:#3b82f6"></span><span>Internacional</span>
                                     <span class="chart-legend-dot" style="background:#14b8a6"></span><span>Nacional</span>
@@ -709,7 +711,7 @@
                         <div class="col-lg-6 col-md-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Filmes por Ano de Lançamento</h5>
-                                <p class="chart-desc">Quantos filmes você assistiu de cada ano de lançamento, mostrando os 10 anos com mais títulos. Revela de qual época são os filmes que você mais consome.</p>
+                                <p class="chart-desc">Todos os filmes assistidos. Os 10 anos de lançamento com mais títulos na sua coleção.</p>
                                 <div style="height: 300px;"><canvas id="anosChart"></canvas></div>
                             </div>
                         </div>
@@ -718,7 +720,7 @@
                         <div class="col-lg-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Distribuição de Notas</h5>
-                                <p class="chart-desc">Quantos filmes você avaliou com cada nota, de 0 a 10. A cor indica a faixa de qualidade.</p>
+                                <p class="chart-desc">Todos os filmes com nota registrada. Distribuição de 0 a 10.</p>
                                 <div class="chart-legend-row">
                                     <span class="chart-legend-dot" style="background:rgba(239,68,68,0.75)"></span><span>Ruim (0–4)</span>
                                     <span class="chart-legend-dot" style="background:rgba(234,179,8,0.75)"></span><span>Ok (5–6)</span>
@@ -733,7 +735,7 @@
                         <div class="col-lg-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Nota Média por Década</h5>
-                                <p class="chart-desc">Sua nota média agrupada por década de lançamento. A linha tracejada é sua média geral. <span style="color:#22c55e;font-weight:600;">Verde</span> = acima da média, <span style="color:#3b82f6;font-weight:600;">Azul</span> = na média, <span style="color:#f97316;font-weight:600;">Laranja</span> = abaixo. Passe o mouse para ver quantos filmes cada década tem.</p>
+                                <p class="chart-desc">Todos os filmes com nota. Média agrupada por década de lançamento. <span style="color:#22c55e;font-weight:600;">Verde</span> = acima da média, <span style="color:#3b82f6;font-weight:600;">Azul</span> = na média, <span style="color:#f97316;font-weight:600;">Laranja</span> = abaixo. Passe o mouse para ver quantos filmes cada década tem.</p>
                                 <div class="chart-legend-row">
                                     <span class="chart-legend-dot" style="background:rgba(34,197,94,0.75)"></span><span>Acima da média</span>
                                     <span class="chart-legend-dot" style="background:rgba(59,130,246,0.75)"></span><span>Na média</span>
@@ -747,7 +749,7 @@
                         <div class="col-lg-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Assistidos nos Últimos 12 Meses</h5>
-                                <p class="chart-desc">Quantos filmes você marcou como assistido em cada mês dos últimos 12 meses. Barras mais escuras = meses mais ativos. Ideal para ver seu ritmo de consumo.</p>
+                                <p class="chart-desc">Últimos 12 meses. Quantos filmes você marcou como assistido em cada mês.</p>
                                 <div style="height: 280px;"><canvas id="assistidosMesChart"></canvas></div>
                             </div>
                         </div>
@@ -756,7 +758,7 @@
                         <div class="col-lg-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Qualidade por Era do Cinema</h5>
-                                <p class="chart-desc">Para cada década, mostra a proporção de filmes que você avaliou em cada faixa de nota. Permite comparar se você tende a gostar mais de filmes antigos ou recentes. Passe o mouse sobre cada barra para ver os percentuais.</p>
+                                <p class="chart-desc">Todos os filmes com nota. Proporção de notas por década de lançamento.</p>
                                 <div class="chart-legend-row">
                                     <span class="chart-legend-dot" style="background:rgba(34,197,94,0.8)"></span><span>Ótimo (≥8)</span>
                                     <span class="chart-legend-dot" style="background:rgba(59,130,246,0.8)"></span><span>Bom (7–7.9)</span>
@@ -771,7 +773,7 @@
                         <div class="col-lg-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Progresso Acumulado</h5>
-                                <p class="chart-desc">Total de filmes assistidos ao longo do tempo, mês a mês desde o início da sua coleção. A linha só sobe — mostra sua jornada cinematográfica completa.</p>
+                                <p class="chart-desc">Desde o início da sua coleção. Total acumulado de filmes assistidos mês a mês.</p>
                                 <div style="height: 280px;"><canvas id="progressoAcumuladoChart"></canvas></div>
                             </div>
                         </div>
@@ -780,7 +782,7 @@
                         <div class="col-lg-6">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Radar de Gostos</h5>
-                                <p class="chart-desc">Sua nota média para cada um dos seus gêneros mais assistidos. Quanto mais próximo da borda, mais você gosta daquele gênero. O label mostra a quantidade de filmes assistidos.</p>
+                                <p class="chart-desc">Todos os filmes com nota. Nota média dos 7 gêneros mais assistidos.</p>
                                 <div style="height: 300px;"><canvas id="radarGostosChart"></canvas></div>
                             </div>
                         </div>
@@ -789,8 +791,28 @@
                         <div class="col-lg-12">
                             <div class="chart-card">
                                 <h5 class="ranking-title">Gênero × Nota Média</h5>
-                                <p class="chart-desc">Comparação entre quantidade assistida e nota média por gênero. A barra mostra quantos filmes você assistiu (relativo ao gênero mais assistido). A coluna <strong>"vs Geral"</strong> indica se você tende a gostar mais (↑ verde) ou menos (↓ vermelho) daquele gênero em relação à sua média geral de notas.</p>
+                                <p class="chart-desc">Todos os filmes com nota. Quantidade assistida e média por gênero. A barra mostra quantos filmes você assistiu (relativo ao gênero mais assistido). A coluna <strong>"vs Geral"</strong> indica se você tende a gostar mais (↑ verde) ou menos (↓ vermelho) daquele gênero em relação à sua média geral de notas.</p>
                                 <div id="heatmap-genero-nota" style="overflow-x:auto;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Relógio Cinematográfico -->
+                        <div class="col-lg-6">
+                            <div class="chart-card">
+                                <h5 class="ranking-title">⏰ Relógio Cinematográfico</h5>
+                                <p class="chart-desc">Todos os filmes com data de registro. Distribuição por dia da semana.</p>
+                                <div style="height:280px;"><canvas id="relogioCinemaChart"></canvas></div>
+                            </div>
+                        </div>
+
+                        </div>
+
+                        <!-- Evolução do Gosto -->
+                        <div class="col-lg-12">
+                            <div class="chart-card">
+                                <h5 class="ranking-title">📈 Evolução da Nota Média</h5>
+                                <p class="chart-desc">Desde o início do uso do app. Média móvel de 3 meses das notas dadas.</p>
+                                <div style="height:240px;"><canvas id="evolucaoGostoChart"></canvas></div>
                             </div>
                         </div>
 
@@ -937,6 +959,16 @@
                             </button>
                             <button id="btn-indicar-filme" class="btn btn-indicar-modern">
                                 <i class="fas fa-share-alt me-2"></i> Indicar Filme
+                            </button>
+                            <button id="btn-minhas-listas" class="btn btn-outline-secondary btn-sm rounded-pill">
+                                <i class="fas fa-bookmark me-1"></i> Minhas Listas
+                            </button>
+                            <button id="btn-comparar-amigo" class="btn btn-comparar-modern">
+                                <i class="fas fa-user-friends me-2"></i> Comparar com Amigo
+                            </button>
+                            <button id="btn-importar-letterboxd" class="btn btn-outline-secondary btn-sm"
+                                    title="Importar lista do Letterboxd">
+                                <i class="fas fa-file-import me-1"></i> Letterboxd
                             </button>
                             
                             <div class="btn-group import-export-buttons gap-1">
