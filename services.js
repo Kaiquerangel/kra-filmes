@@ -72,44 +72,25 @@ export const AuthService = {
     },
 
     getProfileByNickname: async (nickname) => {
-        const normalizedNick = nickname.replace('@', '').toLowerCase().trim();
+        // Busca sem depender de nickname_lower — funciona para todos os usuários
+        const nick = nickname.replace('@', '').trim();
+        const nickLower = nick.toLowerCase();
 
-        // Tenta primeiro pelo campo nickname_lower (usuários novos)
-        const q1 = query(collection(db, "users"), where("nickname_lower", "==", normalizedNick));
-        const snap1 = await getDocs(q1);
-        if (!snap1.empty) {
-            const data = snap1.docs[0].data();
-            // Migra o campo nickname_lower se ainda não existe
-            if (!data.nickname_lower) {
-                try {
-                    const { updateDoc } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
-                    await updateDoc(doc(db, "users", snap1.docs[0].id), {
-                        nickname_lower: data.nickname.toLowerCase().trim(),
-                        publico: data.publico ?? true
-                    });
-                } catch(e) {}
-            }
-            return data;
-        }
+        // Tenta o nickname exatamente como digitado
+        let q = query(collection(db, "users"), where("nickname", "==", nick));
+        let snap = await getDocs(q);
+        if (!snap.empty) return snap.docs[0].data();
 
-        // Fallback: busca pelo nickname original (usuários cadastrados antes da migração)
-        const q2 = query(collection(db, "users"), where("nickname", "==", nickname.replace('@', '').trim()));
-        const snap2 = await getDocs(q2);
-        if (!snap2.empty) {
-            const data = snap2.docs[0].data();
-            // Migra automaticamente o campo nickname_lower no perfil encontrado
-            try {
-                const { updateDoc } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
-                await updateDoc(doc(db, "users", snap2.docs[0].id), {
-                    nickname_lower: data.nickname.toLowerCase().trim(),
-                    publico: data.publico ?? true
-                });
-            } catch(e) {}
-            return data;
+        // Tenta em lowercase (caso o nick cadastrado seja diferente do digitado)
+        if (nick !== nickLower) {
+            q = query(collection(db, "users"), where("nickname", "==", nickLower));
+            snap = await getDocs(q);
+            if (!snap.empty) return snap.docs[0].data();
         }
 
         return null;
     }
+
 };
 
 export const MovieService = {
