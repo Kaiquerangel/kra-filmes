@@ -1,4 +1,4 @@
-import { onSnapshot, query, collection, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { onSnapshot, getDocs, query, collection, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { auth, db, OMDB_API_KEY, TMDB_API_KEY } from './config.js';
 window._OMDB_KEY = OMDB_API_KEY;
 window._TMDB_KEY = TMDB_API_KEY;
@@ -232,30 +232,51 @@ function encerrarAplicacao() {
     }
 }
 
+function _processarSnapshotFilmes(docs) {
+    filmes = docs.map(doc => {
+        const data = doc.data();
+        const dataCadastro = (data.cadastradoEm && data.cadastradoEm.toDate)
+            ? data.cadastradoEm.toDate()
+            : new Date(0);
+        return { id: doc.id, ...data, cadastradoEm: dataCadastro };
+    });
+    filmes.sort((a, b) => a.cadastradoEm - b.cadastradoEm);
+    requestAnimationFrame(() => {
+        Filters.atualizarExtras(filmes);
+        Achievements.verificar(currentUserProfile, filmes);
+        _verificarMetasProximas(filmes);
+        QRManager.setupShareButton(currentUserProfile);
+        refreshUI();
+        if (UI.renderVitrines) UI.renderVitrines(filmes);
+    });
+}
+
 function conectarBancoDeDados(uid) {
     if (unsubscribeFilmes) {
         unsubscribeFilmes();
         unsubscribeFilmes = null;
     }
-    
+
     UI.renderSkeletons(UI.els.tabelaTodos, currentView, 16);
-    
+
     const q = query(collection(db, "users", uid, "filmes"), limit(2000));
 
+    // Modo visitante (read-only): usa getDocs (leitura única, sem autenticação necessária)
+    if (isReadOnly) {
+        getDocs(q)
+            .then(snapshot => _processarSnapshotFilmes(snapshot.docs))
+            .catch(error => {
+                console.error(error);
+                UI.toast("Erro ao carregar filmes do perfil público.", "error");
+            });
+        return;
+    }
+
+    // Modo logado: usa onSnapshot para atualizações em tempo real
     let onboardingMostrado = false;
     unsubscribeFilmes = onSnapshot(q, (snapshot) => {
-        filmes = snapshot.docs.map(doc => {
-            const data = doc.data();
-            let dataCadastro = (data.cadastradoEm && data.cadastradoEm.toDate) 
-                ? data.cadastradoEm.toDate() 
-                : new Date(0);
-            return { id: doc.id, ...data, cadastradoEm: dataCadastro };
-        });
+        _processarSnapshotFilmes(snapshot.docs);
 
-        filmes.sort((a, b) => a.cadastradoEm - b.cadastradoEm);
-
-        // Onboarding — apenas na primeira abertura com lista vazia
-        // Lembrete de backup mensal
         verificarLembreteBackup(currentUserProfile, filmes);
 
         if (!onboardingMostrado && filmes.length === 0 && currentUserProfile && !currentUserProfile.tourCompleto) {
@@ -267,27 +288,9 @@ function conectarBancoDeDados(uid) {
                 } catch(e) {}
             }), 800);
         }
-
-        requestAnimationFrame(() => {
-            Filters.atualizarExtras(filmes);
-            Achievements.verificar(currentUserProfile, filmes);
-
-        // Notificação motivacional ao se aproximar de conquistas
-        _verificarMetasProximas(filmes);
-            
-            // Configura o botão de QR Code no perfil
-            QRManager.setupShareButton(currentUserProfile);
-            
-            refreshUI(); 
-            
-            if (UI.renderVitrines) {
-                UI.renderVitrines(filmes);
-            }
-        });
-        
-    }, (error) => { 
-        console.error(error); 
-        UI.toast("Erro de conexão com o banco de dados.", "error"); 
+    }, (error) => {
+        console.error(error);
+        UI.toast("Erro de conexão com o banco de dados.", "error");
     });
 }
 
