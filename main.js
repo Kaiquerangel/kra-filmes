@@ -173,9 +173,20 @@ function injetarElementosDinamicos() {
     }
 }
 
-async function iniciarModoPublico(nickname) {
+async function iniciarModoPublico(uidOuNickname) {
     try {
-        const profile = await AuthService.getProfileByNickname(nickname);
+        let profile = null;
+
+        // Se parece um UID do Firebase (20+ caracteres alfanuméricos), busca direto por getDoc
+        const pareceUid = /^[a-zA-Z0-9]{20,}$/.test(uidOuNickname);
+        if (pareceUid) {
+            profile = await AuthService.getProfile(uidOuNickname);
+        }
+
+        // Fallback: tenta buscar por nickname (links antigos com ?u=nickname)
+        if (!profile) {
+            profile = await AuthService.getProfileByNickname(uidOuNickname);
+        }
         
         if (!profile) {
             UI.alert('Ops!', 'Perfil não encontrado.', 'error');

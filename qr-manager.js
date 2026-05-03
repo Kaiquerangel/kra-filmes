@@ -8,7 +8,7 @@ export const QRManager = {
         btn.dataset.listenerAttached = 'true';
 
         btn.addEventListener('click', () => {
-            const url = `${window.location.origin}${window.location.pathname}?u=${profile.nickname}`;
+            const url = `${window.location.origin}${window.location.pathname}?u=${profile.uid}`;
             
             
             Swal.fire({
