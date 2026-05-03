@@ -7,35 +7,44 @@ async function buscarPerfilPublico(db, identificador) {
     const { collection, getDocs, query: fsQuery, where, doc, getDoc }
         = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
 
-    const isNickname = !identificador.includes('/') && identificador.length < 30;
+    // Detecta se é UID direto (20+ chars alfanuméricos sem @ ou /)
+    const pareceUid = /^[a-zA-Z0-9]{20,}$/.test(identificador.trim());
     let uid = null;
 
-    if (isNickname) {
-        const nick = identificador.replace('@','').toLowerCase().trim();
-        const snap = await getDocs(fsQuery(collection(db, 'users'), where('nickname_lower','==', nick)));
+    if (pareceUid) {
+        // Link gerado pelo QR Code — usa UID diretamente (getDoc, sem query)
+        uid = identificador.trim();
+    } else {
+        // Digitou @nickname ou link antigo com ?u=nickname
+        const nick = identificador.replace('@','').trim();
+
+        // Tenta nick exato
+        let snap = await getDocs(fsQuery(collection(db, 'users'), where('nickname','==', nick)));
+
+        // Tenta lowercase como fallback
+        if (snap.empty && nick !== nick.toLowerCase()) {
+            snap = await getDocs(fsQuery(collection(db, 'users'), where('nickname','==', nick.toLowerCase())));
+        }
+
         if (snap.empty) throw new Error(`Usuário @${nick} não encontrado.`);
         uid = snap.docs[0].id;
-    } else {
-        const match = identificador.match(/[?&/]u[=/]([a-zA-Z0-9]{20,})/);
-        if (!match) throw new Error('Link inválido. Use o link público do perfil.');
-        uid = match[1];
     }
 
     const perfilSnap = await getDoc(doc(db, 'users', uid));
     if (!perfilSnap.exists()) throw new Error('Perfil não encontrado.');
     const perfil = { uid, ...perfilSnap.data() };
-    // Permite comparar se o perfil tem nickname (conta válida)
-    // O campo 'publico' é opcional — se não existir, considera público por padrão
+
+    // Bloqueia apenas se explicitamente marcado como privado
     if (perfil.publico === false) throw new Error('Este perfil é privado.');
 
     let filmes = [];
     try {
         const filmesSnap = await getDocs(collection(db, 'users', uid, 'filmes'));
         filmes = filmesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (e) {
-        // Erro de permissão no Firestore — regras bloquearam leitura da subcoleção
-        throw new Error('Não foi possível acessar a coleção deste usuário. O perfil pode ser privado ou as regras do Firestore precisam ser atualizadas.');
+    } catch(e) {
+        throw new Error('Não foi possível acessar os filmes deste perfil. O perfil pode ser privado.');
     }
+
     return { perfil, filmes };
 }
 
