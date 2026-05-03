@@ -72,19 +72,20 @@ export const AuthService = {
     },
 
     getProfileByNickname: async (nickname) => {
-        // Busca sem depender de nickname_lower — funciona para todos os usuários
-        const nick = nickname.replace('@', '').trim();
-        const nickLower = nick.toLowerCase();
+        // Cobre todas as variações: com/sem @ e com/sem lowercase
+        const semArroba = nickname.replace('@', '').trim();
+        const comArroba = '@' + semArroba;
 
-        // Tenta o nickname exatamente como digitado
-        let q = query(collection(db, "users"), where("nickname", "==", nick));
-        let snap = await getDocs(q);
-        if (!snap.empty) return snap.docs[0].data();
+        const tentativas = [
+            semArroba,
+            semArroba.toLowerCase(),
+            comArroba,
+            comArroba.toLowerCase(),
+        ].filter((v, i, arr) => arr.indexOf(v) === i);
 
-        // Tenta em lowercase (caso o nick cadastrado seja diferente do digitado)
-        if (nick !== nickLower) {
-            q = query(collection(db, "users"), where("nickname", "==", nickLower));
-            snap = await getDocs(q);
+        for (const nick of tentativas) {
+            const q = query(collection(db, "users"), where("nickname", "==", nick));
+            const snap = await getDocs(q);
             if (!snap.empty) return snap.docs[0].data();
         }
 

@@ -16,17 +16,24 @@ async function buscarPerfilPublico(db, identificador) {
         uid = identificador.trim();
     } else {
         // Digitou @nickname ou link antigo com ?u=nickname
-        const nick = identificador.replace('@','').trim();
+        const nickSemArroba = identificador.replace('@','').trim();
+        const nickComArroba = '@' + nickSemArroba;
 
-        // Tenta nick exato
-        let snap = await getDocs(fsQuery(collection(db, 'users'), where('nickname','==', nick)));
+        // Tenta as 4 combinações: com/sem @ e com/sem lowercase
+        const tentativas = [
+            nickSemArroba,
+            nickSemArroba.toLowerCase(),
+            nickComArroba,
+            nickComArroba.toLowerCase(),
+        ].filter((v, i, arr) => arr.indexOf(v) === i); // remove duplicatas
 
-        // Tenta lowercase como fallback
-        if (snap.empty && nick !== nick.toLowerCase()) {
-            snap = await getDocs(fsQuery(collection(db, 'users'), where('nickname','==', nick.toLowerCase())));
+        let snap = null;
+        for (const tentativa of tentativas) {
+            snap = await getDocs(fsQuery(collection(db, 'users'), where('nickname','==', tentativa)));
+            if (!snap.empty) break;
         }
 
-        if (snap.empty) throw new Error(`Usuário @${nick} não encontrado.`);
+        if (!snap || snap.empty) throw new Error(`Usuário @${nickSemArroba} não encontrado.`);
         uid = snap.docs[0].id;
     }
 
