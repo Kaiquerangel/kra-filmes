@@ -384,26 +384,25 @@
 }
 
 .btn-acao-secondary {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.65);
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.22) !important;
+    color: rgba(255,255,255,0.9) !important;
 }
-
 .btn-acao-secondary:hover {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
+    background: rgba(255,255,255,0.15) !important;
+    border-color: rgba(255,255,255,0.35) !important;
+    color: #fff !important;
 }
 
 .btn-acao-listas {
-    background: rgba(168,85,247,0.12);
-    border: 1px solid rgba(168,85,247,0.3);
-    color: #c084fc;
+    background: rgba(168,85,247,0.18) !important;
+    border: 1px solid rgba(168,85,247,0.5) !important;
+    color: #e9d5ff !important;
 }
-
 .btn-acao-listas:hover {
-    background: rgba(168,85,247,0.22);
-    border-color: rgba(168,85,247,0.5);
-    color: #e9d5ff;
+    background: rgba(168,85,247,0.3) !important;
+    border-color: rgba(168,85,247,0.7) !important;
+    color: #fff !important;
 }
 
 /* Botões de import/export — compactos */
@@ -435,4 +434,54 @@
         padding: 4px 8px;
         font-size: 0.9rem;
     }
-} 
+}
+
+/* ── Perfil — layout responsivo ── */
+.perfil-layout-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .perfil-layout-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Sidebar centralizada em mobile */
+    .perfil-layout-grid > div:first-child {
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    /* Stats grid 2 colunas em mobile */
+    .perfil-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Conquistas 2 colunas */
+    #perfil-conquistas-grid > div,
+    [style*="grid-template-columns:repeat(3"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .perfil-stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ── Heatmap — scroll horizontal em mobile ── */
+@media (max-width: 768px) {
+    #heatmap-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #heatmap-wrapper > div {
+        min-width: 600px;
+    }
+}

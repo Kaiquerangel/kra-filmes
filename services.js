@@ -8,7 +8,8 @@ export const AuthService = {
         let email = identifier;
         
         if (!identifier.includes('@')) {
-            const q = query(collection(db, "users"), where("nickname", "==", identifier));
+            const normalizedNick = identifier.replace('@', '').toLowerCase().trim();
+            const q = query(collection(db, "users"), where("nickname_lower", "==", normalizedNick));
             const snapshot = await getDocs(q);
             
             if (snapshot.empty) {
@@ -41,7 +42,9 @@ export const AuthService = {
             uid: cred.user.uid,
             nome: nome,
             nickname: nickname,
-            email: email, 
+            nickname_lower: nickname.toLowerCase().trim(),
+            email: email,
+            publico: true,
             membroDesde: serverTimestamp()
         });
         
@@ -49,7 +52,8 @@ export const AuthService = {
     },
     
     checkNickname: async (nickname) => {
-        const q = query(collection(db, "users"), where("nickname", "==", nickname));
+        const normalizedNick = nickname.toLowerCase().trim();
+        const q = query(collection(db, "users"), where("nickname_lower", "==", normalizedNick));
         const snapshot = await getDocs(q);
         return snapshot.empty;
     },
@@ -60,7 +64,8 @@ export const AuthService = {
     },
 
     getProfileByNickname: async (nickname) => {
-        const q = query(collection(db, "users"), where("nickname", "==", nickname));
+        const normalizedNick = nickname.replace('@', '').toLowerCase().trim();
+        const q = query(collection(db, "users"), where("nickname_lower", "==", normalizedNick));
         const snapshot = await getDocs(q);
         return snapshot.empty ? null : snapshot.docs[0].data();
     }

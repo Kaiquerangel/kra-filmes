@@ -1,7 +1,13 @@
 export const getResizedUrl = (url, width = 300) => {
     if (!url || url === 'N/A') return null;
-    if (url.includes('_SX')) return url.replace(/_SX[0-9]+/, `_SX${width}`);
-    else if (url.includes('media-amazon.com') || url.includes('omdbapi.com')) return url.replace(/\.(jpg|jpeg|png)$/i, `_SX${width}.$1`);
+    // Usa proxy wsrv.nl para evitar 404 de URLs expiradas do Amazon/IMDb
+    // e também resolve CORS para uso no canvas
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=jpg&default=1`;
+};
+
+// Retorna a URL original do OMDb sem proxy (para salvar no Firestore)
+export const getPosterOriginal = (url) => {
+    if (!url || url === 'N/A') return '';
     return url;
 };
 

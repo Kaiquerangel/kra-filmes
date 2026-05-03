@@ -12,7 +12,7 @@ async function buscarPerfilPublico(db, identificador) {
 
     if (isNickname) {
         const nick = identificador.replace('@','').toLowerCase().trim();
-        const snap = await getDocs(fsQuery(collection(db, 'users'), where('nickname','==', nick)));
+        const snap = await getDocs(fsQuery(collection(db, 'users'), where('nickname_lower','==', nick)));
         if (snap.empty) throw new Error(`Usuário @${nick} não encontrado.`);
         uid = snap.docs[0].id;
     } else {
@@ -24,10 +24,18 @@ async function buscarPerfilPublico(db, identificador) {
     const perfilSnap = await getDoc(doc(db, 'users', uid));
     if (!perfilSnap.exists()) throw new Error('Perfil não encontrado.');
     const perfil = { uid, ...perfilSnap.data() };
-    if (!perfil.publico && !perfil.nickname) throw new Error('Este perfil não é público.');
+    // Permite comparar se o perfil tem nickname (conta válida)
+    // O campo 'publico' é opcional — se não existir, considera público por padrão
+    if (perfil.publico === false) throw new Error('Este perfil é privado.');
 
-    const filmesSnap = await getDocs(collection(db, 'users', uid, 'filmes'));
-    const filmes = filmesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let filmes = [];
+    try {
+        const filmesSnap = await getDocs(collection(db, 'users', uid, 'filmes'));
+        filmes = filmesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+        // Erro de permissão no Firestore — regras bloquearam leitura da subcoleção
+        throw new Error('Não foi possível acessar a coleção deste usuário. O perfil pode ser privado ou as regras do Firestore precisam ser atualizadas.');
+    }
     return { perfil, filmes };
 }
 

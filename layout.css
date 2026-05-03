@@ -259,23 +259,57 @@ body.read-only .col-assistido {
     color: #facc15;
 }
 /* =========================================================
+   PERFIL — LAYOUT BASE
+   ========================================================= */
+
+.perfil-layout-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.perfil-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    position: sticky;
+    top: 80px;
+}
+
+.perfil-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    min-width: 0;
+}
+
+/* =========================================================
    CORREÇÕES RESPONSIVAS — MOBILE
    ========================================================= */
 
-/* ── Perfil: grid colapsa em coluna única em mobile ── */
+/* ── Perfil: mobile ── */
 @media (max-width: 768px) {
     .perfil-layout-grid {
-        grid-template-columns: 1fr !important;
-        gap: 1.5rem !important;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    .perfil-sidebar {
+        position: static;
+        padding: 1rem;
+        background: rgba(255,255,255,0.02);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.06);
     }
     .perfil-stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: repeat(3, 1fr) !important;
     }
 }
-
-@media (max-width: 400px) {
+@media (max-width: 480px) {
     .perfil-stats-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
@@ -442,3 +476,41 @@ body.read-only .btn-delete-item {
     display: none !important;
 }
 
+
+/* ── Perfil: força colapso da sidebar inline-styled ── */
+@media (max-width: 991px) {
+    #perfil-layout-grid,
+    .perfil-layout-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    /* Avatar centralizado */
+    #perfil-avatar-wrapper,
+    .perfil-avatar-wrapper {
+        display: flex !important;
+        justify-content: center !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Sticky não funciona em mobile — remove */
+    #perfil-layout-grid > div:first-child,
+    .perfil-layout-grid > div:first-child {
+        position: relative !important;
+        top: auto !important;
+    }
+
+    /* Sidebar: centraliza textos */
+    #perfil-layout-grid > div:first-child,
+    .perfil-sidebar {
+        text-align: center !important;
+    }
+
+    /* Botões da sidebar em linha */
+    .perfil-sidebar > div[style*="flex-direction:column"],
+    .perfil-botoes {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+}
