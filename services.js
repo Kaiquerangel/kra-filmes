@@ -9,9 +9,17 @@ export const AuthService = {
         
         if (!identifier.includes('@')) {
             const normalizedNick = identifier.replace('@', '').toLowerCase().trim();
-            const q = query(collection(db, "users"), where("nickname_lower", "==", normalizedNick));
-            const snapshot = await getDocs(q);
-            
+
+            // Tenta nickname_lower primeiro
+            let q = query(collection(db, "users"), where("nickname_lower", "==", normalizedNick));
+            let snapshot = await getDocs(q);
+
+            // Fallback: nickname original
+            if (snapshot.empty) {
+                q = query(collection(db, "users"), where("nickname", "==", identifier.replace('@', '').trim()));
+                snapshot = await getDocs(q);
+            }
+
             if (snapshot.empty) {
                 throw { code: 'auth/user-not-found', message: 'Usuário não encontrado.' };
             }
@@ -65,9 +73,42 @@ export const AuthService = {
 
     getProfileByNickname: async (nickname) => {
         const normalizedNick = nickname.replace('@', '').toLowerCase().trim();
-        const q = query(collection(db, "users"), where("nickname_lower", "==", normalizedNick));
-        const snapshot = await getDocs(q);
-        return snapshot.empty ? null : snapshot.docs[0].data();
+
+        // Tenta primeiro pelo campo nickname_lower (usuários novos)
+        const q1 = query(collection(db, "users"), where("nickname_lower", "==", normalizedNick));
+        const snap1 = await getDocs(q1);
+        if (!snap1.empty) {
+            const data = snap1.docs[0].data();
+            // Migra o campo nickname_lower se ainda não existe
+            if (!data.nickname_lower) {
+                try {
+                    const { updateDoc } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
+                    await updateDoc(doc(db, "users", snap1.docs[0].id), {
+                        nickname_lower: data.nickname.toLowerCase().trim(),
+                        publico: data.publico ?? true
+                    });
+                } catch(e) {}
+            }
+            return data;
+        }
+
+        // Fallback: busca pelo nickname original (usuários cadastrados antes da migração)
+        const q2 = query(collection(db, "users"), where("nickname", "==", nickname.replace('@', '').trim()));
+        const snap2 = await getDocs(q2);
+        if (!snap2.empty) {
+            const data = snap2.docs[0].data();
+            // Migra automaticamente o campo nickname_lower no perfil encontrado
+            try {
+                const { updateDoc } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
+                await updateDoc(doc(db, "users", snap2.docs[0].id), {
+                    nickname_lower: data.nickname.toLowerCase().trim(),
+                    publico: data.publico ?? true
+                });
+            } catch(e) {}
+            return data;
+        }
+
+        return null;
     }
 };
 
