@@ -968,33 +968,40 @@
                                 <i class="fas fa-share-alt"></i>
                                 <span>Indicar</span>
                             </button>
-                            <button id="btn-minhas-listas" class="btn btn-acao-lista btn-acao-listas">
-                                <i class="fas fa-bookmark"></i>
-                                <span>Listas</span>
-                            </button>
                             <button id="btn-comparar-amigo" class="btn btn-comparar-modern btn-acao-lista">
                                 <i class="fas fa-user-friends"></i>
-                                <span class="d-none d-sm-inline">Comparar</span>
-                                <span class="d-inline d-sm-none">Amigo</span>
+                                <span>Comparar</span>
                             </button>
-                            <button id="btn-importar-letterboxd" class="btn btn-acao-lista btn-acao-secondary"
-                                    title="Importar do Letterboxd">
-                                <i class="fas fa-file-import"></i>
+
+                            <!-- Separador visual -->
+                            <div class="lista-acoes-divider"></div>
+
+                            <button id="btn-minhas-listas" class="btn btn-acao-lista btn-acao-listas">
+                                <i class="fas fa-bookmark"></i>
+                                <span>Minhas Listas</span>
+                            </button>
+                            <button id="btn-importar-letterboxd" class="btn btn-acao-lista btn-acao-letterboxd">
+                                <i class="fas fa-film"></i>
                                 <span>Letterboxd</span>
                             </button>
-                            
-                            <div class="btn-group import-export-buttons gap-1">
-                                <button id="export-json-btn" class="btn btn-icon-modern" title="Exportar JSON">
-                                    <i class="fas fa-file-code"></i>
-                                </button>
-                                <button id="export-csv-btn" class="btn btn-icon-modern" title="Exportar CSV">
-                                    <i class="fas fa-file-csv"></i>
-                                </button>
-                                <button id="import-btn" class="btn btn-icon-modern" title="Importar">
-                                    <i class="fas fa-file-import"></i>
-                                </button>
-                                <input type="file" id="import-file-input" accept=".json, .csv" style="display: none;">
-                            </div>
+
+                            <!-- Separador visual -->
+                            <div class="lista-acoes-divider"></div>
+
+                            <!-- Import/Export com tooltip visível -->
+                            <button id="export-json-btn" class="btn btn-acao-lista btn-acao-io" title="Exportar JSON">
+                                <i class="fas fa-file-code"></i>
+                                <span class="btn-acao-io-label">JSON</span>
+                            </button>
+                            <button id="export-csv-btn" class="btn btn-acao-lista btn-acao-io" title="Exportar CSV">
+                                <i class="fas fa-file-csv"></i>
+                                <span class="btn-acao-io-label">CSV</span>
+                            </button>
+                            <button id="import-btn" class="btn btn-acao-lista btn-acao-io" title="Importar">
+                                <i class="fas fa-file-import"></i>
+                                <span class="btn-acao-io-label">Importar</span>
+                            </button>
+                            <input type="file" id="import-file-input" accept=".json, .csv" style="display: none;">
                         </div>
                     </div>
 
@@ -1021,11 +1028,15 @@
                         </div>
 
                         <div class="row g-2 align-items-center">
-                            <div class="col-auto" style="width: 140px;">
+                            <div class="col-auto" style="width: 220px;">
                                 <div class="nota-min-max-wrapper">
-                                    <div class="nota-icon"><i class="fas fa-star text-warning"></i></div>
-                                    <input type="number" id="filtro-nota-min" placeholder="Min" min="0" max="10" step="0.1">
-                                    <input type="number" id="filtro-nota-max" placeholder="Max" min="0" max="10" step="0.1">
+                                    <div class="nota-icon">
+                                        <i class="fas fa-star text-warning" style="font-size:0.75rem;"></i>
+                                        <span style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-left:4px;font-weight:500;">Nota</span>
+                                    </div>
+                                    <input type="number" id="filtro-nota-min" placeholder="Mín" min="0" max="10" step="0.1">
+                                    <span class="nota-sep">–</span>
+                                    <input type="number" id="filtro-nota-max" placeholder="Máx" min="0" max="10" step="0.1">
                                 </div>
                             </div>
                             

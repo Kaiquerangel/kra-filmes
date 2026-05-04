@@ -1647,3 +1647,215 @@ body.dark-mode .mini-movie-card:hover .text-muted {
     box-shadow: 0 0 14px rgba(168,85,247,0.4);
     color: #e9d5ff;
 }
+/* ═══════════════════════════════════════════════════
+   BOTÕES DE AÇÃO DA LISTA — redesign
+   ═══════════════════════════════════════════════════ */
+
+/* Separador visual entre grupos */
+.lista-acoes-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255,255,255,0.1);
+    flex-shrink: 0;
+    margin: 0 4px;
+    align-self: center;
+}
+
+/* Letterboxd — cor própria legível */
+.btn-acao-letterboxd {
+    background: rgba(0, 172, 138, 0.12) !important;
+    border: 1px solid rgba(0, 172, 138, 0.35) !important;
+    color: #34d399 !important;
+    font-weight: 500;
+}
+.btn-acao-letterboxd:hover {
+    background: rgba(0, 172, 138, 0.24) !important;
+    border-color: rgba(0, 172, 138, 0.6) !important;
+    color: #6ee7b7 !important;
+    transform: translateY(-1px);
+}
+
+/* Import/Export — visível com label */
+.btn-acao-io {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    color: rgba(255,255,255,0.65) !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    padding: 6px 12px !important;
+    border-radius: 20px;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+}
+.btn-acao-io:hover {
+    background: rgba(255,255,255,0.1) !important;
+    border-color: rgba(255,255,255,0.28) !important;
+    color: rgba(255,255,255,0.95) !important;
+}
+.btn-acao-io-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+}
+
+/* Listas — label mais clara */
+.btn-acao-listas {
+    background: rgba(168,85,247,0.13) !important;
+    border: 1px solid rgba(168,85,247,0.4) !important;
+    color: #d8b4fe !important;
+    font-weight: 500;
+}
+.btn-acao-listas:hover {
+    background: rgba(168,85,247,0.26) !important;
+    border-color: rgba(168,85,247,0.65) !important;
+    color: #ede9fe !important;
+    transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════════════
+   FILTRO DE NOTA — redesign
+   ═══════════════════════════════════════════════════ */
+.nota-min-max-wrapper {
+    display: flex;
+    align-items: center;
+    background: rgba(17, 24, 39, 0.7);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 38px;
+}
+.nota-min-max-wrapper .nota-icon {
+    padding: 0 10px;
+    background: rgba(255,255,255,0.04);
+    border-right: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 100%;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.nota-min-max-wrapper input {
+    background: transparent;
+    border: none;
+    color: white;
+    width: 68px;
+    padding: 0 8px;
+    font-size: 0.82rem;
+    outline: none;
+    height: 100%;
+    text-align: center;
+}
+.nota-min-max-wrapper input::placeholder {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.8rem;
+}
+.nota-sep {
+    color: rgba(255,255,255,0.25);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    padding: 0 4px;
+}
+.nota-min-max-wrapper:focus-within {
+    border-color: rgba(250,204,21,0.5);
+    box-shadow: 0 0 0 2px rgba(250,204,21,0.1);
+}
+
+/* ═══════════════════════════════════════════════════
+   AUTOCOMPLETE DE BUSCA OMDb — redesign
+   ═══════════════════════════════════════════════════ */
+.omdb-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.15);
+    z-index: 1000;
+    overflow: hidden;
+    max-height: 420px;
+    overflow-y: auto;
+}
+.omdb-dropdown-header {
+    padding: 10px 14px 8px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.omdb-dropdown-header button {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.25);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.15s;
+}
+.omdb-dropdown-header button:hover { color: rgba(255,255,255,0.7); }
+
+.omdb-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.omdb-item:last-child { border-bottom: none; }
+.omdb-item:hover {
+    background: rgba(59,130,246,0.1);
+}
+.omdb-item:hover .omdb-item-title { color: #93c5fd; }
+
+.omdb-item-poster {
+    width: 36px;
+    height: 54px;
+    border-radius: 5px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.05);
+}
+.omdb-item-poster-placeholder {
+    width: 36px;
+    height: 54px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: rgba(255,255,255,0.2);
+    font-size: 0.9rem;
+}
+.omdb-item-info { flex: 1; min-width: 0; }
+.omdb-item-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.15s;
+}
+.omdb-item-year {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.35);
+    margin-top: 2px;
+}
+.omdb-item-arrow {
+    color: rgba(255,255,255,0.15);
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}

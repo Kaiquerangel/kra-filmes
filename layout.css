@@ -84,6 +84,8 @@ body.read-only .col-assistido {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     transition: border-color 0.2s;
+    width: 150px;
+    flex-shrink: 0;
 }
 
 .sort-modern-container:hover {
@@ -513,4 +515,40 @@ body.read-only .btn-delete-item {
         flex-wrap: wrap !important;
         justify-content: center !important;
     }
+}
+/* ── Header da lista: título + controles na mesma linha ── */
+.lista-header-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lista-header-row1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+.lista-titulo {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.lista-header-controles {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    .sort-modern-container {
+        width: 120px;
+    }
+    .lista-titulo .d-none { display: none !important; }
 }

@@ -297,3 +297,199 @@
         padding: 6px 12px;
     }
 }
+
+/* =========================================================
+   MOBILE GERAL — NAVBAR E BOTÕES DE AÇÃO
+   ========================================================= */
+
+/* ── Navbar collapse mobile ── */
+@media (max-width: 991px) {
+    /* Collapse abre empurrando o conteúdo, não por cima */
+    #navbarNav {
+        background: rgba(15, 23, 42, 0.98);
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding: 12px 0;
+        margin-top: 4px;
+    }
+
+    /* Itens do menu centralizados e com padding correto */
+    #navbarNav .nav-link {
+        text-align: center !important;
+        padding: 10px 20px !important;
+        font-size: 1rem !important;
+        border-radius: 8px;
+        margin: 2px 12px;
+    }
+
+    #navbarNav .nav-link:hover {
+        background: rgba(255,255,255,0.06);
+    }
+
+    /* Remove ícones sociais do mobile — pouco espaço */
+    #navbarNav .navbar-nav.mx-auto {
+        display: none !important;
+    }
+
+    /* Boas-vindas e sair centralizados */
+    #welcome-message {
+        display: block !important;
+        text-align: center;
+        padding: 8px 0 4px;
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.6) !important;
+    }
+
+    #logout-container {
+        justify-content: center;
+        margin-top: 4px;
+    }
+
+    #logout-container .btn {
+        min-width: 120px;
+    }
+
+    /* Tema e nome alinhados */
+    .navbar .ms-auto {
+        align-items: center !important;
+    }
+}
+
+/* ── Botões de ação da lista — linha única com scroll horizontal ── */
+.lista-acoes-scroll {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 0 6px;
+    margin-top: 8px;
+}
+
+.lista-acoes-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* Botões dentro do scroll — nunca quebram linha */
+.btn-acao-lista {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.btn-acao-secondary {
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.22) !important;
+    color: rgba(255,255,255,0.9) !important;
+}
+.btn-acao-secondary:hover {
+    background: rgba(255,255,255,0.15) !important;
+    border-color: rgba(255,255,255,0.35) !important;
+    color: #fff !important;
+}
+
+.btn-acao-listas {
+    background: rgba(168,85,247,0.15) !important;
+    border: 1px solid rgba(168,85,247,0.45) !important;
+    color: #d8b4fe !important;
+}
+.btn-acao-listas:hover {
+    background: rgba(168,85,247,0.28) !important;
+    border-color: rgba(168,85,247,0.7) !important;
+    color: #ede9fe !important;
+    transform: translateY(-1px);
+}
+
+/* Separador entre grupos */
+.lista-acoes-divider {
+    width: 1px;
+    height: 22px;
+    background: rgba(255,255,255,0.12);
+    flex-shrink: 0;
+    margin: 0 2px;
+}
+
+/* Botões de import/export */
+.import-export-buttons {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 576px) {
+    .btn-acao-lista {
+        padding: 5px 11px;
+        font-size: 0.76rem;
+    }
+}
+
+/* ── Navbar brand e toggler alinhados ── */
+@media (max-width: 576px) {
+    .navbar-brand {
+        font-size: 1rem !important;
+    }
+
+    .navbar-toggler {
+        padding: 4px 8px;
+        font-size: 0.9rem;
+    }
+}
+
+/* ── Perfil — layout responsivo ── */
+.perfil-layout-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .perfil-layout-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Sidebar centralizada em mobile */
+    .perfil-layout-grid > div:first-child {
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    /* Stats grid 2 colunas em mobile */
+    .perfil-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Conquistas 2 colunas */
+    #perfil-conquistas-grid > div,
+    [style*="grid-template-columns:repeat(3"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .perfil-stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ── Heatmap — scroll horizontal em mobile ── */
+@media (max-width: 768px) {
+    #heatmap-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #heatmap-wrapper > div {
+        min-width: 600px;
+    }
+}
