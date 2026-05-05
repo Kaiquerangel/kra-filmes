@@ -217,6 +217,9 @@ async function iniciarAplicacao(user) {
                 () => currentUser?.uid, 
                 () => filmes
             );
+
+            // Carrega listas personalizadas na inicialização
+            listasPersonalizadas = await getListas(db, user.uid);
             
             conectarBancoDeDados(user.uid);
         }
