@@ -127,28 +127,64 @@ export const FormManager = {
         function criarSugestaoItem(filme) {
             const item = document.createElement('div');
             item.className = 'sug-item';
-            item.style.cssText = `display:flex;align-items:center;gap:10px;padding:8px 12px;
-                cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.12s;`;
+            item.style.cssText = `
+                display:flex;align-items:center;gap:12px;padding:8px 10px;
+                border-radius:10px;cursor:pointer;transition:background 0.13s;
+                position:relative;overflow:hidden;`;
 
-            const poster = filme.Poster && filme.Poster !== 'N/A'
-                ? `<img src="${filme.Poster}" style="width:32px;height:48px;object-fit:cover;border-radius:3px;flex-shrink:0;">`
-                : `<div style="width:32px;height:48px;background:rgba(255,255,255,0.06);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="fas fa-film" style="font-size:0.6rem;color:rgba(255,255,255,0.2);"></i></div>`;
+            const temPoster = filme.Poster && filme.Poster !== 'N/A';
+            const poster = temPoster
+                ? `<div style="width:38px;height:56px;border-radius:7px;overflow:hidden;flex-shrink:0;
+                              border:1px solid rgba(255,255,255,0.06);">
+                      <img src="${filme.Poster}" style="width:100%;height:100%;object-fit:cover;">
+                   </div>`
+                : `<div style="width:38px;height:56px;border-radius:7px;flex-shrink:0;
+                              background:#1e2a3a;border:1px solid rgba(255,255,255,0.06);
+                              display:flex;align-items:center;justify-content:center;">
+                      <i class="fas fa-film" style="font-size:0.85rem;color:rgba(255,255,255,0.12);"></i>
+                   </div>`;
+
+            const isTmdb = filme._tmdbId != null;
+            const badge  = isTmdb
+                ? `<span style="font-size:0.6rem;padding:1px 5px;border-radius:4px;font-weight:600;
+                               text-transform:uppercase;letter-spacing:0.05em;
+                               background:rgba(1,180,228,0.12);color:#01b4e4;
+                               border:1px solid rgba(1,180,228,0.2);">TMDB</span>`
+                : '';
 
             item.innerHTML = `
                 ${poster}
-                <div style="min-width:0;flex:1;">
-                    <div style="font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.92);
-                                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:0.88rem;font-weight:600;color:rgba(255,255,255,0.82);
+                                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                                margin-bottom:4px;transition:color 0.13s;" class="sug-title">
                         ${filme.Title}
                     </div>
-                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px;">
-                        ${filme.Year || ''}
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:0.72rem;color:rgba(255,255,255,0.3);font-variant-numeric:tabular-nums;">
+                            ${filme.Year || ''}
+                        </span>
+                        ${badge}
                     </div>
                 </div>
-                <i class="fas fa-chevron-right" style="font-size:0.65rem;color:rgba(255,255,255,0.2);flex-shrink:0;"></i>`;
+                <i class="fas fa-chevron-right" style="font-size:0.6rem;color:rgba(56,189,248,0.5);flex-shrink:0;
+                          opacity:0;transform:translateX(-4px);transition:opacity 0.13s,transform 0.13s;"
+                   class="sug-arrow"></i>`;
 
-            item.addEventListener('mouseenter', () => item.style.background = 'rgba(59,130,246,0.12)');
-            item.addEventListener('mouseleave', () => item.style.background = '');
+            item.addEventListener('mouseenter', () => {
+                item.style.background = 'rgba(56,189,248,0.07)';
+                const t = item.querySelector('.sug-title');
+                const a = item.querySelector('.sug-arrow');
+                if (t) t.style.color = '#e2e8f0';
+                if (a) { a.style.opacity = '1'; a.style.transform = 'translateX(0)'; }
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.background = '';
+                const t = item.querySelector('.sug-title');
+                const a = item.querySelector('.sug-arrow');
+                if (t) t.style.color = 'rgba(255,255,255,0.82)';
+                if (a) { a.style.opacity = '0'; a.style.transform = 'translateX(-4px)'; }
+            });
 
             item.addEventListener('click', async () => {
                 fecharSugestoes();
@@ -177,29 +213,68 @@ export const FormManager = {
             const rect = inputTitulo.getBoundingClientRect();
             const box  = document.createElement('div');
             box.id = 'sugestoes-box';
-            box.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;
-                width:${Math.max(rect.width, 340)}px;max-height:320px;overflow-y:auto;
-                background:#1a2235;border:1px solid rgba(255,255,255,0.12);border-radius:10px;
-                box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:99999;`;
+            box.style.cssText = `
+                position:fixed;top:${rect.bottom + 6}px;left:${rect.left}px;
+                width:${Math.max(rect.width, 360)}px;
+                background:#111827;
+                border:1px solid rgba(255,255,255,0.08);
+                border-radius:14px;overflow:hidden;
+                box-shadow:0 24px 64px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04) inset;
+                z-index:99999;
+                animation:sugDropIn 0.18s cubic-bezier(0.16,1,0.3,1);`;
+
+            // Injeta keyframe de animação uma vez
+            if (!document.getElementById('sug-anim-style')) {
+                const st = document.createElement('style');
+                st.id = 'sug-anim-style';
+                st.textContent = `
+                    @keyframes sugDropIn {
+                        from { opacity:0; transform:translateY(-6px) scale(0.98); }
+                        to   { opacity:1; transform:translateY(0)    scale(1);    }
+                    }`;
+                document.head.appendChild(st);
+            }
 
             // Header
             const header = document.createElement('div');
-            header.style.cssText = `padding:8px 12px;font-size:0.68rem;color:rgba(255,255,255,0.35);
-                text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid rgba(255,255,255,0.06);
-                display:flex;justify-content:space-between;align-items:center;`;
-            header.innerHTML = `<span>${resultados.length} resultado${resultados.length > 1 ? 's' : ''} para "${query}"</span>
+            header.style.cssText = `
+                display:flex;justify-content:space-between;align-items:center;
+                padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);
+                background:rgba(255,255,255,0.02);`;
+            header.innerHTML = `
+                <div style="display:flex;align-items:center;gap:6px;
+                            font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;
+                            color:rgba(255,255,255,0.25);">
+                    <div style="width:5px;height:5px;border-radius:50%;
+                                background:#38bdf8;box-shadow:0 0 6px #38bdf8;"></div>
+                    ${resultados.length} resultado${resultados.length > 1 ? 's' : ''} para "${query}"
+                </div>
                 <button onclick="document.getElementById('sugestoes-box')?.remove()"
-                    style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:0.75rem;">✕</button>`;
+                    style="background:none;border:none;color:rgba(255,255,255,0.2);cursor:pointer;
+                           font-size:0.8rem;width:22px;height:22px;border-radius:6px;
+                           display:flex;align-items:center;justify-content:center;
+                           transition:background 0.15s,color 0.15s;"
+                    onmouseenter="this.style.background='rgba(255,255,255,0.07)';this.style.color='rgba(255,255,255,0.5)'"
+                    onmouseleave="this.style.background='';this.style.color='rgba(255,255,255,0.2)'">✕</button>`;
             box.appendChild(header);
 
-            resultados.forEach(f => box.appendChild(criarSugestaoItem(f)));
+            // Lista com padding interno
+            const lista = document.createElement('div');
+            lista.style.cssText = `padding:4px;max-height:280px;overflow-y:auto;`;
+            resultados.forEach(f => lista.appendChild(criarSugestaoItem(f)));
+            box.appendChild(lista);
 
-            // Footer — opção de busca manual
+            // Footer
             const footer = document.createElement('div');
-            footer.style.cssText = `padding:8px 12px;font-size:0.75rem;color:rgba(255,255,255,0.35);
-                text-align:center;border-top:1px solid rgba(255,255,255,0.06);cursor:pointer;
-                transition:color 0.12s;`;
-            footer.innerHTML = `<i class="fas fa-keyboard me-1"></i>Não é o que procura? <span style="color:#60a5fa;">Preencha manualmente</span>`;
+            footer.style.cssText = `
+                display:flex;align-items:center;justify-content:center;gap:6px;
+                padding:10px 14px;border-top:1px solid rgba(255,255,255,0.05);
+                cursor:pointer;color:rgba(255,255,255,0.25);font-size:0.74rem;
+                transition:color 0.13s;background:rgba(255,255,255,0.01);`;
+            footer.innerHTML = `<i class="fas fa-pen-to-square" style="font-size:0.7rem;"></i>
+                Não encontrou? <span style="color:#60a5fa;">Preencha manualmente</span>`;
+            footer.addEventListener('mouseenter', () => footer.style.color = 'rgba(255,255,255,0.45)');
+            footer.addEventListener('mouseleave', () => footer.style.color = 'rgba(255,255,255,0.25)');
             footer.addEventListener('click', () => {
                 fecharSugestoes();
                 if (inputTitulo) inputTitulo.focus();
